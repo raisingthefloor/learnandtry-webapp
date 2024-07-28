@@ -1,2 +1,2 @@
 # learnandtry-webapp
-Learn and Try
+Learn and Try web app
