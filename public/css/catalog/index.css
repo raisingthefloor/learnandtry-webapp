@@ -1,0 +1,493 @@
+:root {
+    --filters-background-color: white;
+    --header-background-color: rgb(249 249 249);
+    --tools-background-color: white;
+
+    --sidebar-section-instructions: rgb(0, 90, 158);
+
+    --filters-clear-button-color: rgb(51 51 51);
+
+    --filter-button-color: black;
+
+    --controls-border-color: darkgray;
+
+    --tool-item-header-background-color: rgb(249 249 249);
+    --tool-item-header-background-color-hover: rgb(232 232 232);
+    --tool-item-header-background-color-expanded: rgb(215 215 215);
+    --tool-item-header-color: black;
+    --tool-item-header-expander-color: rgb(0, 90, 158);
+
+    --tool-item-padding: 12px;
+
+    --tool-item-description-margin: 16px;
+
+    --sidebar-width: 250px;
+    --sidebar-width-minus-one: 249px;
+    --sidebar-horizontal-padding: 8px;
+
+    --sidebar-transition-duration: 250ms;
+
+    --filter-button-transition-duration: var(--sidebar-transition-duration);
+    --filter-button-transition-first-half-duration: calc(var(--filter-button-transition-duration) / 2);
+    --filter-button-transition-forty-percent-timespan: calc(var(--filter-button-transition-duration) * 0.4);
+    --filter-button-transition-second-half-duration: calc(var(--filter-button-transition-duration) / 2);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+
+    font-family: sans-serif;
+
+    margin: 0;
+}
+
+#HeaderSection {
+    height: auto;
+    background-color: var(--header-background-color);
+}
+
+.SearchForm {
+    text-align: center;
+    padding: 15px;
+}
+
+#SearchTextbox {
+    width: 100%;
+    height: 2.5rem;
+
+    padding-right: 25px;
+    border-radius: 8px;
+
+    border: thin solid var(--controls-border-color);
+    padding-left: 10px;
+
+    box-sizing: border-box;
+}
+
+.SearchDiv {
+    position: relative;
+
+    display: inline-block;
+    width: 80%;
+}
+
+.SearchClearButton {
+    position: absolute;
+
+    font-size: 0.9rem;
+
+    top: 0;
+    bottom: 0;
+    right: 2px;
+    width: 25px;
+    padding: 0;
+
+    border: none;
+    background: transparent;
+    margin: auto;
+    display: block;
+
+    cursor: pointer;
+
+    visibility: hidden;
+}
+.SearchClearButton::after {
+    content: "\2716";
+    color: rgb(51 51 51);
+}
+
+.MainSection {
+    display: flex;
+    flex-direction: row;
+
+    flex: 1;
+}
+
+#SidebarSection {
+    position: absolute;
+    top: 0px;
+    min-height: 100dvh;
+
+    left: calc(var(--sidebar-width) * -1);
+    width: var(--sidebar-width);
+    transition: transform var(--sidebar-transition-duration);
+    z-index: 1;
+
+    background-color: var(--filters-background-color);
+}
+@media screen and (min-width: 40rem) {
+    #SidebarSection {
+        position: static;
+        z-index: auto;
+        height: auto;
+        transition: transform 0ms;
+
+        padding-left: var(--sidebar-horizontal-padding);
+        padding-right: var(--sidebar-horizontal-padding);
+    }
+    #HeaderSectionVerticalSpacer {
+        display: none;
+    }
+}
+@media screen and not (min-width: 40rem) {
+    .offscreen-sidebar-visible {
+        transform: translate3d(var(--sidebar-width-minus-one), 0, 0);
+
+        padding-left: var(--sidebar-horizontal-padding);
+        padding-right: var(--sidebar-horizontal-padding);
+    }
+}
+
+#SidebarSectionInstructions {
+    background-color: rgb(224, 243, 255);
+    color: var(--sidebar-section-instructions);
+}
+
+.FilterFieldset {
+    border: none;
+}
+
+.FilterFieldset>legend {
+    font-size: 1.17rem;
+    font-weight: bolder;
+
+    padding-top: 16px;
+}
+
+.FilterFieldset>div {
+    margin-bottom: 4px;
+}
+
+.FilterFieldset>div>label {
+    margin-left: 2px;
+}
+
+.FilterFieldset>.ClearFiltersButton {
+    background: none;
+    border: none;
+    padding: 0;
+    text-decoration: underline;
+    cursor: pointer;
+
+    font-size: 0.85rem;
+    color: var(--filters-clear-button-color);
+
+}
+
+.ContentSection {
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+    background-color: var(--tools-background-color);
+}
+
+#ContentHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    padding: var(--tool-item-padding);
+}
+
+#ToolsListCount {
+    font-size: 1.3rem;
+    font-weight: bolder;
+
+    width: 50%;
+}
+
+#SortFilterSelector {
+    width: 50%;
+    text-align: right;
+}
+
+#SortOrderDropdownList {
+    background-color: white;
+    border: thin solid var(--controls-border-color);
+    padding: 8px;
+    border-radius: 8px;
+}
+
+#ToolsList {
+    display: grid;
+    grid-gap: 0px;
+    grid-template-rows: auto;
+    grid-template-columns: 1fr;
+}
+
+#ToolsListLoadingMessage {
+    padding: var(--tool-item-padding);
+}
+
+.ToolsListElement {
+    margin-top: 4px;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.ToolsListElement.ToolElementHiddenByFilter, .ToolsListElement.ToolElementHiddenBySearch {
+    visibility: collapse;
+    max-height: 0;
+    margin-top: 0px;
+    overflow: hidden;
+}
+
+#FilterIconDiv {
+    position: absolute;
+    z-index: 100;
+
+    left: 8px;
+
+    visibility: collapse;
+}
+@media screen and not (min-width: 40rem) {
+    #FilterIconDiv {
+        visibility: visible;
+    }
+}
+
+#FilterButton {
+    background: transparent;
+    border: none;
+
+    cursor: pointer;
+    fill: var(--filter-button-color);
+}
+/**/
+/* animation: move the first segment of the top and bottom lines towards the vertical center, then hide them instantly */
+#FilterButton :is(.filter-line-1-segment-1, .filter-line-3-segment-1) {
+    transition: 
+        opacity var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration),
+        y var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-1-segment-1, .filter-line-3-segment-1) {
+    transition: 
+        opacity 0ms var(--filter-button-transition-second-half-duration),
+        y var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-1-segment-1, .filter-line-3-segment-1) {
+    opacity: 0.0;
+    y: 45px;
+}
+/**/
+/* animation: move the last segment of the top and bottom lines towards the vertical center, growing them to full length shortly before they arrive */
+#FilterButton :is(.filter-line-1-segment-2, .filter-line-3-segment-2) {
+    transform-origin: 50% 55.5%; /* instead of 'transform-origin: center'; this is required to offset the 100 x 90 virtual drawing area (versus a traditional 100 x 100 drawing area) */
+}
+#FilterButton :is(.filter-line-1-segment-2, .filter-line-3-segment-2) {
+    transition:
+        rotate var(--filter-button-transition-second-half-duration) 0ms,
+        x calc(var(--filter-button-transition-first-half-duration) - var(--filter-button-transition-forty-percent-timespan)) var(--filter-button-transition-second-half-duration),
+        width calc(var(--filter-button-transition-first-half-duration) - var(--filter-button-transition-forty-percent-timespan)) var(--filter-button-transition-second-half-duration),
+        y var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-1-segment-2, .filter-line-3-segment-2) {
+    transition:
+        rotate var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration),
+        x calc(var(--filter-button-transition-first-half-duration) - var(--filter-button-transition-forty-percent-timespan)) var(--filter-button-transition-forty-percent-timespan),
+        width calc(var(--filter-button-transition-first-half-duration) - var(--filter-button-transition-forty-percent-timespan)) var(--filter-button-transition-forty-percent-timespan),
+        y var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-1-segment-2, .filter-line-3-segment-2) {
+    x: 10px;
+    width: 80px;
+    y: 45px;
+}
+/**/
+/* animation: rotate the two elongated lines at the mid-point (with a duration until end of the full animation sequence duration) */
+#FilterButton[aria-expanded="true"] .filter-line-1-segment-2 {
+    rotate: 45deg;
+}
+#FilterButton[aria-expanded="true"] .filter-line-3-segment-2 {
+    rotate: -45deg;
+}
+/**/
+/* animation: hide the center segments at the mid-point */
+#FilterButton :is(.filter-line-2-segment-1, .filter-line-2-segment-2) {
+    transition:
+        opacity 0ms var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-2-segment-1, .filter-line-2-segment-2) {
+    opacity: 0.0;
+
+    transition:
+        opacity 0ms var(--filter-button-transition-second-half-duration);
+}
+/**/
+/* animation: move the circles from the top and bottom lines towards the vertical center, then hide them */
+#FilterButton :is(.filter-line-1-circle, .filter-line-3-circle) {
+    transition: 
+        opacity var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration),
+        cy var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-1-circle, .filter-line-3-circle) {
+    transition: 
+        opacity 0ms var(--filter-button-transition-second-half-duration),
+        cy var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-1-circle, .filter-line-3-circle) {
+    opacity: 0.0;
+    cy: 45px;
+}
+/**/
+/* animation: hide the center line's circle at the midway point */
+#FilterButton :is(.filter-line-2-circle) {
+    transition: 
+        opacity var(--filter-button-transition-second-half-duration) var(--filter-button-transition-first-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-2-circle) {
+    transition: 
+        opacity 0ms var(--filter-button-transition-second-half-duration);
+}
+#FilterButton[aria-expanded="true"] :is(.filter-line-2-circle) {
+    opacity: 0.0;
+}
+
+.ToolItemHeader {
+    width: 100%;
+
+    border: thin solid darkgray;
+    padding: var(--tool-item-padding);
+    text-align: left;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    background-color: var(--tool-item-header-background-color);
+    color: var(--tool-item-header-color);
+
+    border-radius: 8px;
+
+    cursor: pointer;
+}
+.ToolsListElement.ToolItemExpanded>.ToolItemHeader {
+    background-color: var(--tool-item-header-background-color-expanded);
+}
+.ToolItemHeader:after {
+    float: right;
+
+    color: var(--tool-item-header-expander-color);
+    font-weight: bold;
+}
+.ToolsListElement:not(.ToolItemExpanded)>.ToolItemHeader:after {
+    content: '\002b';
+}
+.ToolsListElement>.ToolItemHeader:after {
+    content: '\2212';
+}
+.ToolItemHeader:hover {
+    background-color: var(--tool-item-header-background-color-hover);
+}
+
+.ToolItemContent {
+    display: grid;
+    row-gap: 10px;
+    column-gap: 10px;
+    grid-template-rows: 0px auto auto auto auto 30px;
+    grid-template-columns: repeat(8, 1fr);
+
+    padding-left: var(--tool-item-padding);
+    padding-top: var(--tool-item-padding);
+    padding-right: var(--tool-item-padding);
+    padding-bottom: var(--tool-item-padding);
+
+    transition: padding 0.2s ease-out; */
+    transition: padding 0s 0.2s;
+    transition: overflow 0s 0.2s;
+    transition: visibility 0s 0.2s; */
+
+    transition: max-height 0.2s ease-out;
+}
+.ToolsListElement.ToolItemExpanded>.ToolItemContent {
+}
+.ToolsListElement:not(.ToolItemExpanded)>.ToolItemContent {
+    /* default max-height to 0 (collapsed); padding must also be set to zero to eliminate empty space (which is not included in the max-height) */
+    max-height: 0;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    overflow: hidden;
+}
+
+.ToolItemButtonBarGridCell {
+    grid-row: 1;
+    grid-column: 5 / span 4;
+}
+
+.ToolItemPrimaryVideoGridCell {
+    grid-row: 2;
+    grid-column: 1 / span 4;
+}
+
+.ToolItemPrimaryVideoIframe {
+    width: 100%;
+}
+
+.ToolItemSecondaryVideosGridCell {
+    display: grid;
+    row-gap: 10px;
+    column-gap: 10px;
+    grid-template-rows: repeat(2, auto);
+    grid-template-columns: repeat(2, auto);
+    
+    grid-row: 2 / span 2;
+    grid-column: 5 / span 5;
+
+    text-align: center;
+}
+
+.ToolItemSecondaryVideosSubGridCell {
+}
+
+.ToolItemSecondaryVideoIframe {
+    width: 100%;
+}
+
+.ToolItemDescriptionGridCell {
+    grid-row: 3;
+    grid-column: 1 / span 4;
+}
+
+.ToolItemVendorProductPageUrlGridCell {
+    grid-row: 4;
+    grid-column: 1 / span 4;
+
+    margin-bottom: 40px;
+}
+
+.ToolItemFunctionsGridCell {
+    grid-row: 5;
+    grid-column: 1 / span 2;
+}
+
+.ToolItemNeedToInstallGridCell {
+    grid-row: 5;
+    grid-column: 3 / span 2;
+}
+
+.ToolItemDescriptionGridHeader {
+    font-weight: bold;
+
+    margin-bottom: var(--tool-item-description-margin);
+}
+
+.ToolItemDescriptionGridContent {
+    margin-top: var(--tool-item-description-margin);
+}
+
+.ToolItemSupportedPlatformsGridCell {
+    grid-row: 5;
+    grid-column: 5 / span 2;
+}
+
+.ToolItemPurchaseOptionsGridCell {
+    grid-row: 5;
+    grid-column: 7 / span 2;
+}
+
+.ToolItemInstallButtonsGridCell {
+    grid-row: 6;
+    grid-column: 2 / -2;
+}
