@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Learn and Try</title>
+
+        <link rel="stylesheet" href="/css/catalog/index.css">
+
+        <!-- NOTE: a deferred script will be executed after the HTML is downloaded but before the DOMContentLoaded event is fired. -->
+        <script defer src="/scripts/catalog/index.js" type="text/javascript"></script>
+        <script>
+            /* populate the initial contents (filters, tools, etc.) once the HTML DOM has loaded */
+            document.addEventListener('DOMContentLoaded', async () => { 
+                setupElementEvents();
+                await populateInitialContents();
+             });
+        </script>
+    </head>
+    <body>
+        <div id="FilterIconDiv">
+            <button id="FilterButton" aria-expanded="false">
+                <svg class="filter" viewBox="0 0 100 90" width="24">
+                    <rect class="filter-line-1-segment-1" x="10" y="15" width="15" height="10" rx="5"></rect>
+                    <circle class="filter-line-1-circle" cx="30" cy="20" r="10"></circle>
+                    <rect class="filter-line-1-segment-2" x="35" y="15" width="55" height="10" rx="5"></rect>
+                    <rect class="filter-line-2-segment-1" x="10" y="45" width="55" height="10" rx="5"></rect>
+                    <circle class="filter-line-2-circle" cx="70" cy="50" r="10"></circle>
+                    <rect class="filter-line-2-segment-2" x="75" y="45" width="15" height="10" rx="5"></rect>
+                    <rect class="filter-line-3-segment-1" x="10" y="75" width="15" height="10" rx="5"></rect>
+                    <circle class="filter-line-3-circle" cx="30" cy="80" r="10"></circle>
+                    <rect class="filter-line-3-segment-2" x="35" y="75" width="55" height="10" rx="5"></rect>
+                </svg>
+            </button>
+        </div>
+        <header id="HeaderSection">
+            <form class="SearchForm">
+                <div class="SearchDiv">
+                    <input type="text" id="SearchTextbox" placeholder="Search tools..." disabled>
+                    <button id="SearchClearButton" class="SearchClearButton" type="button" disabled></button>
+                </div>
+            </form>
+        </header>
+        <div class="MainSection">
+            <aside id="SidebarSection">
+                <div id="HeaderSectionVerticalSpacer"></div>
+                <p id="SidebarSectionInstructions">
+                    As you check the items below, the list to the right will be filtered to show only those items that match what you check.
+                </p>
+
+                <fieldset id="FunctionsFiltersFieldset" class="FilterFieldset">
+                    <legend>Functions</legend>
+                    <!-- 'functions filters' checkboxes -->
+                </fieldset>
+                <fieldset id="SupportedPlatformsFiltersFieldset" class="FilterFieldset">
+                    <legend>Devices</legend>
+                    <!-- 'supportedPlatforms filters' checkboxes -->
+                </fieldset>
+                <fieldset id="InstallTypesFiltersFieldset" class="FilterFieldset">
+                    <legend>Need to Install?</legend>
+                    <!-- 'installTypes filters' checkboxes -->
+                </fieldset>
+                <fieldset id="PurchaseOptionsFiltersFieldset" class="FilterFieldset">
+                    <legend>Purchase Options</legend>
+                    <!-- 'purchaseOptions filters' checkboxes -->
+                </fieldset>
+            </aside>
+            <main class="ContentSection">
+                <div id="ContentHeader">
+                    <div id="ToolsListCount"><!--All Tools--></div>
+                    <div id="SortFilterSelector">
+                        <span id="SortOrderLabel">Sort by:&nbsp;</span>
+                        <select for="SortOrderLabel" id="SortOrderDropdownList">
+                            <option value="alphabetical">A to Z</option>
+                            <option value="alphabeticalReverse">Z to A</option>
+                            <option value="newestFirst" selected>Most Recent First</option>
+                            <option value="oldestFirst">Least Recent First</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="ToolsList">
+                    <div id="ToolsListLoadingMessage">Loading Learn and Try catalog...</div>
+                </div>
+
+                <!-- template for tools list' item -->
+                <template id="ToolItemTemplate">
+                    <div class="ToolsListElement">
+                        <button class="ToolItemHeader">
+                        </button>
+                        <div class="ToolItemContent">
+                            <!--<div class="ToolItemNameGridCell"></div>-->
+                            <div class="ToolItemButtonBarGridCell"></div>
+                            <div class="ToolItemPrimaryVideoGridCell"></div>
+                            <div class="ToolItemSecondaryVideosGridCell"></div>
+                            <div class="ToolItemDescriptionGridCell">
+                                <div class="ToolItemDescriptionGridHeader">Description</div>
+                                <div class="ToolItemDescriptionGridContent"></div>
+                            </div>
+                            <div class="ToolItemVendorProductPageUrlGridCell">
+                                <a class="ToolItemVendorProductPageUrlAnchor" href="#" target="_blank">Go to Vendor Page</a>
+                            </div>
+                            <div class="ToolItemFunctionsGridCell">
+                                <div class="ToolItemFunctionsHeader"><strong>Functions</strong></div>
+                                <ul class="ToolItemFunctionsList"></ul>
+                            </div>
+                            <div class="ToolItemNeedToInstallGridCell">
+                                <div class="ToolItemNeedToInstallHeader"><strong>Need to Install?</strong></div>
+                                <ul class="ToolItemNeedToInstallList"></ul>
+                            </div>
+                            <div class="ToolItemSupportedPlatformsGridCell">
+                                <div class="ToolItemSupportedPlatformsHeader"><strong>Devices</strong></div>
+                                <ul class="ToolItemSupportedPlatformsList"></ul>
+                            </div>
+                            <div class="ToolItemPurchaseOptionsGridCell">
+                                <div class="ToolItemPurchaseOptionsHeader"><strong>Purchase Options</strong></div>
+                                <ul class="ToolItemPurchaseOptionsList"></ul>
+                            </div>
+                            <div class="ToolItemInstallButtonsGridCell"></div>    
+                        </div>
+                    </div>
+                </template>
+            </main>        
+        </div>
+    </body>
+</html>
