@@ -39,7 +39,7 @@ const supportedPlatformsFilters = {
     "windows": "PC (Windows)",
     "macos": "Macintosh",
     "chromeos": "Chromebooks",
-    "ipados": "iPad",
+    "ipados": "iPad",   
     "ios": "iPhone",
     "android": "Android",
 };
@@ -86,6 +86,75 @@ function setupElementEvents() {
     // wire up a click event to the sidebar (so that we can suppress clicks from progating to the body...so that clicking on the sidebar or its elements doesn't hide the sidebar)
     let sidebarSection = document.getElementById("SidebarSection")
     sidebarSection.addEventListener("click", sidebarSectionClicked);
+
+    // wire up keyboard event for shift+enter to toggle chatbot
+    document.addEventListener('keydown', function(event) {
+        if (event.shiftKey && event.key === 'Enter') {
+            event.preventDefault();
+            // Toggle chatbot - open if closed, close if open
+            let chatBotSection = document.getElementById('ChatBotSection');
+            if (chatBotSection.hidden) {
+                openChatBot();
+            } else {
+                closeChatBot();
+            }
+        }
+        
+        // Shift+N to start a new chat
+        if (event.shiftKey && (event.key === 'N' || event.key === 'n')) {
+            event.preventDefault();
+            let chatBotSection = document.getElementById('ChatBotSection');
+            if (chatBotSection.hidden) {
+                openChatBot();
+            }
+            // If chatbot is already open, start a new chat directly
+            hideChatOptionsScreen();
+            initializeConversation();
+        }
+        
+        // Shift+L to load a previously saved chat
+        if (event.shiftKey && (event.key === 'L' || event.key === 'l')) {
+            event.preventDefault();
+            let chatBotSection = document.getElementById('ChatBotSection');
+            if (chatBotSection.hidden) {
+                openChatBot();
+            }
+            // Trigger the file input for loading a chat
+            document.getElementById('ChatFileInput').click();
+        }
+    });
+
+    // Wire up chatbot button events
+    let chatBotCloseButton = document.getElementById('ChatBotCloseButton');
+    if (chatBotCloseButton) {
+        chatBotCloseButton.addEventListener('click', closeChatBot);
+    }
+
+    let chatBotSendButton = document.getElementById('ChatBotSendButton');
+    if (chatBotSendButton) {
+        chatBotSendButton.addEventListener('click', sendChatBotMessage);
+    }
+
+    let chatBotInputTextbox = document.getElementById('ChatBotInputTextbox');
+    if (chatBotInputTextbox) {
+        chatBotInputTextbox.addEventListener('keypress', handleChatInputKeyPress);
+    }
+
+    let floatingChatBotButton = document.getElementById('FloatingChatBotButton');
+    if (floatingChatBotButton) {
+        floatingChatBotButton.addEventListener('click', openChatBot);
+    }
+
+    // Wire up info popup events for the devices info section
+    let devicesInfoButton = document.querySelector('#devices-info').previousElementSibling;
+    if (devicesInfoButton && devicesInfoButton.classList.contains('info-button')) {
+        devicesInfoButton.addEventListener('click', () => toggleInfoPopup('devices-info'));
+    }
+
+    let devicesInfoCloseButton = document.querySelector('#devices-info .info-close');
+    if (devicesInfoCloseButton) {
+        devicesInfoCloseButton.addEventListener('click', () => toggleInfoPopup('devices-info'));
+    }
 }
 
 // NOTE: currently unused
@@ -152,18 +221,20 @@ function sidebarSectionClicked(event) {
 
 async function populateInitialContents() {
     // set up filters sidebar; note that the filter checkboxes are disabled by default (until we have loaded the filter list)
-    populateFiltersSidebar();
+        populateFiltersSidebar();
 
-    let fetchCatalogResponse;
+        let fetchCatalogResponse;
     try {
         fetchCatalogResponse = await fetch('/data/catalog.json');
     } catch {
         let toolsListLoadingMessage = document.getElementById('ToolsListLoadingMessage');
         toolsListLoadingMessage.innerText = "Sorry, I could not load the Learn and Try catalog due to a network error.";
+        return;
     }
     if (fetchCatalogResponse.ok !== true) {
         let toolsListLoadingMessage = document.getElementById('ToolsListLoadingMessage');
         toolsListLoadingMessage.innerText = "Sorry, I could not load the Learn and Try catalog due to a server error.";
+        return;
     }
     const catalog = await fetchCatalogResponse.json();
 
@@ -277,11 +348,60 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
     label.htmlFor = checkboxInput.id;
     label.innerText = text;
 
+    if(!id.includes("filter_supportedPlatforms")) {
+
+    // Create info button for this filter item
+    let infoButton = document.createElement('button');
+    infoButton.className = 'info-button';
+    infoButton.type = 'button';
+    infoButton.setAttribute('aria-label', `Information about ${text}`);
+    
+    let infoIcon = document.createElement('span');
+    infoIcon.className = 'info-icon';
+    infoIcon.textContent = 'i';
+    infoButton.appendChild(infoIcon);
+
+    // Create popup for this filter item
+    let popupId = `filter-info-${value}`;
+    let popup = document.createElement('div');
+    popup.id = popupId;
+    popup.className = 'info-popup';
+    popup.style.display = 'none';
+    
+    let popupContent = document.createElement('div');
+    popupContent.className = 'info-popup-content';
+    
+    let popupText = document.createElement('p');
+    popupText.textContent = getFilterInfoText(value, text);
+    
+    let closeButton = document.createElement('button');
+    closeButton.className = 'info-close';
+    closeButton.textContent = '×';
+    closeButton.addEventListener('click', () => toggleInfoPopup(popupId));
+    
+    popupContent.appendChild(popupText);
+    popupContent.appendChild(closeButton);
+    popup.appendChild(popupContent);
+    
+    // Add click handler to info button
+    infoButton.addEventListener('click', () => toggleInfoPopup(popupId));
+
     let div = document.createElement('div');
+    div.className = 'filter-item-container';
     div.appendChild(checkboxInput);
     div.appendChild(label);
+    div.appendChild(infoButton);
+    div.appendChild(popup);
 
     fieldset.appendChild(div);
+    }
+    else {
+        let div = document.createElement('div');
+        div.className = 'filter-item-container';
+        div.appendChild(checkboxInput);
+        div.appendChild(label);
+        fieldset.appendChild(div);
+    }
 }
 
 /* code to create tools list elements */
@@ -296,6 +416,14 @@ async function createToolItemElement(catalogEntry, index) {
     var validatedToolId = validateIdOrNull(catalogEntry.id);
     if (validatedToolId !== null) {
         toolsListElement.id = 'ToolItem_' + validatedToolId;
+        toolsListElement.dataset.toolId = validatedToolId;
+    }
+    // Preserve original backend id_tag (database id) if provided
+    if (isOfStringType(catalogEntry.dbId) === true && catalogEntry.dbId.trim().length > 0) {
+        toolsListElement.dataset.dbId = catalogEntry.dbId.trim();
+    } else if (isOfStringType(catalogEntry.id) === true && catalogEntry.id.trim().length > 0) {
+        // Fall back to catalog id
+        toolsListElement.dataset.dbId = catalogEntry.id.trim();
     }
 
     let toolItemHeader = toolItemElement.querySelector('.ToolItemHeader');
@@ -309,10 +437,18 @@ async function createToolItemElement(catalogEntry, index) {
     if (isOfStringType(catalogEntry.name) === true) {
         nameGridCell.textContent = catalogEntry.name;
         toolsListElement.dataset.sortableName = catalogEntry.name.trim().toLowerCase();
+        toolsListElement.dataset.toolName = catalogEntry.name.trim();
     } else {
         nameGridCell.textContent = "Untitled";
         toolsListElement.dataset.sortableName = "";
+        toolsListElement.dataset.toolName = "";
         console.log("catalogEntry's name field is missing or is of an invalid type.");
+    }
+    // Persist company for deduping in UI
+    if (isOfStringType(catalogEntry.company) === true) {
+        toolsListElement.dataset.toolCompany = catalogEntry.company.trim();
+    } else {
+        toolsListElement.dataset.toolCompany = "";
     }
     // index (used for "newest first" and "oldest first" sorting)
     toolsListElement.dataset.sortableIndex = "" + index;
@@ -625,6 +761,9 @@ function filterToolItemsAndUpdateToolsListCount() {
 
     // step 3: update the tools list count
     updateToolsListCount();
+    
+    // Clear relevance cache when filters change
+    clearRelevanceCache();
 }
 
 function getSelectedFilters() {
@@ -761,6 +900,57 @@ function sortToolsList() {
     //
     const sortOrder = getSelectedSortOrder();
 
+    // If user picked Relevance manually, check cache first, then re-run relevance sorting if needed
+    if (sortOrder === 'relevance') {
+        // Check if we have cached relevance results that match current conversation state
+        // Also check if cache is not too old (expire after 1 hour)
+        const cacheAge = Date.now() - (relevanceSortedCache.timestamp || 0);
+        const cacheExpired = cacheAge > 3600000; // 1 hour in milliseconds
+        
+        if (relevanceSortedCache.tools && 
+            !cacheExpired &&
+            relevanceSortedCache.query === conversationState.problem_description &&
+            relevanceSortedCache.filters === JSON.stringify(conversationState.applied_filters)) {
+            
+            console.log('Using cached relevance-sorted results (age:', Math.round(cacheAge/1000), 'seconds)');
+            // Use cached results immediately
+            displaySearchResults(relevanceSortedCache.tools);
+            
+            // Ensure the dropdown shows relevance as selected
+            setRelevanceSorting();
+            return;
+        }
+        
+        // If no cache hit, check if we have conversation context to re-sort
+        if (typeof conversationState === 'object' && conversationState && conversationState.problem_description && conversationState.applied_filters) {
+            console.log('Cache miss - re-sorting by relevance with conversation context');
+            // Silent mode: do not post chat messages, just re-sort the UI
+            applySortingToResults(conversationState.problem_description, conversationState.applied_filters, /*silent:*/ true);
+            return;
+        }
+        // If no query context, we can't do relevance sorting - restore original order
+        console.log('No conversation context for relevance sorting - restoring original order');
+        
+        // Show a brief message to the user
+        const toolsListCount = document.getElementById('ToolsListCount');
+        if (toolsListCount) {
+            const originalText = toolsListCount.textContent;
+            toolsListCount.textContent = "Relevance sorting requires a conversation context - showing original order";
+            setTimeout(() => {
+                toolsListCount.textContent = originalText;
+            }, 3000);
+        }
+        
+        // Restore the original order by sorting by the original index
+        const originalOrderElements = Array.from(allToolsListElements).sort((a, b) => {
+            const indexA = parseInt(a.dataset.sortableIndex || '0', 10);
+            const indexB = parseInt(b.dataset.sortableIndex || '0', 10);
+            return indexA - indexB;
+        });
+        toolsList.replaceChildren(...originalOrderElements);
+        return;
+    }
+
     // NOTE: 'sortToolsListElements' sorts the list in-place
     let sortedToolsListElements = sortToolsListElements(allToolsListElements, sortOrder);
     toolsList.replaceChildren(...sortedToolsListElements);
@@ -802,9 +992,15 @@ function sortToolsListElements(toolsListElements, sortOrder) {
             arrayIndicesAndSortedIndices.sort((lhs, rhs) => lhs[1].localeCompare(rhs[1], undefined, { numeric: true }));
             sortedArrayIndices = arrayIndicesAndSortedIndices.map((x) => x[0]);
             break;
+        case "relevance":
+            // This case should never be reached - relevance is handled in sortToolsList()
+            console.warn('Relevance case reached in sortToolsListElements - this should not happen');
+            sortedArrayIndices = Array.from({length: toolsListElements.length}, (_, i) => i.toString());
+            break;
         default:
             // leave in default order
             console.log('Unrecognized sort order: "' + sortOrder + '"');
+            sortedArrayIndices = Array.from({length: toolsListElements.length}, (_, i) => i.toString());
     }
 
     // alternate implementation (if we wanted to chagne the grid row of elements); note that we'd also need to update the reading order for screen readers
@@ -817,15 +1013,67 @@ function sortToolsListElements(toolsListElements, sortOrder) {
     //     toolsListElements[allToolsListElementIndex].style.gridRow = gridRow;
     // }
 
-    // sort grid rows based on the results of the sort
+    // sort grid rows based on the results of the sort, with a client-side dedupe by normalized name|company
     let result = [];
+    let seenKeys = new Set();
     for (let iSortedIndex = 0; iSortedIndex < sortedArrayIndices.length; iSortedIndex += 1) {
         let allToolsListElementIndex = parseInt(sortedArrayIndices[iSortedIndex], 10);
-        //
-        result.push(toolsListElements[allToolsListElementIndex]);
+        let el = toolsListElements[allToolsListElementIndex];
+        let nm = (el.dataset.toolName || '').trim().toLowerCase();
+        let co = (el.dataset.toolCompany || '').trim().toLowerCase();
+        let key = nm + '|' + co;
+        if (seenKeys.has(key)) {
+            continue;
+        }
+        seenKeys.add(key);
+        result.push(el);
     }
 
     return result;
+}
+
+/* functions to manage relevance sorting option */
+
+function showRelevanceSortOption() {
+    const relevanceOption = document.querySelector('#SortOrderDropdownList option[value="relevance"]');
+    if (relevanceOption) {
+        relevanceOption.style.display = '';
+    }
+}
+
+function hideRelevanceSortOption() {
+    const relevanceOption = document.querySelector('#SortOrderDropdownList option[value="relevance"]');
+    if (relevanceOption) {
+        // Do not hide relevance option anymore, so users can switch back to it manually
+        // relevanceOption.style.display = 'none';
+    }
+}
+
+function setRelevanceSorting() {
+    const dropdown = document.getElementById('SortOrderDropdownList');
+    if (dropdown) {
+        showRelevanceSortOption();
+        
+        // Temporarily remove event listener to prevent automatic re-sorting
+        dropdown.removeEventListener('change', sortToolsList);
+        dropdown.value = 'relevance';
+        // Re-add event listener for future manual changes
+        dropdown.addEventListener('change', sortToolsList);
+    }
+}
+
+function resetToDefaultSorting() {
+    const dropdown = document.getElementById('SortOrderDropdownList');
+    if (dropdown) {
+        // Temporarily remove event listener to prevent automatic re-sorting
+        dropdown.removeEventListener('change', sortToolsList);
+        dropdown.value = 'newestFirst'; // back to default
+        // Re-add event listener for future manual changes
+        dropdown.addEventListener('change', sortToolsList);
+    }
+    
+    // Clear relevance cache when resetting to default sorting
+    clearRelevanceCache();
 }
 
 
@@ -837,6 +1085,9 @@ function searchClearButtonClicked()
     searchTextbox.value = "";
 
     processSearchTextboxChange();
+    
+    // Clear relevance cache when search is cleared
+    clearRelevanceCache();
 }
 
 function processSearchTextboxChange(e) {
@@ -899,6 +1150,9 @@ function processSearchTextboxChange(e) {
 
     // NOTE: once we update our tools list, we update the tools list count
     updateToolsListCount();
+    
+    // Clear relevance cache when search changes as it affects the visible tools
+    clearRelevanceCache();
 }
 
 
@@ -1082,6 +1336,59 @@ function createShareLinkUrl(toolId) {
 
 /* helper functions */
 
+function sanitizeHTML(htmlString) {
+    // Create a temporary div to parse and sanitize HTML
+    const tempDiv = document.createElement('div');
+    
+    // Allow only specific safe tags
+    const allowedTags = ['strong', 'em', 'b', 'i', 'br', 'span', 'div', 'p'];
+    const allowedAttributes = ['class', 'style'];
+    
+    // For basic security, we'll use a simple approach that allows safe tags
+    // In production, you might want to use a library like DOMPurify for more robust sanitization
+    
+    // First, escape the entire string to be safe
+    tempDiv.textContent = htmlString;
+    let escapedString = tempDiv.innerHTML;
+    
+    // Now selectively unescape only the allowed tags
+    allowedTags.forEach(tag => {
+        const escapedOpenTag = `&lt;${tag}&gt;`;
+        const escapedCloseTag = `&lt;/${tag}&gt;`;
+        const openTag = `<${tag}>`;
+        const closeTag = `</${tag}>`;
+        
+        escapedString = escapedString.replace(new RegExp(escapedOpenTag, 'g'), openTag);
+        escapedString = escapedString.replace(new RegExp(escapedCloseTag, 'g'), closeTag);
+    });
+    
+    return escapedString;
+}
+
+function getFilterInfoText(filterValue, filterDisplayName) {
+    const filterDescriptions = {
+        // Functions descriptions
+        'reading': 'Tools to help individuals with reading disabilities (e.g. dyslexia, low vision or anyone who struggles to read standard text).',
+        'cognitive': 'Tools to help users with cognitive disabilities that affect reading, writing, memory, or comprehension (e.g. dyslexia, dysgraphia, ADHD, or processing disorders).',
+        'vision': 'Tools that assist individuals who are blind, have low vision, or other vision-related impairments. Also aids to prevent photosensitive seizures.',
+        'physical': 'Tools designed to help users with physical disabilities that limit their ability to interact with devices using standard input methods.',
+        'hearing': 'Tools for those who are deaf or hard of hearing.',
+        'speech': 'Tools for individuals who are non-verbal or have difficulty speaking or forming clear verbal communication.',
+        
+        // Install types descriptions
+        'builtIn': 'choosing this option will cause the list to show ONLY those solutions that are built into the computer (so always there and always free)',
+        'installable': 'chosing this option will cause the list to show ONLY those solutions that need to be installed in order to be used',
+        
+        // Purchase options descriptions
+        'free': 'If you check this box under Purchase Options the list will include solutions that are described as FREE (this includes built-in options).',
+        'freeTrial': 'If you check this box under Purchase Options the list will include solutions that allow you to try the solution for free - but then you have to pay for it.',
+        'lifetimeLicense': 'If you check this box under Purchase Options the list will include solutions that you only pay for once - and then you own it and can use it for as long as it lasts and works.',
+        'subscription': 'If you check this box under Purchase Options the list will include solutions that you must continually pay for each month or year in order to keep using it.'
+    };
+    
+    return filterDescriptions[filterValue] || `Information about ${filterDisplayName.toLowerCase()} options.`;
+}
+
 function isOfStringType(value) {
     if (typeof value === 'string') {
         return true;
@@ -1113,3 +1420,769 @@ function setIntervalWithTimeout(fn, condition, interval, expiration, args) {
         intervalVars.numberOfCalls += 1;
     }, intervalVars.interval, fn, args);
 }
+
+
+
+
+//**************** CHAT BOT CODE ******************** *//
+
+// Global variable to store conversation state
+let conversationState = {};
+
+// Cache for relevance-sorted results to avoid recalculation
+let relevanceSortedCache = {
+    tools: null,
+    query: null,
+    filters: null,
+    timestamp: null
+};
+
+function openChatBot() {
+    let chatBotSection = document.getElementById('ChatBotSection');
+    let floatingChatBotContainer = document.getElementById('FloatingChatBotContainer');
+    let mainSection = document.querySelector('.MainSection');
+    
+    // Show chatbot and hide floating button container
+    chatBotSection.hidden = false;
+    floatingChatBotContainer.style.display = 'none';
+    
+    // Adjust the main section to make room for the chatbot
+    // Get chatbot width and apply it as left margin
+    const chatBotWidth = chatBotSection.offsetWidth;
+    mainSection.style.marginLeft = chatBotWidth + 'px';
+    
+    // Clear relevance cache when opening chatbot (new context)
+    clearRelevanceCache();
+    
+    // Show chat options screen instead of directly initializing conversation
+    showChatOptionsScreen();
+}
+
+function initializeConversation() {
+            // Reset conversation state
+        conversationState = {};
+        
+        // Clear relevance cache for new conversation
+        clearRelevanceCache();
+    
+    // Clear existing chat content except initial message
+    let chatContent = document.getElementById('ChatBotContent');
+    // Keep only the initial welcome message
+    let welcomeMessage = chatContent.querySelector('.BotMessage');
+    // Clear content safely without innerHTML
+    while (chatContent.firstChild) {
+        chatContent.removeChild(chatContent.firstChild);
+    }
+    if (welcomeMessage) {
+        chatContent.appendChild(welcomeMessage);
+    }
+    
+    // Send initial message to start conversation
+    sendInitialChatBotMessage();
+}
+
+async function sendInitialChatBotMessage() {
+    // Show loading indicator for initial message
+    let loadingMessageId = showChatLoadingIndicator();
+    
+    try {
+        const response = await fetch('/api/chatbot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: '', 
+                state: conversationState 
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading indicator
+        removeChatLoadingIndicator(loadingMessageId);
+        
+        if (data.success) {
+            conversationState = data.state;
+            addMessageToChat(data.bot_message, 'bot');
+        } else {
+            addMessageToChat('Sorry, I encountered an error starting our conversation.', 'bot');
+        }
+    } catch (error) {
+        console.error('Error initializing conversation:', error);
+        // Remove loading indicator
+        removeChatLoadingIndicator(loadingMessageId);
+        addMessageToChat('Sorry, I couldn\'t connect to the AI service.', 'bot');
+    }
+}
+
+function closeChatBot() {
+    let chatBotSection = document.getElementById('ChatBotSection');
+    let floatingChatBotContainer = document.getElementById('FloatingChatBotContainer');
+    let mainSection = document.querySelector('.MainSection');
+    
+    // Hide all chat screens
+    document.getElementById('ChatOptionsScreen').style.display = 'none';
+    document.getElementById('ChatDownloadPrompt').style.display = 'none';
+    document.getElementById('ChatBotContent').style.display = 'block';
+    document.getElementById('ChatBotInput').style.display = 'flex';
+    
+    // Hide chatbot and show floating button container
+    chatBotSection.hidden = true;
+    floatingChatBotContainer.style.display = 'flex';
+    
+    // Reset the main section margin
+    mainSection.style.marginLeft = '';
+    
+            // Reset conversation state when closing so user gets options next time
+        conversationState = {};
+        
+        // Clear relevance cache when closing chatbot
+        clearRelevanceCache();
+}
+
+function handleChatInputKeyPress(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendChatBotMessage();
+    }
+}
+
+async function sendChatBotMessage() {
+    let chatInput = document.getElementById('ChatBotInputTextbox');
+    let sendButton = document.getElementById('ChatBotSendButton');
+    let query = chatInput.value.trim();
+    
+    if (!query) return;
+    
+    // Clear input and disable send button
+    chatInput.value = '';
+    sendButton.disabled = true;
+    sendButton.textContent = 'Thinking...';
+    
+    // Add user message to chat
+    addMessageToChat(query, 'user');
+
+    // Show loading indicator
+    let loadingMessageId = showChatLoadingIndicator();
+
+    try {
+        // Send message to conversational chatbot API
+        const response = await fetch('/api/chatbot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                message: query, 
+                state: conversationState 
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading indicator
+        removeChatLoadingIndicator(loadingMessageId);
+        
+        if (data.success) {
+            // Update conversation state
+            conversationState = data.state;
+            
+            // If we should show the interface (final results), apply filters and show filter message first
+            if (data.show_interface) {
+                // Apply filters to the main UI based on conversation state
+                const appliedFilters = conversationState.applied_filters;
+                if (appliedFilters) {
+                    applyConversationFilters(appliedFilters);
+                    
+                    // Show a message about filters being applied BEFORE the bot response
+                    const filterSummary = generateFilterSummary(appliedFilters);
+                    if (filterSummary) {
+                        addMessageToChat(`🔍 <strong>Filters Applied:</strong><br>${filterSummary}`, 'bot');
+                    }
+                }
+            }
+            
+            // Add bot response to chat (after filters message if applicable)
+            addMessageToChat(data.bot_message, 'bot');
+            
+            // Handle sorting if requested
+            if (data.show_interface && data.request_sorting && conversationState.applied_filters && (conversationState.problem_summary || conversationState.problem_description)) {
+                // Show a loading indicator specific to sorting phase
+                const sortingLoadingId = showChatLoadingIndicator();
+                setTimeout(async () => {
+                    const sortQuery = conversationState.problem_summary || conversationState.problem_description;
+                    await applySortingToResults(sortQuery, conversationState.applied_filters);
+                    removeChatLoadingIndicator(sortingLoadingId);
+                }, 250);
+            }
+            
+            // Show download prompt after conversation is complete and filters are applied
+            if (data.show_interface && conversationState.applied_filters && conversationState.step === 'show_results') {
+                setTimeout(() => {
+                    showChatDownloadPrompt();
+                }, 1000); // Show after sorting if applicable
+            }
+        } else {
+            addMessageToChat('Sorry, I encountered an error processing your message.', 'bot');
+        }
+    } catch (error) {
+        console.error('Error in conversational chatbot:', error);
+        // Remove loading indicator
+        removeChatLoadingIndicator(loadingMessageId);
+        addMessageToChat('Sorry, I couldn\'t connect to the AI service. Please make sure all services are running.', 'bot');
+    }
+    
+    // Re-enable send button
+    sendButton.disabled = false;
+    sendButton.textContent = 'Send';
+    chatInput.focus();
+}
+
+function addMessageToChat(message, sender) {
+    let chatContent = document.getElementById('ChatBotContent');
+    
+    let messageDiv = document.createElement('div');
+    messageDiv.className = sender === 'user' ? 'UserMessage' : 'BotMessage';
+    
+    let messageContentDiv = document.createElement('div');
+    messageContentDiv.className = sender === 'user' ? 'UserMessageContent' : 'BotMessageContent';
+    
+    let messageP = document.createElement('p');
+    // Safely render HTML tags from bot messages
+    if (message.includes('<') && message.includes('>')) {
+        // If message contains HTML, we need to sanitize it
+        const sanitizedMessage = sanitizeHTML(message);
+        messageP.innerHTML = sanitizedMessage;
+    } else {
+        // If no HTML, use textContent for safety
+        messageP.textContent = message;
+    }
+    
+    messageContentDiv.appendChild(messageP);
+    messageDiv.appendChild(messageContentDiv);
+    chatContent.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatContent.scrollTop = chatContent.scrollHeight;
+}
+
+async function applyConversationFilters(appliedFilters) {
+    // Apply filters using frontend filtering (chatbot-determined filters)
+    applyFrontendFilters(appliedFilters);
+    
+    // Clear relevance cache when filters change
+    clearRelevanceCache();
+    
+    // Close the sidebar if it's open (so user can see results)
+    if (getSidebarIsOpened()) {
+        setSidebarIsOpened(false);
+    }
+}
+
+async function applySortingToResults(userQuery, appliedFilters, silent) {
+    try {
+        // Inform user that sorting is in progress
+        if (!silent) {
+            addMessageToChat('Sorting the list by relevance. Please wait...', 'bot');
+        }
+        // Collect currently visible tool names after filters/search
+        const toolsList = document.getElementById('ToolsList');
+        const visibleToolElements = toolsList.querySelectorAll('.ToolsListElement:not(.ToolElementHiddenByFilter):not(.ToolElementHiddenBySearch)');
+        const visibleToolNames = Array.from(visibleToolElements)
+            .map(el => el.dataset.toolName)
+            .filter(n => typeof n === 'string' && n.trim().length > 0);
+        const visibleToolIds = Array.from(visibleToolElements)
+            .map(el => el.dataset.toolId)
+            .filter(id => typeof id === 'string' && id.trim().length > 0);
+        const visibleDbIds = Array.from(visibleToolElements)
+            .map(el => el.dataset.dbId)
+            .filter(id => typeof id === 'string' && id.trim().length > 0);
+        const response = await fetch('/api/sort-tools', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                query: userQuery,
+                filters: {
+                    functions: appliedFilters.functions || [],
+                    platforms: appliedFilters.platforms || [],
+                    installTypes: appliedFilters.installTypes || [],
+                    purchaseOptions: appliedFilters.purchaseOptions || []
+                },
+                visible_tools: visibleToolNames,
+                visible_ids: visibleToolIds.length > 0 ? visibleToolIds : visibleDbIds
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.tools) {
+            console.log('Sorted results received:', data.tools.length, 'tools');
+            
+            // Cache the relevance-sorted results
+            relevanceSortedCache = {
+                tools: data.tools,
+                query: userQuery,
+                filters: JSON.stringify(appliedFilters),
+                timestamp: Date.now()
+            };
+            console.log('Relevance cache populated with', data.tools.length, 'tools for query:', userQuery);
+            
+            // Replace the tools list with sorted results
+            displaySearchResults(data.tools);
+            
+            // Reflect relevance sorting in the UI dropdown
+            setRelevanceSorting();
+
+            // Update the count display
+            const toolsListCount = document.getElementById('ToolsListCount');
+            if (toolsListCount) {
+                let toolsListCountText = "Showing " + data.tools.length;
+                if(data.tools.length == 1){
+                    toolsListCountText += " tool";
+                }
+                else{
+                    toolsListCountText += " tools";
+                }
+                toolsListCountText += " out of " + toolsList.children.length;
+                
+                toolsListCount.textContent = toolsListCountText;
+            }
+            
+            // Add a message about sorting being applied
+            if (!silent) {
+                setTimeout(() => {
+                    addMessageToChat(`✨ <strong>Sorted by relevance!</strong> The tools most relevant to your problem "${userQuery}" are now at the top.`, 'bot');
+                }, 250);
+            }
+            
+        } else {
+            console.error('Sorting failed:', data.error || 'Unknown error');
+            if (!silent) {
+                addMessageToChat('Sorry, I had trouble sorting the results. The tools are still filtered according to your preferences.', 'bot');
+            }
+        }
+    } catch (error) {
+        console.error('Error sorting results:', error);
+        if (!silent) {
+            addMessageToChat('Sorry, I had trouble sorting the results. The tools are still filtered according to your preferences.', 'bot');
+        }
+    }
+}
+
+function applyFrontendFilters(appliedFilters) {
+    // First, clear all existing filters
+    clearAllFilters();
+    
+    // Apply function filters
+    if (appliedFilters.functions && appliedFilters.functions.length > 0) {
+        appliedFilters.functions.forEach(functionName => {
+            let checkbox = document.getElementById(`filter_functions_${functionName}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    // Apply platform filters
+    if (appliedFilters.platforms && appliedFilters.platforms.length > 0) {
+        appliedFilters.platforms.forEach(platform => {
+            let checkbox = document.getElementById(`filter_supportedPlatforms_${platform}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    // Apply install types filters
+    if (appliedFilters.installTypes && appliedFilters.installTypes.length > 0) {
+        appliedFilters.installTypes.forEach(installType => {
+            let checkbox = document.getElementById(`filter_installTypes_${installType}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    // Apply purchase option filters
+    if (appliedFilters.purchaseOptions && appliedFilters.purchaseOptions.length > 0) {
+        appliedFilters.purchaseOptions.forEach(option => {
+            let checkbox = document.getElementById(`filter_purchaseOptions_${option}`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    }
+    
+    // Update the filtered results using frontend filtering
+    filterToolItemsAndUpdateToolsListCount();
+    
+    // Reset to default sorting for frontend filtering
+    resetToDefaultSorting();
+}
+
+function displaySearchResults(tools) {
+    // Instead of creating new elements, we need to reorder the existing elements
+    // to match the relevance-sorted order from the backend
+    
+    let toolsList = document.getElementById('ToolsList');
+    let existingElements = Array.from(toolsList.querySelectorAll('.ToolsListElement'));
+    
+    // Create a map of tool names to existing elements for quick lookup
+    let toolNameToElement = new Map();
+    existingElements.forEach(element => {
+        const toolName = element.dataset.toolName;
+        if (toolName) {
+            toolNameToElement.set(toolName.toLowerCase().trim(), element);
+        }
+    });
+    
+    // Create a map of tool names to their relevance-sorted positions
+    let toolNameToRelevancePosition = new Map();
+    tools.forEach((tool, index) => {
+        if (tool.tool_name) {
+            toolNameToRelevancePosition.set(tool.tool_name.toLowerCase().trim(), index);
+        }
+    });
+    
+    // Sort existing elements by their relevance position
+    let sortedElements = existingElements.sort((a, b) => {
+        const nameA = (a.dataset.toolName || '').toLowerCase().trim();
+        const nameB = (b.dataset.toolName || '').toLowerCase().trim();
+        
+        const positionA = toolNameToRelevancePosition.get(nameA) ?? Number.MAX_SAFE_INTEGER;
+        const positionB = toolNameToRelevancePosition.get(nameB) ?? Number.MAX_SAFE_INTEGER;
+        
+        return positionA - positionB;
+    });
+    
+    // Reorder the elements in the DOM
+    toolsList.replaceChildren(...sortedElements);
+}
+
+function generateFilterSummary(appliedFilters) {
+    let filterParts = [];
+    
+    if (appliedFilters.platforms && appliedFilters.platforms.length > 0) {
+        const platformNames = appliedFilters.platforms.map(p => supportedPlatformsFilters[p]).filter(Boolean);
+        if (platformNames.length > 0) {
+            filterParts.push(`<strong>Devices:</strong> ${platformNames.join(', ')}`);
+        }
+    }
+    
+    if (appliedFilters.functions && appliedFilters.functions.length > 0) {
+        const functionNames = appliedFilters.functions.map(f => functionsFilters[f]).filter(Boolean);
+        if (functionNames.length > 0) {
+            filterParts.push(`<strong>Accessibility needs:</strong> ${functionNames.join(', ')}`);
+        }
+    }
+    
+    if (appliedFilters.installTypes && appliedFilters.installTypes.length > 0) {
+        const installNames = appliedFilters.installTypes.map(i => installTypesFilters[i]).filter(Boolean);
+        if (installNames.length > 0) {
+            filterParts.push(`<strong>Installation:</strong> ${installNames.join(', ')}`);
+        }
+    }
+    
+    if (appliedFilters.purchaseOptions && appliedFilters.purchaseOptions.length > 0) {
+        const pricingNames = appliedFilters.purchaseOptions.map(p => purchaseOptionsFilters[p]).filter(Boolean);
+        if (pricingNames.length > 0) {
+            filterParts.push(`<strong>Pricing:</strong> ${pricingNames.join(', ')}`);
+        }
+    }
+    
+    return filterParts.join('<br>');
+}
+
+// Keep the old function for backwards compatibility
+function applyAIFilters(filters) {
+    // Convert old format to new format and use the new function
+    const appliedFilters = {
+        functions: filters.functions || [],
+        platforms: filters.supportedPlatforms || [],
+        installTypes: filters.installTypes || [],
+        purchaseOptions: filters.purchaseOptions || []
+    };
+    applyConversationFilters(appliedFilters);
+}
+
+// Chat Management Functions
+function showChatOptionsScreen() {
+    // Hide other chat elements
+    document.getElementById('ChatBotContent').style.display = 'none';
+    document.getElementById('ChatBotInput').style.display = 'none';
+    document.getElementById('ChatDownloadPrompt').style.display = 'none';
+    
+    // Show options screen
+    document.getElementById('ChatOptionsScreen').style.display = 'block';
+    
+    // Set up event listeners for the buttons
+    setupChatOptionsEventListeners();
+}
+
+function setupChatOptionsEventListeners() {
+    // Start New Chat button
+    let startNewChatButton = document.getElementById('StartNewChatButton');
+    if (startNewChatButton) {
+        startNewChatButton.addEventListener('click', () => {
+            hideChatOptionsScreen();
+            initializeConversation();
+        });
+    }
+    
+    // Load Chat button
+    let loadChatButton = document.getElementById('LoadChatButton');
+    if (loadChatButton) {
+        loadChatButton.addEventListener('click', () => {
+            document.getElementById('ChatFileInput').click();
+        });
+    }
+    
+    // File input change event
+    let chatFileInput = document.getElementById('ChatFileInput');
+    if (chatFileInput) {
+        chatFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                loadChatFromFile(file);
+            }
+        });
+    }
+}
+
+function hideChatOptionsScreen() {
+    // Hide options screen
+    document.getElementById('ChatOptionsScreen').style.display = 'none';
+    
+    // Show chat elements
+    document.getElementById('ChatBotContent').style.display = 'block';
+    document.getElementById('ChatBotInput').style.display = 'flex';
+    
+    // Focus on input
+    let chatInput = document.getElementById('ChatBotInputTextbox');
+    chatInput.focus();
+}
+
+function showChatDownloadPrompt() {
+    // Show download prompt
+    document.getElementById('ChatDownloadPrompt').style.display = 'block';
+    // Hide chat input when conversation is over
+    const chatInputContainer = document.getElementById('ChatBotInput');
+    if (chatInputContainer) {
+        chatInputContainer.style.display = 'none';
+    }
+    
+    // Set up event listeners
+    let downloadChatYesButton = document.getElementById('DownloadChatYesButton');
+    if (downloadChatYesButton) {
+        downloadChatYesButton.addEventListener('click', () => {
+            downloadCurrentChat();
+            hideChatDownloadPrompt();
+        });
+    }
+    
+    let downloadChatNoButton = document.getElementById('DownloadChatNoButton');
+    if (downloadChatNoButton) {
+        downloadChatNoButton.addEventListener('click', () => {
+            hideChatDownloadPrompt();
+        });
+    }
+}
+
+function hideChatDownloadPrompt() {
+    document.getElementById('ChatDownloadPrompt').style.display = 'none';
+}
+
+function downloadCurrentChat() {
+    // Create chat data object
+    const chatData = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        conversationState: conversationState,
+        chatHistory: getAllChatMessages()
+    };
+    
+    // Create and download file
+    const dataStr = JSON.stringify(chatData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `learn-and-try-chat-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+}
+
+function getAllChatMessages() {
+    const chatContent = document.getElementById('ChatBotContent');
+    const messages = [];
+    
+    // Get all message elements
+    const messageElements = chatContent.querySelectorAll('.UserMessage, .BotMessage');
+    
+    messageElements.forEach(element => {
+        const isUser = element.classList.contains('UserMessage');
+        const messageContent = element.querySelector(isUser ? '.UserMessageContent' : '.BotMessageContent');
+        
+        if (messageContent) {
+            messages.push({
+                sender: isUser ? 'user' : 'bot',
+                content: messageContent.textContent || messageContent.innerText || '',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+    
+    return messages;
+}
+
+function loadChatFromFile(file) {
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const chatData = JSON.parse(e.target.result);
+            
+            if (chatData.version && chatData.conversationState && chatData.chatHistory) {
+                // Restore conversation state
+                conversationState = chatData.conversationState;
+                
+                // Hide options screen and show chat
+                hideChatOptionsScreen();
+                
+                // Clear existing chat content
+                const chatContent = document.getElementById('ChatBotContent');
+                while (chatContent.firstChild) {
+                    chatContent.removeChild(chatContent.firstChild);
+                }
+                
+                // Restore chat messages
+                chatData.chatHistory.forEach(message => {
+                    addMessageToChat(message.content, message.sender);
+                });
+                
+                // Apply filters if they exist in the conversation state
+                if (conversationState.applied_filters) {
+                    applyConversationFilters(conversationState.applied_filters);
+                }
+                
+            } else {
+                throw new Error('Invalid chat file format');
+            }
+        } catch (error) {
+            alert('Error loading chat file: ' + error.message);
+            showChatOptionsScreen(); // Go back to options
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+function clearRelevanceCache() {
+    relevanceSortedCache = {
+        tools: null,
+        query: null,
+        filters: null,
+        timestamp: null
+    };
+    console.log('Relevance cache cleared');
+}
+
+function getRelevanceCacheInfo() {
+    if (!relevanceSortedCache.tools) {
+        return 'Cache is empty';
+    }
+    const cacheAge = Date.now() - (relevanceSortedCache.timestamp || 0);
+    const cacheExpired = cacheAge > 3600000;
+    return {
+        hasTools: !!relevanceSortedCache.tools,
+        toolCount: relevanceSortedCache.tools ? relevanceSortedCache.tools.length : 0,
+        query: relevanceSortedCache.query,
+        filters: relevanceSortedCache.filters,
+        age: Math.round(cacheAge/1000),
+        expired: cacheExpired
+    };
+}
+
+function clearAllFilters() {
+    // Clear all filter checkboxes
+    let allFilterCheckboxes = document.querySelectorAll('input[id^="filter_"]');
+    allFilterCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    
+    // Clear search text
+    let searchTextbox = document.getElementById('SearchTextbox');
+    if (searchTextbox) {
+        searchTextbox.value = '';
+        // Trigger the search update
+        processSearchTextboxChange();
+    }
+    
+    // Clear relevance cache when filters change
+    clearRelevanceCache();
+}
+
+/* Info popup functionality */
+function toggleInfoPopup(popupId) {
+    const popup = document.getElementById(popupId);
+    if (!popup) return;
+    
+    // Hide all other popups first
+    const allPopups = document.querySelectorAll('.info-popup');
+    allPopups.forEach(otherPopup => {
+        if (otherPopup.id !== popupId) {
+            otherPopup.style.display = 'none';
+        }
+    });
+    
+    // Toggle the requested popup
+    if (popup.style.display === 'none' || popup.style.display === '') {
+        popup.style.display = 'block';
+    } else {
+        popup.style.display = 'none';
+    }
+}
+
+// Close info popups when clicking outside
+document.addEventListener('click', function(event) {
+    // Check if the click was on an info button or inside a popup
+    const isInfoButton = event.target.closest('.info-button');
+    const isInsidePopup = event.target.closest('.info-popup');
+    
+    if (!isInfoButton && !isInsidePopup) {
+        // Close all popups
+        const allPopups = document.querySelectorAll('.info-popup');
+        allPopups.forEach(popup => {
+            popup.style.display = 'none';
+        });
+    }
+});
+
+function showChatLoadingIndicator() {
+    let chatContent = document.getElementById('ChatBotContent');
+    
+    // Create a unique ID for this loading message
+    let loadingMessageId = 'loading-' + Date.now();
+    
+    // Get the template and clone it
+    let template = document.getElementById('ChatLoaderTemplate');
+    let loadingMessage = template.content.cloneNode(true);
+    
+    // Set the ID on the container
+    let container = loadingMessage.querySelector('#ChatLoaderContainer');
+    container.id = loadingMessageId;
+    
+    // Add to chat
+    chatContent.appendChild(loadingMessage);
+    
+    // Scroll to bottom
+    chatContent.scrollTop = chatContent.scrollHeight;
+    
+    return loadingMessageId;
+}
+
+function removeChatLoadingIndicator(loadingMessageId) {
+    let loadingElement = document.getElementById(loadingMessageId);
+    if (loadingElement) {
+        loadingElement.remove();
+    }
+}
+
