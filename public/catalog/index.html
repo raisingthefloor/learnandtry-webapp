@@ -160,21 +160,72 @@
                 <!-- Chat Options Screen (shown initially) -->
                 <div id="ChatOptionsScreen" style="display: none;">
                     <div class="chat-options-container">
-                        <h3>Chat Options</h3>
-                        <p>How would you like to proceed?</p>
-                        <div class="chat-option-buttons">
-                            <button id="StartNewChatButton" class="chat-option-btn">
-                                <span class="option-icon">💬</span>
-                                <span class="option-text">Start a New Chat</span>
-                                <span class="option-shortcut">Press Shift + N</span>
+                        <div id="ChatOptionsLoading">
+                            <p>Checking local chatbot status... Please wait.</p>
+                            <div class="ChatLoader"></div>
+                        </div>
+                        <div id="ChatOptionsContent" style="display: none;">
+                            <h3>Chat Options</h3>
+                            <p>How would you like to proceed?</p>
+                            <div class="chat-option-buttons">
+                                <button id="StartNewChatButton" class="chat-option-btn">
+                                    <span class="option-icon">💬</span>
+                                    <span class="option-text">Start a New Chat</span>
+                                    <span class="option-shortcut">Press Shift + N</span>
+                                </button>
+                                <button id="LoadChatButton" class="chat-option-btn">
+                                    <span class="option-icon">📁</span>
+                                    <span class="option-text">Load a Previously Saved Chat</span>
+                                    <span class="option-shortcut">Press Shift + L</span>
+                                </button>
+                                <button id="SetupChatbotButton" class="chat-option-btn setup-btn">
+                                    <span class="option-icon">⚙️</span>
+                                    <span class="option-text">Setup Local Chatbot</span>
+                                    <span class="option-shortcut">Press Shift + S</span>
+                                </button>
+                            </div>
+                            <input type="file" id="ChatFileInput" accept=".json" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                <!-- Platform Selection Screen (for chatbot setup) -->
+                <div id="PlatformSelectionScreen" style="display: none;">
+                    <div class="platform-selection-container">
+                        <h3>Setup Local Chatbot</h3>
+                        <p>Select your operating system to download the setup package:</p>
+                        <div class="platform-buttons">
+                            <button id="WindowsSetupButton" class="platform-btn">
+                                <span class="platform-icon">🖥️</span>
+                                <span class="platform-text">Windows</span>
+                                <span class="platform-status">Download</span>
                             </button>
-                            <button id="LoadChatButton" class="chat-option-btn">
-                                <span class="option-icon">📁</span>
-                                <span class="option-text">Load a Previously Saved Chat</span>
-                                <span class="option-shortcut">Press Shift + L</span>
+                            <button id="MacSetupButton" class="platform-btn">
+                                <span class="platform-icon">🍎</span>
+                                <span class="platform-text">macOS</span>
+                                <span class="platform-status">Download</span>
+                            </button>
+                            <button id="LinuxSetupButton" class="platform-btn">
+                                <span class="platform-icon">🐧</span>
+                                <span class="platform-text">Linux</span>
+                                <span class="platform-status">Download</span>
                             </button>
                         </div>
-                        <input type="file" id="ChatFileInput" accept=".json" style="display: none;">
+                        <div class="platform-info">
+                            <p><strong>What's included:</strong></p>
+                            <ul>
+                                <li>Ollama installation</li>
+                                <li>Gemma2:9b model download</li>
+                                <li>Nomic-embed-text model download</li>
+                                <li>One-click setup script</li>
+                            </ul>
+                        </div>
+                        <div class="platform-actions">
+                            <button id="BackToChatOptionsButton" class="back-btn">← Back</button>
+                        </div>
+                        <div id="DownloadLoading" class="download-loading">
+                            <div class="loading-spinner"></div>
+                            Download will start soon, please wait...
+                        </div>
                     </div>
                 </div>
                 <!-- Chat Download Prompt (shown after filters applied) -->

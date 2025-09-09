@@ -30,7 +30,8 @@ except Exception as exc:
 
 
 CATALOG_PATH = Path("public/data/catalog.json")
-QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+QDRANT_URL = os.environ.get("QDRANT_URL", "https://0cc71459-a784-4e72-80ba-6e37fabd4109.us-east-1-1.aws.cloud.qdrant.io:6333")
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ZHhmETT2uLK_Ba_g_tuffEXORkGPY0FXzariD7GLeag")
 QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "active_tools")
 
 
@@ -93,7 +94,7 @@ def main() -> None:
     print(f"Loaded {len(catalog_ids)} catalog IDs")
 
     # Connect Qdrant and fetch payloads
-    client = QdrantClient(url=QDRANT_URL)
+    client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
     payloads = fetch_all_qdrant_payloads(client, QDRANT_COLLECTION)
     print(f"Fetched {len(payloads)} records from Qdrant")
 

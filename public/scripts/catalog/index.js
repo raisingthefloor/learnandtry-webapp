@@ -62,6 +62,92 @@ const purchaseOptionsFilters = {
 /* script to run after the page loads */
 let bodyResizeObserver;
 let headerSectionResizeObserver;
+let isOllamaAccessible = false; // Track Ollama accessibility status
+let hasCompletedInitialOllamaCheck = false; // Track first check completion
+let ollamaCheckIntervalId = null; // Interval id for periodic checks (not used after initial)
+let isCheckingOllama = false; // Prevent multiple simultaneous checks
+
+async function checkOllamaAccessibility() {
+    // Prevent multiple simultaneous checks
+    if (isCheckingOllama) {
+        console.log('Ollama check already in progress, skipping');
+        return;
+    }
+    
+    isCheckingOllama = true;
+    
+    try {
+        // Fetch with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch('/api/check-ollama', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+            const data = await response.json();
+            isOllamaAccessible = !!data.accessible;
+            console.log('Ollama accessibility check:', data.accessible ? 'accessible' : 'not accessible');
+        } else {
+            console.log('Ollama check failed with status:', response.status);
+            isOllamaAccessible = false;
+        }
+    } catch (error) {
+        // Only log actual errors, not aborts from rapid requests
+        if (error.name !== 'AbortError') {
+            console.error('Error checking Ollama accessibility:', error);
+        }
+        // Don't change isOllamaAccessible on abort - keep previous state
+        if (error.name === 'AbortError') {
+            console.log('Ollama check aborted (likely due to rapid requests)');
+        } else {
+            isOllamaAccessible = false;
+        }
+    } finally {
+        isCheckingOllama = false;
+        hasCompletedInitialOllamaCheck = true;
+        
+        // Stop further periodic checks after first determination, if any
+        if (ollamaCheckIntervalId !== null) {
+            clearInterval(ollamaCheckIntervalId);
+            ollamaCheckIntervalId = null;
+        }
+
+        updateButtonVisibility();
+    }
+}
+
+function updateButtonVisibility() {
+    const startNewChatButton = document.getElementById('StartNewChatButton');
+    const setupChatbotButton = document.getElementById('SetupChatbotButton');
+
+    const chatOptionsLoading = document.getElementById('ChatOptionsLoading');
+    const chatOptionsContent = document.getElementById('ChatOptionsContent');
+
+    // First, apply the correct states BEFORE revealing content to avoid flicker
+    if (startNewChatButton) {
+        startNewChatButton.style.display = 'block';
+        // Start disabled by default, only enable if Ollama is confirmed accessible
+        if (isOllamaAccessible) {
+            startNewChatButton.classList.remove('is-disabled');
+            startNewChatButton.removeAttribute('aria-disabled');
+        } else {
+            startNewChatButton.classList.add('is-disabled');
+            startNewChatButton.setAttribute('aria-disabled', 'true');
+        }
+    }
+    if (setupChatbotButton) {
+        setupChatbotButton.style.display = 'block';
+        setupChatbotButton.disabled = false;
+    }
+
+    // After states are set, switch from loading to content
+    if (chatOptionsLoading && chatOptionsContent && hasCompletedInitialOllamaCheck) {
+        chatOptionsLoading.style.display = 'none';
+        chatOptionsContent.style.display = 'block';
+    }
+}
+
 //
 function setupElementEvents() {
     // set up an observer to watch for the header being resized
@@ -69,6 +155,9 @@ function setupElementEvents() {
     //
     headerSectionResizeObserver = new ResizeObserver(headerSectionResized);
     headerSectionResizeObserver.observe(headerSection);
+
+    // Kick off one initial check (no periodic polling)
+    checkOllamaAccessibility();
 
     // wire up a click event to the filter button (so that the flyout pops out when it's clicked)
     let filterButton = document.getElementById("FilterButton");
@@ -107,6 +196,12 @@ function setupElementEvents() {
             if (chatBotSection.hidden) {
                 openChatBot();
             }
+            // If Start New Chat is visually disabled, alert instead
+            const startBtn = document.getElementById('StartNewChatButton');
+            if (startBtn && (startBtn.classList.contains('is-disabled') || startBtn.getAttribute('aria-disabled') === 'true')) {
+                alert('Please setup the local chatbot first.');
+                return;
+            }
             // If chatbot is already open, start a new chat directly
             hideChatOptionsScreen();
             initializeConversation();
@@ -121,6 +216,17 @@ function setupElementEvents() {
             }
             // Trigger the file input for loading a chat
             document.getElementById('ChatFileInput').click();
+        }
+        
+        // Shift+S to setup local chatbot
+        if (event.shiftKey && (event.key === 'S' || event.key === 's')) {
+            event.preventDefault();
+            let chatBotSection = document.getElementById('ChatBotSection');
+            if (chatBotSection.hidden) {
+                openChatBot();
+            }
+            // Show the platform selection screen
+            showPlatformSelectionScreen();
         }
     });
 
@@ -256,8 +362,7 @@ async function populateInitialContents() {
     // before populating the list, apply our default filters
     const defaultFilters = getSelectedFilters();
     filterToolsListElements(toolsListElements, defaultFilters);
-    //
-    // NOTE: this replacement action clears the ToolsList innerHtml, replacing the "loading catalog..." UI element
+    
     toolsList.replaceChildren(...toolsListElements);
 
     // if the web page's URL (window location) includes a hash component, expand and navigate to that element now
@@ -1349,7 +1454,7 @@ function sanitizeHTML(htmlString) {
     
     // First, escape the entire string to be safe
     tempDiv.textContent = htmlString;
-    let escapedString = tempDiv.innerHTML;
+    let escapedString = tempDiv.textContent;
     
     // Now selectively unescape only the allowed tags
     allowedTags.forEach(tag => {
@@ -1437,7 +1542,7 @@ let relevanceSortedCache = {
     timestamp: null
 };
 
-function openChatBot() {
+async function openChatBot() {
     let chatBotSection = document.getElementById('ChatBotSection');
     let floatingChatBotContainer = document.getElementById('FloatingChatBotContainer');
     let mainSection = document.querySelector('.MainSection');
@@ -1454,8 +1559,18 @@ function openChatBot() {
     // Clear relevance cache when opening chatbot (new context)
     clearRelevanceCache();
     
-    // Show chat options screen instead of directly initializing conversation
+    // Show chat options screen with loading indicator
     showChatOptionsScreen();
+
+    // If we already know Ollama status, update immediately and do a background recheck
+    if (hasCompletedInitialOllamaCheck) {
+        updateButtonVisibility();
+        // background recheck (don't block UI)
+        checkOllamaAccessibility();
+    } else {
+        // Do one blocking check to resolve initial state and hide loader
+        await checkOllamaAccessibility();
+    }
 }
 
 function initializeConversation() {
@@ -1469,7 +1584,7 @@ function initializeConversation() {
     let chatContent = document.getElementById('ChatBotContent');
     // Keep only the initial welcome message
     let welcomeMessage = chatContent.querySelector('.BotMessage');
-    // Clear content safely without innerHTML
+    // Clear content safely
     while (chatContent.firstChild) {
         chatContent.removeChild(chatContent.firstChild);
     }
@@ -1522,6 +1637,7 @@ function closeChatBot() {
     // Hide all chat screens
     document.getElementById('ChatOptionsScreen').style.display = 'none';
     document.getElementById('ChatDownloadPrompt').style.display = 'none';
+    document.getElementById('PlatformSelectionScreen').style.display = 'none';
     document.getElementById('ChatBotContent').style.display = 'block';
     document.getElementById('ChatBotInput').style.display = 'flex';
     
@@ -1643,13 +1759,22 @@ function addMessageToChat(message, sender) {
     
     let messageContentDiv = document.createElement('div');
     messageContentDiv.className = sender === 'user' ? 'UserMessageContent' : 'BotMessageContent';
-    
+
     let messageP = document.createElement('p');
     // Safely render HTML tags from bot messages
     if (message.includes('<') && message.includes('>')) {
-        // If message contains HTML, we need to sanitize it
+        // If message contains HTML, we need to sanitize and parse it
         const sanitizedMessage = sanitizeHTML(message);
-        messageP.innerHTML = sanitizedMessage;
+
+        // Use DOMParser to parse the sanitized HTML string into nodes
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(`<div>${sanitizedMessage}</div>`, 'text/html');
+        const nodes = doc.body.firstChild.childNodes;
+
+        // Append each node to messageP
+        nodes.forEach(node => {
+            messageP.appendChild(node.cloneNode(true));
+        });
     } else {
         // If no HTML, use textContent for safety
         messageP.textContent = message;
@@ -1912,6 +2037,36 @@ function showChatOptionsScreen() {
     // Show options screen
     document.getElementById('ChatOptionsScreen').style.display = 'block';
     
+    const chatOptionsLoading = document.getElementById('ChatOptionsLoading');
+    const chatOptionsContent = document.getElementById('ChatOptionsContent');
+
+    // If status not yet known, show loader; otherwise show content immediately
+    if (chatOptionsLoading && chatOptionsContent) {
+        if (!hasCompletedInitialOllamaCheck) {
+            chatOptionsLoading.style.display = 'block';
+            chatOptionsContent.style.display = 'none';
+        } else {
+            chatOptionsLoading.style.display = 'none';
+            chatOptionsContent.style.display = 'block';
+        }
+    }
+
+    // Set button states pre-check: Start disabled by default, Setup enabled
+    const startNewChatButton = document.getElementById('StartNewChatButton');
+    const setupChatbotButton = document.getElementById('SetupChatbotButton');
+    if (startNewChatButton) {
+        // Start disabled by default until Ollama is confirmed accessible
+        startNewChatButton.classList.add('is-disabled');
+        startNewChatButton.setAttribute('aria-disabled', 'true');
+    }
+    if (setupChatbotButton) setupChatbotButton.disabled = false;
+
+    // Do a background recheck every time options screen is shown (no interval persistence)
+    // Only check if we haven't completed the initial check yet
+    if (!hasCompletedInitialOllamaCheck) {
+        checkOllamaAccessibility();
+    }
+
     // Set up event listeners for the buttons
     setupChatOptionsEventListeners();
 }
@@ -1921,6 +2076,11 @@ function setupChatOptionsEventListeners() {
     let startNewChatButton = document.getElementById('StartNewChatButton');
     if (startNewChatButton) {
         startNewChatButton.addEventListener('click', () => {
+            // If disabled visually (before setup), show alert
+            if (startNewChatButton.classList.contains('is-disabled') || startNewChatButton.getAttribute('aria-disabled') === 'true') {
+                alert('Please setup the local chatbot first.');
+                return;
+            }
             hideChatOptionsScreen();
             initializeConversation();
         });
@@ -1941,7 +2101,15 @@ function setupChatOptionsEventListeners() {
             const file = event.target.files[0];
             if (file) {
                 loadChatFromFile(file);
-            }
+                    }
+    });
+}
+    
+    // Setup Chatbot button
+    let setupChatbotButton = document.getElementById('SetupChatbotButton');
+    if (setupChatbotButton) {
+        setupChatbotButton.addEventListener('click', () => {
+            showPlatformSelectionScreen();
         });
     }
 }
@@ -2183,6 +2351,218 @@ function removeChatLoadingIndicator(loadingMessageId) {
     let loadingElement = document.getElementById(loadingMessageId);
     if (loadingElement) {
         loadingElement.remove();
+    }
+}
+
+/* Chatbot Setup Functions */
+function showPlatformSelectionScreen() {
+    // Hide chat options screen
+    document.getElementById('ChatOptionsScreen').style.display = 'none';
+    
+    // Show platform selection screen
+    document.getElementById('PlatformSelectionScreen').style.display = 'block';
+    
+    // Set up event listeners for platform selection
+    setupPlatformSelectionEventListeners();
+}
+
+// Track if event listeners are already set up
+let platformEventListenersSetup = false;
+
+function setupPlatformSelectionEventListeners() {
+    // Prevent duplicate event listeners
+    if (platformEventListenersSetup) {
+        return;
+    }
+    
+    // Windows setup button
+    let windowsSetupButton = document.getElementById('WindowsSetupButton');
+    if (windowsSetupButton) {
+        windowsSetupButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            downloadSetup('windows');
+        });
+    }
+    
+    // macOS setup button
+    let macSetupButton = document.getElementById('MacSetupButton');
+    if (macSetupButton) {
+        macSetupButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            downloadSetup('macos');
+        });
+    }
+    
+    // Linux setup button
+    let linuxSetupButton = document.getElementById('LinuxSetupButton');
+    if (linuxSetupButton) {
+        linuxSetupButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            downloadSetup('linux');
+        });
+    }
+    
+    // Back button
+    let backToChatOptionsButton = document.getElementById('BackToChatOptionsButton');
+    if (backToChatOptionsButton) {
+        backToChatOptionsButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            hidePlatformSelectionScreen();
+        });
+    }
+    
+    platformEventListenersSetup = true;
+}
+
+function hidePlatformSelectionScreen() {
+    // Hide platform selection screen
+    document.getElementById('PlatformSelectionScreen').style.display = 'none';
+    
+    // Show chat options screen
+    document.getElementById('ChatOptionsScreen').style.display = 'block';
+}
+
+// Global variable to prevent multiple downloads
+let isDownloading = false;
+
+async function downloadSetup(platform) {
+    // Prevent multiple simultaneous downloads
+    if (isDownloading) {
+        console.log('Download already in progress, ignoring request');
+        return;
+    }
+    
+    isDownloading = true;
+    
+    // Show loading indicator
+    const downloadLoading = document.getElementById('DownloadLoading');
+    if (downloadLoading) {
+        console.log('Showing download loading indicator');
+        downloadLoading.classList.add('show');
+        downloadLoading.style.display = 'block'; // Force display
+    } else {
+        console.error('DownloadLoading element not found');
+    }
+    
+    // Get the appropriate button based on platform
+    let platformButton;
+    if (platform === 'windows') {
+        platformButton = document.getElementById('WindowsSetupButton');
+    } else if (platform === 'macos') {
+        platformButton = document.getElementById('MacSetupButton');
+    } else if (platform === 'linux') {
+        platformButton = document.getElementById('LinuxSetupButton');
+    }
+    
+    if (!platformButton) {
+        console.error('Platform button not found for:', platform);
+        isDownloading = false;
+        if (downloadLoading) {
+            downloadLoading.classList.remove('show');
+        }
+        return;
+    }
+    
+    // Show loading state
+    let originalText = platformButton.querySelector('.platform-status').textContent;
+    platformButton.querySelector('.platform-status').textContent = 'Preparing...';
+    platformButton.disabled = true;
+    
+    // Disable all platform buttons to prevent multiple clicks
+    document.querySelectorAll('.platform-btn').forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+    });
+    
+    try {
+        // Create download link
+        const downloadUrl = `/api/download-setup?platform=${platform}&t=` + Date.now(); // Add timestamp to prevent caching
+        
+        // First, fetch the file to ensure it's ready
+        console.log('Fetching download URL:', downloadUrl);
+        const response = await fetch(downloadUrl);
+        
+        if (response.ok) {
+            // Server has prepared the file, now trigger download
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create a temporary anchor element for download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `ollama-chatbot-setup-${platform}.zip`;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            
+            // Trigger download
+            link.click();
+            
+            // Hide loading indicator when download actually starts
+            if (downloadLoading) {
+                console.log('Hiding download loading indicator - download started');
+                downloadLoading.classList.remove('show');
+                downloadLoading.style.display = 'none';
+            }
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+            
+            // Show success message
+            platformButton.querySelector('.platform-status').textContent = 'Downloaded!';
+        } else {
+            throw new Error(`Download failed with status: ${response.status}`);
+        }
+        
+        // Reset button state after delay
+        setTimeout(() => {
+            platformButton.querySelector('.platform-status').textContent = originalText;
+            platformButton.disabled = false;
+            
+            // Re-enable all platform buttons
+            document.querySelectorAll('.platform-btn').forEach(btn => {
+                if (!btn.classList.contains('disabled')) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            isDownloading = false;
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Download failed:', error);
+        
+        // Reset on error
+        platformButton.querySelector('.platform-status').textContent = 'Error';
+        
+        // Hide loading indicator on error
+        if (downloadLoading) {
+            console.log('Hiding download loading indicator (error)');
+            downloadLoading.classList.remove('show');
+            downloadLoading.style.display = 'none'; // Force hide
+        }
+        
+        setTimeout(() => {
+            platformButton.querySelector('.platform-status').textContent = originalText;
+            platformButton.disabled = false;
+            
+            // Re-enable all platform buttons
+            document.querySelectorAll('.platform-btn').forEach(btn => {
+                if (!btn.classList.contains('disabled')) {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            isDownloading = false;
+        }, 2000);
     }
 }
 

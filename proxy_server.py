@@ -17,6 +17,9 @@ import re
 from dotenv import load_dotenv
 import numpy as np
 from datetime import datetime
+import socket
+import shutil
+import tempfile
 
 
 # Import Qdrant and ollama for vector search
@@ -30,6 +33,28 @@ except ImportError:
 
 # Load environment variables
 load_dotenv()
+
+# Installer cache configuration
+INSTALLER_CACHE_DIR = Path('./installer_cache')
+INSTALLER_URLS = {
+    'windows': 'https://ollama.com/download/OllamaSetup.exe',
+    'macos': 'https://ollama.com/download/Ollama-darwin.zip',
+    'linux': 'https://ollama.com/download/ollama-linux-amd64'
+}
+
+def check_internet_connection():
+    """Check if internet connection is available"""
+    try:
+        # Try to connect to Google DNS
+        socket.create_connection(("8.8.8.8", 53), timeout=3)
+        return True
+    except OSError:
+        try:
+            # Try to connect to Cloudflare DNS as backup
+            socket.create_connection(("1.1.1.1", 53), timeout=3)
+            return True
+        except OSError:
+            return False
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     # Class-level variables for Qdrant client (shared across all instances)
@@ -45,7 +70,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         # Initialize Qdrant client once if available and not already initialized
         if VECTOR_SEARCH_AVAILABLE and not ProxyHandler._client_initialized:
             try:
-                ProxyHandler._qdrant_client = QdrantClient(url="http://localhost:6333")
+                ProxyHandler._qdrant_client = QdrantClient(
+                    url="https://0cc71459-a784-4e72-80ba-6e37fabd4109.us-east-1-1.aws.cloud.qdrant.io:6333",
+                    api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ZHhmETT2uLK_Ba_g_tuffEXORkGPY0FXzariD7GLeag"
+                )
                 ProxyHandler._client_initialized = True
                 print("Qdrant client initialized")
             except Exception as e:
@@ -76,6 +104,18 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         # Handle preflight CORS requests
         self.send_response(200)
         self.end_headers()
+    
+    def do_GET(self):
+        # Handle setup package download
+        if self.path.startswith('/api/download-setup'):
+            self.handle_download_setup()
+        elif self.path == '/api/check-ollama':
+            self.handle_check_ollama()
+        elif self.path.startswith('/installer_cache/'):
+            self.handle_installer_download()
+        else:
+            # Default file serving behavior
+            super().do_GET()
     
     def do_POST(self):
         if self.path == '/api/chatbot':
@@ -472,8 +512,25 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def handle_sort_tools(self):
         """
         Handle sorting tools by relevance to user's query
+        Only performs AI-powered sorting if internet connection is available
         """
         try:
+            # Check internet connectivity first
+            if not check_internet_connection():
+                # No internet - return simple alphabetical sort
+                print("No internet connection detected - skipping AI-powered relevance sorting")
+                error_response = {
+                    "error": "Offline mode: AI-powered sorting not available",
+                    "success": False,
+                    "tools": [],
+                    "offline_mode": True
+                }
+                self.send_response(200)  # Still return 200 for graceful handling
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_response).encode('utf-8'))
+                return
+            
             # Read the request body
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
@@ -1469,7 +1526,11 @@ If you would like to make the list shorter you can use the checkboxes under  “
             ollama_data = {
                 "model": "gemma2:9b",
                 "prompt": prompt,
-                "stream": False
+                "stream": False,
+                "temperature": 0.0,
+                "top_p": 0.1,
+                "top_k": 1,
+                "seed": 42
             }
             
             ollama_request = urllib.request.Request(
@@ -1507,6 +1568,1241 @@ If you would like to make the list shorter you can use the checkboxes under  “
             print(f"Error in AI analysis: {e}")
             return {}
 
+    def handle_download_setup(self):
+        """Handle setup package download requests with on-disk caching."""
+        import zipfile
+        import tempfile
+        from urllib.parse import urlparse, parse_qs
+
+        try:
+            # Parse query parameters
+            parsed_url = urlparse(self.path)
+            query_params = parse_qs(parsed_url.query)
+            platform = query_params.get('platform', [''])[0]
+
+            if platform not in ['windows', 'macos', 'linux']:
+                self.send_error(400, f"Unsupported platform: {platform}")
+                return
+
+            # Cache directory and cached zip path
+            CACHE_DIR = Path('./setup_cache')
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            cached_zip_path = CACHE_DIR / f"ollama-chatbot-setup-{platform}.zip"
+
+            # If cached zip exists, serve it immediately
+            if cached_zip_path.exists() and cached_zip_path.is_file():
+                print(f"[SETUP] Serving cached {platform} setup package")
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/zip')
+                self.send_header('Content-Disposition', f'attachment; filename="ollama-chatbot-setup-{platform}.zip"')
+                self.send_header('Content-Length', str(cached_zip_path.stat().st_size))
+                self.end_headers()
+                with open(cached_zip_path, 'rb') as f:
+                    shutil.copyfileobj(f, self.wfile)
+                return
+
+            print(f"[SETUP] Generating {platform} setup package (no cache found)...")
+
+            # Ensure installer is cached
+            if not self.ensure_installer_cached(platform):
+                print(f"[SETUP] Warning: Could not cache {platform} installer, will use original URLs")
+
+            # Create temporary directory for the package
+            with tempfile.TemporaryDirectory() as temp_dir:
+                package_dir = Path(temp_dir) / f"ollama-chatbot-setup-{platform}"
+                package_dir.mkdir()
+
+                # Create platform-specific files
+                if platform == 'windows':
+                    install_script = self.create_windows_install_script()
+                    (package_dir / "INSTALL-CHATBOT.ps1").write_text(install_script, encoding='utf-8')
+                    batch_content = self.create_batch_file()
+                    (package_dir / "INSTALL-CHATBOT.bat").write_text(batch_content, encoding='utf-8')
+                    
+                    # Bundle Ollama installer
+                    if self.ensure_installer_cached(platform):
+                        installer_filename = INSTALLER_URLS[platform].split('/')[-1]
+                        installer_path = INSTALLER_CACHE_DIR / installer_filename
+                        if installer_path.exists():
+                            shutil.copy2(installer_path, package_dir / installer_filename)
+                            print(f"[SETUP] Bundled {installer_filename} in Windows package")
+                elif platform == 'macos':
+                    install_script = self.create_macos_install_script()
+                    (package_dir / "install-chatbot.sh").write_text(install_script, encoding='utf-8')
+                    import stat
+                    script_path = package_dir / "install-chatbot.sh"
+                    script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC)
+                    
+                    # Bundle Ollama installer
+                    if self.ensure_installer_cached(platform):
+                        installer_filename = INSTALLER_URLS[platform].split('/')[-1]
+                        installer_path = INSTALLER_CACHE_DIR / installer_filename
+                        if installer_path.exists():
+                            shutil.copy2(installer_path, package_dir / installer_filename)
+                            print(f"[SETUP] Bundled {installer_filename} in macOS package")
+                elif platform == 'linux':
+                    install_script = self.create_linux_install_script()
+                    (package_dir / "install-chatbot.sh").write_text(install_script, encoding='utf-8')
+                    import stat
+                    script_path = package_dir / "install-chatbot.sh"
+                    script_path.chmod(script_path.stat().st_mode | stat.S_IEXEC)
+                    
+                    # Bundle Ollama installer
+                    if self.ensure_installer_cached(platform):
+                        installer_filename = INSTALLER_URLS[platform].split('/')[-1]
+                        installer_path = INSTALLER_CACHE_DIR / installer_filename
+                        if installer_path.exists():
+                            shutil.copy2(installer_path, package_dir / installer_filename)
+                            print(f"[SETUP] Bundled {installer_filename} in Linux package")
+
+                # Create README file for all platforms
+                readme_content = self.create_readme_content(platform)
+                (package_dir / "README.txt").write_text(readme_content, encoding='utf-8')
+
+                # Create zip file into cache
+                with tempfile.TemporaryDirectory() as zip_temp_dir:
+                    temp_zip_path = Path(zip_temp_dir) / f"ollama-chatbot-setup-{platform}.zip"
+                    with zipfile.ZipFile(temp_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                        for file_path in package_dir.rglob('*'):
+                            if file_path.is_file():
+                                arcname = file_path.relative_to(package_dir.parent)
+                                zipf.write(file_path, arcname)
+                    # Move to cache atomically
+                    shutil.move(str(temp_zip_path), str(cached_zip_path))
+
+                # Serve the cached file we just created
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/zip')
+                self.send_header('Content-Disposition', f'attachment; filename="ollama-chatbot-setup-{platform}.zip"')
+                self.send_header('Content-Length', str(cached_zip_path.stat().st_size))
+                self.end_headers()
+                with open(cached_zip_path, 'rb') as f:
+                    shutil.copyfileobj(f, self.wfile)
+
+                print(f"[SETUP] {platform.title()} setup package generated and cached successfully")
+
+        except Exception as e:
+            print(f"[SETUP] Error generating setup package: {e}")
+            self.send_error(500, f"Error generating setup package: {str(e)}")
+
+    def handle_installer_download(self):
+        """Handle installer file downloads from cache"""
+        try:
+            # Extract filename from path
+            filename = self.path.split('/')[-1]
+            installer_path = INSTALLER_CACHE_DIR / filename
+            
+            if not installer_path.exists():
+                self.send_error(404, "Installer not found")
+                return
+            
+            # Serve the installer file
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/octet-stream')
+            self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+            self.send_header('Content-Length', str(installer_path.stat().st_size))
+            self.end_headers()
+            
+            with open(installer_path, 'rb') as f:
+                shutil.copyfileobj(f, self.wfile)
+                
+        except Exception as e:
+            print(f"[INSTALLER] Error serving installer: {e}")
+            self.send_error(500, f"Error serving installer: {str(e)}")
+
+    def ensure_installer_cached(self, platform):
+        """Ensure installer for platform is downloaded and cached"""
+        if platform not in INSTALLER_URLS:
+            return False
+            
+        installer_filename = INSTALLER_URLS[platform].split('/')[-1]
+        installer_path = INSTALLER_CACHE_DIR / installer_filename
+        
+        # Create cache directory if it doesn't exist
+        INSTALLER_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Download if not cached
+        if not installer_path.exists():
+            try:
+                print(f"[INSTALLER] Downloading {platform} installer...")
+                urllib.request.urlretrieve(INSTALLER_URLS[platform], installer_path)
+                print(f"[INSTALLER] {platform} installer cached successfully")
+                return True
+            except Exception as e:
+                print(f"[INSTALLER] Failed to download {platform} installer: {e}")
+                return False
+        
+        return True
+
+    def create_macos_install_script(self):
+        """Create the macOS installation script"""
+        return '''#!/bin/bash
+# Ollama Chatbot One-Click Installation Script for macOS
+# This script will automatically install Ollama and download required models
+
+set -e  # Exit on any error
+
+# Colors for output
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+BLUE='\\033[0;34m'
+CYAN='\\033[0;36m'
+NC='\\033[0m' # No Color
+
+echo -e "${GREEN}Starting Ollama Chatbot Setup for macOS...${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${BLUE}Installation started at: $(date)${NC}"
+echo ""
+
+# Check if running with appropriate permissions
+if [[ $EUID -eq 0 ]]; then
+    echo -e "${YELLOW}Warning: Running as root is not recommended for this installation.${NC}"
+    echo -e "${YELLOW}This script will prompt for sudo when needed.${NC}"
+    echo ""
+fi
+
+# Check if Homebrew is installed (recommended but not required)
+if command -v brew &> /dev/null; then
+    echo -e "${GREEN}Homebrew detected - using brew for installation${NC}"
+    HOMEBREW_AVAILABLE=true
+else
+    echo -e "${YELLOW}Homebrew not detected - will use direct download method${NC}"
+    HOMEBREW_AVAILABLE=false
+fi
+
+# Check if Ollama is already installed
+echo -e "${CYAN}Checking for existing Ollama installation...${NC}"
+if command -v ollama &> /dev/null; then
+    echo -e "${GREEN}Ollama is already installed at: $(which ollama)${NC}"
+    VERSION=$(ollama --version 2>/dev/null || echo "unknown")
+    echo -e "${GREEN}Version: $VERSION${NC}"
+else
+    echo -e "${CYAN}Downloading and installing Ollama...${NC}"
+    
+    if [ "$HOMEBREW_AVAILABLE" = true ]; then
+        echo -e "${CYAN}Installing Ollama via Homebrew...${NC}"
+        brew install ollama
+        echo -e "${GREEN}Ollama installed successfully via Homebrew!${NC}"
+    else
+        echo -e "${CYAN}Installing Ollama via direct download...${NC}"
+        
+        # Use bundled Ollama installer
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        BUNDLED_INSTALLER="$SCRIPT_DIR/Ollama-darwin.zip"
+        
+        if [ -f "$BUNDLED_INSTALLER" ]; then
+            echo -e "${GREEN}Using bundled Ollama installer...${NC}"
+            DOWNLOAD_PATH="$BUNDLED_INSTALLER"
+        else
+            echo -e "${YELLOW}Bundled installer not found, downloading...${NC}"
+            OLLAMA_URL="https://ollama.com/download/Ollama-darwin.zip"
+            TEMP_DIR=$(mktemp -d)
+            DOWNLOAD_PATH="$TEMP_DIR/Ollama-darwin.zip"
+            curl -L -o "$DOWNLOAD_PATH" "$OLLAMA_URL"
+        fi
+        
+        echo -e "${CYAN}Extracting Ollama...${NC}"
+        unzip -q "$DOWNLOAD_PATH" -d "$TEMP_DIR"
+        
+        echo -e "${CYAN}Installing Ollama to /Applications...${NC}"
+        if [ -d "/Applications/Ollama.app" ]; then
+            echo -e "${YELLOW}Removing existing Ollama installation...${NC}"
+            rm -rf "/Applications/Ollama.app"
+        fi
+        
+        cp -R "$TEMP_DIR/Ollama.app" "/Applications/"
+        
+        # Add Ollama CLI to PATH
+        OLLAMA_CLI_PATH="/Applications/Ollama.app/Contents/Resources/ollama"
+        if [ -f "$OLLAMA_CLI_PATH" ]; then
+            echo -e "${CYAN}Creating symbolic link for ollama command...${NC}"
+            sudo ln -sf "$OLLAMA_CLI_PATH" "/usr/local/bin/ollama"
+        fi
+        
+        # Clean up
+        rm -rf "$TEMP_DIR"
+        
+        echo -e "${GREEN}Ollama installed successfully!${NC}"
+    fi
+    
+    echo ""
+    echo -e "${YELLOW}IMPORTANT: Starting Ollama service...${NC}"
+    echo -e "${YELLOW}This will launch Ollama in the background.${NC}"
+fi
+
+# Kill any existing Ollama processes to prevent conflicts
+echo -e "${CYAN}Stopping any existing Ollama processes...${NC}"
+pkill -f ollama || true
+sleep 2
+echo -e "${GREEN}Cleared existing Ollama processes${NC}"
+
+# Start Ollama service
+echo -e "${CYAN}Starting Ollama service...${NC}"
+if [ "$HOMEBREW_AVAILABLE" = true ]; then
+    # Start with brew services if available
+    brew services start ollama || {
+        echo -e "${YELLOW}Brew services failed, starting manually...${NC}"
+        nohup ollama serve > /dev/null 2>&1 &
+    }
+else
+    # Start manually
+    nohup ollama serve > /dev/null 2>&1 &
+fi
+
+sleep 5
+echo -e "${GREEN}Ollama service started${NC}"
+
+# Verify service is responsive
+echo -e "${CYAN}Verifying Ollama service...${NC}"
+ATTEMPTS=0
+MAX_ATTEMPTS=15
+SERVICE_READY=false
+
+while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+    if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+        echo -e "${GREEN}Ollama service is responsive and ready!${NC}"
+        SERVICE_READY=true
+        break
+    else
+        ATTEMPTS=$((ATTEMPTS + 1))
+        if [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; then
+            echo -e "${YELLOW}Waiting for Ollama service to be ready... (attempt $ATTEMPTS/$MAX_ATTEMPTS)${NC}"
+            sleep 3
+        else
+            echo -e "${YELLOW}Ollama service is taking longer than expected, but continuing...${NC}"
+            break
+        fi
+    fi
+done
+
+if [ "$SERVICE_READY" = false ]; then
+    echo -e "${YELLOW}WARNING: Ollama service may not be fully ready${NC}"
+    echo -e "${YELLOW}Model downloads may take longer or fail${NC}"
+fi
+
+# Check if models are installed
+echo -e "${CYAN}Checking for required models...${NC}"
+
+MODELS_NEEDED=("gemma2:9b" "nomic-embed-text")
+MODELS_TO_DOWNLOAD=()
+
+for MODEL in "${MODELS_NEEDED[@]}"; do
+    if ollama list 2>/dev/null | grep -q "$MODEL"; then
+        echo -e "${GREEN}Model $MODEL is already installed${NC}"
+    else
+        echo -e "${YELLOW}Model $MODEL needs to be downloaded${NC}"
+        MODELS_TO_DOWNLOAD+=("$MODEL")
+    fi
+done
+
+# Download missing models
+if [ ${#MODELS_TO_DOWNLOAD[@]} -gt 0 ]; then
+    echo ""
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${CYAN}DOWNLOADING MODELS${NC}"
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${YELLOW}This will download ${#MODELS_TO_DOWNLOAD[@]} model(s):${NC}"
+    for MODEL in "${MODELS_TO_DOWNLOAD[@]}"; do
+        echo -e "${BLUE}  - $MODEL${NC}"
+    done
+    echo ""
+    echo -e "${YELLOW}IMPORTANT: This may take 10-30 minutes depending on your internet speed.${NC}"
+    echo -e "${YELLOW}Please be patient and do not close this terminal.${NC}"
+    echo ""
+    read -p "Press Enter to start downloading models..."
+    
+    MODEL_COUNT=0
+    for MODEL in "${MODELS_TO_DOWNLOAD[@]}"; do
+        MODEL_COUNT=$((MODEL_COUNT + 1))
+        echo ""
+        echo -e "${CYAN}[$MODEL_COUNT/${#MODELS_TO_DOWNLOAD[@]}] Downloading $MODEL...${NC}"
+        echo -e "${YELLOW}This may take several minutes...${NC}"
+        
+        if ollama pull "$MODEL"; then
+            echo -e "${GREEN}Successfully downloaded $MODEL!${NC}"
+        else
+            echo -e "${RED}Failed to download $MODEL${NC}"
+        fi
+    done
+    
+    echo ""
+    echo -e "${GREEN}Model downloads completed!${NC}"
+else
+    echo -e "${GREEN}All required models are already installed${NC}"
+fi
+
+# Test the installation
+echo -e "${CYAN}Testing installation...${NC}"
+if ollama list > /dev/null 2>&1; then
+    echo -e "${GREEN}Ollama is working correctly!${NC}"
+    echo -e "${CYAN}Installed models:${NC}"
+    ollama list
+else
+    echo -e "${RED}Installation test failed${NC}"
+    echo -e "${YELLOW}Please check that Ollama is running and try again${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}Setup Complete!${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}Your local AI chatbot is now ready to use!${NC}"
+echo -e "${CYAN}You can now use your chatbot application.${NC}"
+echo ""
+echo -e "${CYAN}Ollama API is available at: http://localhost:11434${NC}"
+echo ""
+echo -e "${BLUE}To start Ollama manually in the future:${NC}"
+if [ "$HOMEBREW_AVAILABLE" = true ]; then
+    echo -e "${BLUE}  brew services start ollama${NC}"
+else
+    echo -e "${BLUE}  ollama serve${NC}"
+fi
+echo ""
+echo -e "${BLUE}To stop Ollama:${NC}"
+if [ "$HOMEBREW_AVAILABLE" = true ]; then
+    echo -e "${BLUE}  brew services stop ollama${NC}"
+else
+    echo -e "${BLUE}  pkill ollama${NC}"
+fi
+echo ""
+echo -e "${GREEN}Installation completed successfully!${NC}"
+'''
+
+    def create_linux_install_script(self):
+        """Create the Linux installation script"""
+        return '''#!/bin/bash
+# Ollama Chatbot One-Click Installation Script for Linux
+# This script will automatically install Ollama and download required models
+
+set -e  # Exit on any error
+
+# Colors for output
+RED='\\033[0;31m'
+GREEN='\\033[0;32m'
+YELLOW='\\033[1;33m'
+BLUE='\\033[0;34m'
+CYAN='\\033[0;36m'
+NC='\\033[0m' # No Color
+
+echo -e "${GREEN}Starting Ollama Chatbot Setup for Linux...${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${BLUE}Installation started at: $(date)${NC}"
+echo ""
+
+# Detect Linux distribution
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    DISTRO=$ID
+    VERSION=$VERSION_ID
+    echo -e "${BLUE}Detected Linux distribution: $PRETTY_NAME${NC}"
+else
+    echo -e "${YELLOW}Cannot detect Linux distribution, proceeding with generic installation${NC}"
+    DISTRO="unknown"
+fi
+
+# Check if running as root
+if [[ $EUID -eq 0 ]]; then
+    echo -e "${YELLOW}Running as root - installation will proceed with system-wide changes${NC}"
+    SUDO_CMD=""
+else
+    echo -e "${BLUE}Running as regular user - will use sudo when needed${NC}"
+    SUDO_CMD="sudo"
+    
+    # Check if sudo is available
+    if ! command -v sudo &> /dev/null; then
+        echo -e "${RED}Error: sudo is not available and not running as root${NC}"
+        echo -e "${RED}Please run as root or install sudo${NC}"
+        exit 1
+    fi
+fi
+
+# Check if Ollama is already installed
+echo -e "${CYAN}Checking for existing Ollama installation...${NC}"
+if command -v ollama &> /dev/null; then
+    echo -e "${GREEN}Ollama is already installed at: $(which ollama)${NC}"
+    VERSION=$(ollama --version 2>/dev/null || echo "unknown")
+    echo -e "${GREEN}Version: $VERSION${NC}"
+else
+    echo -e "${CYAN}Installing Ollama...${NC}"
+    
+    # Install dependencies based on distribution
+    case $DISTRO in
+        ubuntu|debian)
+            echo -e "${CYAN}Installing dependencies for Debian/Ubuntu...${NC}"
+            $SUDO_CMD apt-get update
+            $SUDO_CMD apt-get install -y curl wget
+            ;;
+        fedora|rhel|centos|rocky|almalinux)
+            echo -e "${CYAN}Installing dependencies for RHEL/Fedora...${NC}"
+            if command -v dnf &> /dev/null; then
+                $SUDO_CMD dnf install -y curl wget
+            else
+                $SUDO_CMD yum install -y curl wget
+            fi
+            ;;
+        arch|manjaro)
+            echo -e "${CYAN}Installing dependencies for Arch Linux...${NC}"
+            $SUDO_CMD pacman -S --noconfirm curl wget
+            ;;
+        opensuse*|sled|sles)
+            echo -e "${CYAN}Installing dependencies for openSUSE...${NC}"
+            $SUDO_CMD zypper install -y curl wget
+            ;;
+        *)
+            echo -e "${YELLOW}Unknown distribution, assuming curl and wget are available${NC}"
+            ;;
+    esac
+    
+    # Use bundled Ollama installer
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    BUNDLED_INSTALLER="$SCRIPT_DIR/ollama-linux-amd64"
+    
+    if [ -f "$BUNDLED_INSTALLER" ]; then
+        echo -e "${GREEN}Using bundled Ollama installer...${NC}"
+        chmod +x "$BUNDLED_INSTALLER"
+        sudo mv "$BUNDLED_INSTALLER" /usr/local/bin/ollama
+    else
+        echo -e "${YELLOW}Bundled installer not found, using official install script...${NC}"
+        curl -fsSL https://ollama.com/install.sh | sh
+    fi
+    
+    if command -v ollama &> /dev/null; then
+        echo -e "${GREEN}Ollama installed successfully!${NC}"
+    else
+        echo -e "${RED}Ollama installation failed${NC}"
+        exit 1
+    fi
+fi
+
+# Kill any existing Ollama processes to prevent conflicts
+echo -e "${CYAN}Stopping any existing Ollama processes...${NC}"
+pkill -f ollama || true
+sleep 2
+echo -e "${GREEN}Cleared existing Ollama processes${NC}"
+
+# Check if systemd is available for service management
+if command -v systemctl &> /dev/null && [ -d /etc/systemd/system ]; then
+    echo -e "${CYAN}Setting up Ollama as a systemd service...${NC}"
+    
+    # Create systemd service file if it doesn't exist
+    if [ ! -f /etc/systemd/system/ollama.service ]; then
+        $SUDO_CMD tee /etc/systemd/system/ollama.service > /dev/null << EOF
+[Unit]
+Description=Ollama Service
+After=network-online.target
+
+[Service]
+ExecStart=/usr/local/bin/ollama serve
+User=ollama
+Group=ollama
+Restart=always
+RestartSec=3
+Environment="PATH=$PATH"
+
+[Install]
+WantedBy=default.target
+EOF
+        
+        # Create ollama user if it doesn't exist
+        if ! id "ollama" &>/dev/null; then
+            $SUDO_CMD useradd -r -s /bin/false -m -d /usr/share/ollama ollama
+        fi
+        
+        $SUDO_CMD systemctl daemon-reload
+        $SUDO_CMD systemctl enable ollama
+    fi
+    
+    # Start the service
+    echo -e "${CYAN}Starting Ollama service...${NC}"
+    $SUDO_CMD systemctl start ollama
+    sleep 5
+    
+    if $SUDO_CMD systemctl is-active --quiet ollama; then
+        echo -e "${GREEN}Ollama service started successfully${NC}"
+        SYSTEMD_AVAILABLE=true
+    else
+        echo -e "${YELLOW}Systemd service failed, starting manually...${NC}"
+        nohup ollama serve > /dev/null 2>&1 &
+        sleep 5
+        SYSTEMD_AVAILABLE=false
+    fi
+else
+    echo -e "${CYAN}Starting Ollama manually (systemd not available)...${NC}"
+    nohup ollama serve > /dev/null 2>&1 &
+    sleep 5
+    SYSTEMD_AVAILABLE=false
+fi
+
+# Verify service is responsive
+echo -e "${CYAN}Verifying Ollama service...${NC}"
+ATTEMPTS=0
+MAX_ATTEMPTS=15
+SERVICE_READY=false
+
+while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+    if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
+        echo -e "${GREEN}Ollama service is responsive and ready!${NC}"
+        SERVICE_READY=true
+        break
+    else
+        ATTEMPTS=$((ATTEMPTS + 1))
+        if [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; then
+            echo -e "${YELLOW}Waiting for Ollama service to be ready... (attempt $ATTEMPTS/$MAX_ATTEMPTS)${NC}"
+            sleep 3
+        else
+            echo -e "${YELLOW}Ollama service is taking longer than expected, but continuing...${NC}"
+            break
+        fi
+    fi
+done
+
+if [ "$SERVICE_READY" = false ]; then
+    echo -e "${YELLOW}WARNING: Ollama service may not be fully ready${NC}"
+    echo -e "${YELLOW}Model downloads may take longer or fail${NC}"
+fi
+
+# Check if models are installed
+echo -e "${CYAN}Checking for required models...${NC}"
+
+MODELS_NEEDED=("gemma2:9b" "nomic-embed-text")
+MODELS_TO_DOWNLOAD=()
+
+for MODEL in "${MODELS_NEEDED[@]}"; do
+    if ollama list 2>/dev/null | grep -q "$MODEL"; then
+        echo -e "${GREEN}Model $MODEL is already installed${NC}"
+    else
+        echo -e "${YELLOW}Model $MODEL needs to be downloaded${NC}"
+        MODELS_TO_DOWNLOAD+=("$MODEL")
+    fi
+done
+
+# Download missing models
+if [ ${#MODELS_TO_DOWNLOAD[@]} -gt 0 ]; then
+    echo ""
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${CYAN}DOWNLOADING MODELS${NC}"
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${YELLOW}This will download ${#MODELS_TO_DOWNLOAD[@]} model(s):${NC}"
+    for MODEL in "${MODELS_TO_DOWNLOAD[@]}"; do
+        echo -e "${BLUE}  - $MODEL${NC}"
+    done
+    echo ""
+    echo -e "${YELLOW}IMPORTANT: This may take 10-30 minutes depending on your internet speed.${NC}"
+    echo -e "${YELLOW}Please be patient and do not close this terminal.${NC}"
+    echo ""
+    read -p "Press Enter to start downloading models..."
+    
+    MODEL_COUNT=0
+    for MODEL in "${MODELS_TO_DOWNLOAD[@]}"; do
+        MODEL_COUNT=$((MODEL_COUNT + 1))
+        echo ""
+        echo -e "${CYAN}[$MODEL_COUNT/${#MODELS_TO_DOWNLOAD[@]}] Downloading $MODEL...${NC}"
+        echo -e "${YELLOW}This may take several minutes...${NC}"
+        
+        if ollama pull "$MODEL"; then
+            echo -e "${GREEN}Successfully downloaded $MODEL!${NC}"
+        else
+            echo -e "${RED}Failed to download $MODEL${NC}"
+        fi
+    done
+    
+    echo ""
+    echo -e "${GREEN}Model downloads completed!${NC}"
+else
+    echo -e "${GREEN}All required models are already installed${NC}"
+fi
+
+# Test the installation
+echo -e "${CYAN}Testing installation...${NC}"
+if ollama list > /dev/null 2>&1; then
+    echo -e "${GREEN}Ollama is working correctly!${NC}"
+    echo -e "${CYAN}Installed models:${NC}"
+    ollama list
+else
+    echo -e "${RED}Installation test failed${NC}"
+    echo -e "${YELLOW}Please check that Ollama is running and try again${NC}"
+fi
+
+echo ""
+echo -e "${GREEN}Setup Complete!${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}Your local AI chatbot is now ready to use!${NC}"
+echo -e "${CYAN}You can now use your chatbot application.${NC}"
+echo ""
+echo -e "${CYAN}Ollama API is available at: http://localhost:11434${NC}"
+echo ""
+echo -e "${BLUE}To manage Ollama service:${NC}"
+if [ "$SYSTEMD_AVAILABLE" = true ]; then
+    echo -e "${BLUE}  Start:  sudo systemctl start ollama${NC}"
+    echo -e "${BLUE}  Stop:   sudo systemctl stop ollama${NC}"
+    echo -e "${BLUE}  Status: sudo systemctl status ollama${NC}"
+else
+    echo -e "${BLUE}  Start:  ollama serve${NC}"
+    echo -e "${BLUE}  Stop:   pkill ollama${NC}"
+fi
+echo ""
+echo -e "${GREEN}Installation completed successfully!${NC}"
+'''
+
+    def handle_check_ollama(self):
+        """Handle Ollama accessibility check requests."""
+        try:
+            # Check if Ollama is accessible
+            try:
+                with urllib.request.urlopen('http://localhost:11434/api/tags', timeout=5) as response:
+                    if response.status == 200:
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({'accessible': True}).encode())
+                        return
+            except:
+                pass
+            
+            # Check if we're in offline mode (no internet)
+            if not check_internet_connection():
+                # In offline mode, assume Ollama should be accessible if installed locally
+                # This removes the setup button from the UI in offline scenarios
+                print("Offline mode detected - assuming Ollama is accessible for UI purposes")
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'accessible': True, 'offline_mode': True}).encode())
+                return
+            
+            # If we get here, we have internet but Ollama is not accessible
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'accessible': False}).encode())
+            
+        except Exception as e:
+            print(f"Error checking Ollama: {e}")
+            self.send_error(500, f"Internal server error: {e}")
+
+    def create_windows_install_script(self):
+        """Create the PowerShell installation script"""
+        return '''# Ollama Chatbot One-Click Installation Script
+# This script will automatically install Ollama and download required models
+
+# Set error action preference to stop on errors
+$ErrorActionPreference = "Stop"
+
+# Set window title
+$Host.UI.RawUI.WindowTitle = "Ollama Chatbot Setup"
+
+Write-Host "Starting Ollama Chatbot Setup..." -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "Installation started at: $(Get-Date)" -ForegroundColor Gray
+Write-Host ""
+
+# Check if running as administrator
+if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Host "This script needs to run as Administrator!" -ForegroundColor Yellow
+    Write-Host "Right-click on this file and select 'Run as Administrator'" -ForegroundColor Yellow
+    Read-Host "Press Enter to exit"
+    exit 1
+}
+
+Write-Host "Running as Administrator" -ForegroundColor Green
+
+# Check if Ollama is already installed
+Write-Host "Checking for existing Ollama installation..." -ForegroundColor Cyan
+$ollamaPath = Get-Command ollama -ErrorAction SilentlyContinue
+
+if ($ollamaPath) {
+    Write-Host "Ollama is already installed at: $($ollamaPath.Source)" -ForegroundColor Green
+    $version = & ollama --version 2>$null
+    Write-Host "Version: $version" -ForegroundColor Green
+} else {
+    Write-Host "Downloading and installing Ollama..." -ForegroundColor Cyan
+    
+    # Use bundled Ollama installer
+    $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $installerPath = "$scriptDir\\OllamaSetup.exe"
+    
+    if (Test-Path $installerPath) {
+        Write-Host "Using bundled Ollama installer..." -ForegroundColor Green
+    } else {
+        Write-Host "Bundled installer not found, downloading..." -ForegroundColor Yellow
+        $ollamaUrl = "https://ollama.com/download/OllamaSetup.exe"
+        $installerPath = "$env:TEMP\\OllamaSetup.exe"
+        try {
+            Invoke-WebRequest -Uri $ollamaUrl -OutFile $installerPath -UseBasicParsing
+            Write-Host "Downloaded successfully!" -ForegroundColor Green
+        } catch {
+            Write-Host "Download failed: $($_.Exception.Message)" -ForegroundColor Red
+            Read-Host "Press Enter to exit"
+            exit 1
+        }
+    }
+    
+    Write-Host ""
+    Write-Host "IMPORTANT: Ollama installer will now open." -ForegroundColor Yellow
+    Write-Host "Please follow the installation wizard and close any Ollama windows that open." -ForegroundColor Yellow
+    Write-Host "After installation is complete, come back to this window and press Enter." -ForegroundColor Yellow
+    Write-Host ""
+    Read-Host "Press Enter when you are ready to start the Ollama installation"
+    
+    # Run installer and wait for completion
+    Write-Host "Starting Ollama installation..." -ForegroundColor Cyan
+    $installProcess = Start-Process -FilePath $installerPath -ArgumentList "/S" -PassThru
+    $installProcess.WaitForExit()
+    
+    Write-Host "Ollama installation completed!" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Please close any Ollama windows that may have opened automatically." -ForegroundColor Yellow
+    Write-Host "We will now configure Ollama and download the required models." -ForegroundColor Cyan
+    Write-Host ""
+    Read-Host "Press Enter to continue with model downloads"
+    
+    # Add Ollama to PATH if not already there
+    $ollamaDir = "$env:LOCALAPPDATA\\Programs\\Ollama"
+    if (Test-Path $ollamaDir) {
+        $currentPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+        if ($currentPath -notlike "*$ollamaDir*") {
+            [Environment]::SetEnvironmentVariable("PATH", "$currentPath;$ollamaDir", "User")
+            Write-Host "Added Ollama to PATH" -ForegroundColor Green
+        }
+    }
+    
+    # Refresh environment variables
+    $env:PATH = [Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" + [Environment]::GetEnvironmentVariable("PATH", "User")
+    
+    # Clean up installer
+    Remove-Item $installerPath -ErrorAction SilentlyContinue
+}
+
+# Kill any existing Ollama processes to prevent loops
+Write-Host "Stopping any existing Ollama processes..." -ForegroundColor Cyan
+try {
+    Get-Process -Name "ollama*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Write-Host "Cleared existing Ollama processes" -ForegroundColor Green
+} catch {
+    # Ignore errors here
+}
+
+# Start Ollama service properly
+Write-Host "Starting Ollama service..." -ForegroundColor Cyan
+try {
+    # Start Ollama serve in background
+    $ollamaProcess = Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden -PassThru
+    Start-Sleep -Seconds 5
+    Write-Host "Ollama service started (PID: $($ollamaProcess.Id))" -ForegroundColor Green
+    
+    # Verify service is responsive
+    Write-Host "Verifying Ollama service..." -ForegroundColor Cyan
+    $attempts = 0
+    $maxAttempts = 15
+    $serviceReady = $false
+    
+    do {
+        try {
+            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method GET -TimeoutSec 5
+            Write-Host "Ollama service is responsive and ready!" -ForegroundColor Green
+            $serviceReady = $true
+            break
+        } catch {
+            $attempts++
+            if ($attempts -lt $maxAttempts) {
+                Write-Host "Waiting for Ollama service to be ready... (attempt $attempts/$maxAttempts)" -ForegroundColor Yellow
+                Start-Sleep -Seconds 3
+            } else {
+                Write-Host "Ollama service is taking longer than expected, but continuing..." -ForegroundColor Yellow
+                break
+            }
+        }
+    } while ($attempts -lt $maxAttempts)
+    
+    if (-not $serviceReady) {
+        Write-Host "WARNING: Ollama service may not be fully ready" -ForegroundColor Yellow
+        Write-Host "Model downloads may take longer or fail" -ForegroundColor Yellow
+    }
+    
+} catch {
+    Write-Host "Error starting Ollama service" -ForegroundColor Yellow
+    Write-Host "Attempting to continue with installation..." -ForegroundColor Yellow
+}
+
+# Check if models are installed
+Write-Host "Checking for required models..." -ForegroundColor Cyan
+
+$modelsNeeded = @("gemma2:9b", "nomic-embed-text")
+$modelsToDownload = @()
+
+foreach ($model in $modelsNeeded) {
+    $modelList = & ollama list 2>$null
+    if ($modelList -like "*$model*") {
+        Write-Host "Model $model is already installed" -ForegroundColor Green
+    } else {
+        Write-Host "Model $model needs to be downloaded" -ForegroundColor Yellow
+        $modelsToDownload += $model
+    }
+}
+
+# Download missing models
+if ($modelsToDownload.Count -gt 0) {
+    Write-Host "" 
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "DOWNLOADING MODELS" -ForegroundColor Cyan
+    Write-Host "========================================" -ForegroundColor Cyan
+    Write-Host "This will download $($modelsToDownload.Count) model(s):" -ForegroundColor Yellow
+    foreach ($model in $modelsToDownload) {
+        Write-Host "  - $model" -ForegroundColor Gray
+    }
+    Write-Host ""
+    Write-Host "IMPORTANT: This may take 10-30 minutes depending on your internet speed." -ForegroundColor Yellow
+    Write-Host "Please be patient and do not close this window." -ForegroundColor Yellow
+    Write-Host ""
+    Read-Host "Press Enter to start downloading models"
+    
+    $modelCount = 0
+    foreach ($model in $modelsToDownload) {
+        $modelCount++
+        Write-Host ""
+        Write-Host "[$modelCount/$($modelsToDownload.Count)] Downloading $model..." -ForegroundColor Cyan
+        Write-Host "This may take several minutes..." -ForegroundColor Yellow
+        
+        try {
+            # Show progress by running ollama pull
+            $pullProcess = Start-Process -FilePath "ollama" -ArgumentList "pull", $model -NoNewWindow -Wait -PassThru
+            
+            if ($pullProcess.ExitCode -eq 0) {
+                Write-Host "Successfully downloaded $model!" -ForegroundColor Green
+            } else {
+                Write-Host "Failed to download $model (Exit Code: $($pullProcess.ExitCode))" -ForegroundColor Red
+            }
+        } catch {
+            Write-Host "Failed to download $model" -ForegroundColor Red
+        }
+    }
+    
+    Write-Host ""
+    Write-Host "Model downloads completed!" -ForegroundColor Green
+    
+} else {
+    Write-Host "All required models are already installed" -ForegroundColor Green
+}
+
+# Test the installation
+Write-Host "Testing installation..." -ForegroundColor Cyan
+try {
+    $response = & ollama list 2>$null
+    if ($response) {
+        Write-Host "Ollama is working correctly!" -ForegroundColor Green
+        Write-Host "Installed models:" -ForegroundColor Cyan
+        Write-Host $response -ForegroundColor Gray
+    } else {
+        throw "No response from ollama list"
+    }
+} catch {
+    Write-Host "Installation test failed" -ForegroundColor Red
+    Write-Host "Please check that Ollama is running and try again" -ForegroundColor Yellow
+}
+
+Write-Host "" 
+Write-Host "Setup Complete!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "Your local AI chatbot is now ready to use!" -ForegroundColor Green
+Write-Host "You can now use your chatbot application." -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Ollama API is available at: http://localhost:11434" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Next Steps:" -ForegroundColor Cyan
+Write-Host "1. Go back to your web browser" -ForegroundColor Gray
+Write-Host "2. Your chatbot should now work locally!" -ForegroundColor Gray
+Write-Host ""
+
+# Final cleanup to prevent infinite loops
+Write-Host ""
+Write-Host "Performing final cleanup..." -ForegroundColor Cyan
+try {
+    # Kill any extra Ollama processes that might cause loops
+    $ollamaProcesses = Get-Process -Name "ollama*" -ErrorAction SilentlyContinue
+    if ($ollamaProcesses.Count -gt 1) {
+        Write-Host "Found multiple Ollama processes, keeping only the main service..." -ForegroundColor Yellow
+        $ollamaProcesses | Sort-Object StartTime | Select-Object -SkipLast 1 | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+} catch {
+    # Ignore cleanup errors
+}
+
+Write-Host ""
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "INSTALLATION COMPLETE!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
+Write-Host ""
+Write-Host "Your local AI chatbot is now ready!" -ForegroundColor Green
+Write-Host ""
+Write-Host "IMPORTANT: If you see any Ollama windows opening and closing repeatedly," -ForegroundColor Yellow
+Write-Host "please restart your computer to fully complete the setup." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "You can now:" -ForegroundColor Cyan
+Write-Host "1. Go back to your web browser" -ForegroundColor Gray
+Write-Host "2. Use your chatbot application" -ForegroundColor Gray
+Write-Host "3. The chatbot will connect to Ollama automatically" -ForegroundColor Gray
+Write-Host ""
+
+# Keep the window open
+Write-Host "Installation log complete." -ForegroundColor Green
+Read-Host "Press Enter to close this window"
+
+# Ensure we exit cleanly
+exit 0
+'''
+
+    def create_readme_content(self, platform='windows'):
+        """Create README content for the setup package"""
+        if platform == 'windows':
+            return '''🤖 Local AI Chatbot Setup for Windows
+=====================================
+
+This package contains everything you need to set up your local AI chatbot.
+
+📋 What's Included:
+- Automatic Ollama installation
+- Gemma2:9b language model download
+- Nomic-embed-text embedding model download
+- One-click setup script
+
+Quick Start:
+1. Right-click on "INSTALL-CHATBOT.bat"
+2. Select "Run as administrator"
+3. Follow the prompts
+4. That's it! Your chatbot will be ready to use.
+
+⚠️  Important Notes:
+- You MUST run the installer as administrator
+- Make sure you have a stable internet connection
+- The download may take 10-30 minutes depending on your connection speed
+- The models are approximately 5.4GB in total
+
+🔧 What the installer does:
+- Downloads and installs Ollama if not already present
+- Starts the Ollama service
+- Downloads the required AI models:
+  * gemma2:9b (main language model)
+  * nomic-embed-text (for embeddings)
+- Tests the installation
+
+🌐 After Installation:
+- Ollama API will be available at: http://localhost:11434
+- Your chatbot application will be able to connect automatically
+
+❓ Troubleshooting:
+- If the batch file closes immediately after pressing a key:
+  * The PowerShell script should open in a new window
+  * Look for a new PowerShell window with the installation progress
+  * If no new window appears, try running "INSTALL-CHATBOT.ps1" directly
+
+- If the installation fails:
+  * Try running the batch file as administrator
+  * Make sure Windows Defender or antivirus isn't blocking the download
+  * Check your internet connection
+  * Restart your computer if PATH issues occur
+
+- If PowerShell execution is blocked:
+  * Open PowerShell as administrator
+  * Run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+  * Then try running the installer again
+
+📞 Support:
+If you encounter any issues, please contact support or refer to the documentation.
+
+Enjoy your local AI chatbot! 🎉
+'''
+        elif platform == 'macos':
+            return '''🤖 Local AI Chatbot Setup for macOS
+====================================
+
+This package contains everything you need to set up your local AI chatbot on macOS.
+
+📋 What's Included:
+- Automatic Ollama installation (via Homebrew or direct download)
+- Gemma2:9b language model download
+- Nomic-embed-text embedding model download
+- One-click setup script
+
+Quick Start:
+1. Double-click "install-chatbot.sh" or open Terminal
+2. If using Terminal: ./install-chatbot.sh
+3. Follow the prompts (may ask for password)
+4. That's it! Your chatbot will be ready to use.
+
+⚠️  Important Notes:
+- The script may request your password for sudo operations
+- Make sure you have a stable internet connection
+- The download may take 10-30 minutes depending on your connection speed
+- The models are approximately 5.4GB in total
+- Homebrew installation is recommended but not required
+
+🔧 What the installer does:
+- Detects and uses Homebrew if available, otherwise downloads directly
+- Downloads and installs Ollama if not already present
+- Starts the Ollama service
+- Downloads the required AI models:
+  * gemma2:9b (main language model)
+  * nomic-embed-text (for embeddings)
+- Tests the installation
+
+🌐 After Installation:
+- Ollama API will be available at: http://localhost:11434
+- Your chatbot application will be able to connect automatically
+
+🍺 Homebrew Users:
+- If you have Homebrew, the installer will use it automatically
+- To install Homebrew: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+❓ Troubleshooting:
+- If permission denied: chmod +x install-chatbot.sh
+- If script won't run: Right-click → Open With → Terminal
+- If Ollama installation fails: Try installing Homebrew first
+- For Apple Silicon Macs: All components are compatible
+
+📞 Support:
+If you encounter any issues, please contact support or refer to the documentation.
+
+Enjoy your local AI chatbot! 🎉
+'''
+        elif platform == 'linux':
+            return '''🤖 Local AI Chatbot Setup for Linux
+===================================
+
+This package contains everything you need to set up your local AI chatbot on Linux.
+
+📋 What's Included:
+- Automatic Ollama installation with distribution detection
+- Gemma2:9b language model download
+- Nomic-embed-text embedding model download
+- Systemd service setup (where available)
+- One-click setup script
+
+Quick Start:
+1. Open Terminal in the extracted folder
+2. Run: ./install-chatbot.sh
+3. Follow the prompts (may ask for password)
+4. That's it! Your chatbot will be ready to use.
+
+⚠️  Important Notes:
+- The script may request your password for sudo operations
+- Make sure you have a stable internet connection
+- The download may take 10-30 minutes depending on your connection speed
+- The models are approximately 5.4GB in total
+- Supports most major Linux distributions
+
+🔧 What the installer does:
+- Detects your Linux distribution automatically
+- Installs dependencies (curl, wget) if needed
+- Downloads and installs Ollama using the official installer
+- Sets up systemd service (if available)
+- Downloads the required AI models:
+  * gemma2:9b (main language model)
+  * nomic-embed-text (for embeddings)
+- Tests the installation
+
+🐧 Supported Distributions:
+- Ubuntu/Debian (apt)
+- Fedora/RHEL/CentOS/Rocky/AlmaLinux (dnf/yum)
+- Arch Linux/Manjaro (pacman)
+- openSUSE (zypper)
+- Other distributions (generic installation)
+
+🌐 After Installation:
+- Ollama API will be available at: http://localhost:11434
+- Systemd service will be configured (if available)
+- Your chatbot application will be able to connect automatically
+
+⚙️  Service Management:
+- Start: sudo systemctl start ollama
+- Stop: sudo systemctl stop ollama
+- Status: sudo systemctl status ollama
+- Manual start: ollama serve
+
+❓ Troubleshooting:
+- If permission denied: chmod +x install-chatbot.sh
+- If sudo not available: Run as root user
+- If systemd not available: Service will run manually
+- For SELinux systems: May need to configure policies
+
+📞 Support:
+If you encounter any issues, please contact support or refer to the documentation.
+
+Enjoy your local AI chatbot! 🎉
+'''
+
+    def create_batch_file(self):
+        """Create batch file for easy execution"""
+        return '''@echo off
+title Ollama Chatbot Setup
+color 0A
+
+echo.
+echo ========================================
+echo     OLLAMA CHATBOT INSTALLER
+echo ========================================
+echo.
+echo This will install Ollama and download required models for your AI chatbot.
+echo.
+echo IMPORTANT: This script needs administrator privileges to install software.
+echo If you're not running as administrator, the script will prompt you.
+echo.
+echo What will happen:
+echo - Download and install Ollama (if not already installed)
+echo - Download Gemma2:9b model (~5.4GB)
+echo - Download nomic-embed-text model (~274MB)
+echo - Configure everything automatically
+echo.
+pause
+
+echo.
+echo Starting installation...
+echo.
+
+REM Check if we're running as administrator
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo [SUCCESS] Running as Administrator
+    goto :run_install
+) else (
+    echo [INFO] Not running as Administrator, requesting elevation...
+    goto :request_admin
+)
+
+:request_admin
+REM Request administrator privileges and run the PowerShell script
+powershell -Command "& {Start-Process PowerShell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \"\"%~dp0INSTALL-CHATBOT.ps1\"\"' -Verb RunAs}"
+if %errorLevel% == 0 (
+    echo.
+    echo [SUCCESS] Installation script launched with administrator privileges
+    echo Check the new PowerShell window for installation progress.
+    echo.
+) else (
+    echo.
+    echo [ERROR] Failed to launch installation script with administrator privileges
+    echo Please try running this batch file as administrator manually.
+    echo.
+)
+goto :end
+
+:run_install
+REM We're already running as admin, run PowerShell script directly
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0INSTALL-CHATBOT.ps1"
+if %errorLevel% == 0 (
+    echo.
+    echo [SUCCESS] Installation completed successfully!
+) else (
+    echo.
+    echo [ERROR] Installation encountered an error (Exit Code: %errorLevel%)
+    echo Please check the output above for details.
+)
+
+:end
+echo.
+echo Press any key to close this window...
+pause >nul
+'''
+
 def main():
     PORT = 8000
     
@@ -1526,11 +2822,14 @@ def main():
     # Check if Qdrant is accessible
     if VECTOR_SEARCH_AVAILABLE:
         try:
-            client = QdrantClient(url="http://localhost:6333")
+            client = QdrantClient(
+                url="https://0cc71459-a784-4e72-80ba-6e37fabd4109.us-east-1-1.aws.cloud.qdrant.io:6333",
+                api_key="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ZHhmETT2uLK_Ba_g_tuffEXORkGPY0FXzariD7GLeag"
+            )
             collections = client.get_collections()
             print("✓ Qdrant is accessible")
         except:
-            print("⚠ Warning: Qdrant doesn't seem to be running on localhost:6333")
+            print("⚠ Warning: Could not connect to Qdrant Cloud")
             print("  Vector search features will be limited")
     
     with socketserver.TCPServer(("", PORT), ProxyHandler) as httpd:
