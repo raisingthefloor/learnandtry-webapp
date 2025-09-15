@@ -1,0 +1,96 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+# NOTE: we build the container image first, and then we log in and push the container image;
+#       this is intentional, as it still allows us maximum flexibility when building the
+#       container image (vs. "buildAndPush") and it also allows us to diagnose image build
+#       issues separately from container registry connection or push issues.
+
+trigger:
+- dev
+
+pool:
+  vmImage: 'ubuntu-24.04' 
+
+variables:
+- group: 'github-access'
+- name: 'containerRegistry'
+  value: 'acr-morphic'
+- name: 'repository'
+  value: 'learnandtry-webapp'
+- name: 'tag'
+  value: '$(Build.BuildNumber)'
+
+stages:
+- stage: Docker
+  displayName: Build and push Docker image
+  jobs:
+  - job: DockerBuildAndPush
+    displayName: Build and push Docker image
+    steps:
+    - task: Docker@2
+      displayName: Build Docker image
+      inputs:
+        command: build
+        containerRegistry: $(containerRegistry)
+        dockerfile: './Dockerfile'
+        repository: $(repository)
+        tags: $(tag)
+    - task: Docker@2
+      displayName: Log in to container registry
+      inputs:
+        command: login
+        containerRegistry: $(containerRegistry)
+    - task: Docker@2
+      displayName: Push docker image
+      inputs:
+        command: push
+        containerRegistry: $(containerRegistry)
+        repository: $(repository)
+        tags: $(tag)
+    - task: Docker@2
+      displayName: Log out of container registry
+      inputs:
+        command: logout
+        containerRegistry: $(containerRegistry)
+
+- stage: Update
+  displayName: Update deployment repository
+  jobs:
+  - job: UpdateDeploymentRepo
+    displayName: Update deployment repository
+    steps:
+    - task: Bash@3
+      env:
+        TAG: $(tag)
+        BRANCH: main
+        GITHUB_USERNAME: deploybot-rtf
+        GITHUB_ACCESS_TOKEN: $(DeploybotAccessToken)
+      inputs:
+        targetType: 'inline'
+        workingDirectory: ./
+        script: |
+          # if any command returns an error, stop the script
+          set -e
+
+          # DEBUG: output all commands to terminal
+          #set -x
+
+          git clone https://${GITHUB_USERNAME}:${GITHUB_ACCESS_TOKEN}@github.com/raisingthefloor/deploy-learnandtry-webapp -b ${BRANCH}
+          cd deploy-learnandtry-webapp
+
+          # DEBUG: print out the dev deployment file
+          # cat learnandtry-webapp-dev-deployment.yaml
+
+          # update our build tag
+          sed -i 's|image: morphic.azurecr.io/learnandtry-webapp:\S*|image: morphic.azurecr.io/learnandtry-webapp:$(TAG)|' learnandtry-webapp-dev-deployment.yaml
+
+          # DEBUG: print out the dev deployment file
+          # cat learnandtry-webapp-dev-deployment.yaml
+
+          # NOTE: we could create a "deploybot" email, but we use a "buildmaster" email instead
+          git config --global user.email "buildmaster@raisingthefloor.org"
+          git config --global user.name "deploybot-rtf"
+          git commit learnandtry-webapp-dev-deployment.yaml -m "deploybot: updating image tag to ${TAG}"
+          git push
