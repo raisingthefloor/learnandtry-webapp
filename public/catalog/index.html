@@ -49,19 +49,36 @@
                 </p>
 
                 <fieldset id="FunctionsFiltersFieldset" class="FilterFieldset">
-                    <legend>Functions</legend>
+                    <legend>
+                        Functions
+                    </legend>
                     <!-- 'functions filters' checkboxes -->
                 </fieldset>
                 <fieldset id="SupportedPlatformsFiltersFieldset" class="FilterFieldset">
-                    <legend>Devices</legend>
+                    <legend>
+                        Devices
+                        <button class="info-button" type="button" aria-label="Information about Devices filter">
+                            <span class="info-icon">i</span>
+                        </button>
+                        <div id="devices-info" class="info-popup" style="display: none;">
+                            <div class="info-popup-content">
+                                <p>Putting a checkmark next to a device type  (PC, Mac etc) will cause the solutions that run on that device to be added to the list.  (If none of them are checked then the list will contain the solutions for any and all of the devices)</p>
+                                <button class="info-close">&times;</button>
+                            </div>
+                        </div>
+                    </legend>
                     <!-- 'supportedPlatforms filters' checkboxes -->
                 </fieldset>
                 <fieldset id="InstallTypesFiltersFieldset" class="FilterFieldset">
-                    <legend>Need to Install?</legend>
+                    <legend>
+                        Need to Install?
+                    </legend>
                     <!-- 'installTypes filters' checkboxes -->
                 </fieldset>
                 <fieldset id="PurchaseOptionsFiltersFieldset" class="FilterFieldset">
-                    <legend>Purchase Options</legend>
+                    <legend>
+                        Purchase Options
+                    </legend>
                     <!-- 'purchaseOptions filters' checkboxes -->
                 </fieldset>
             </aside>
@@ -71,6 +88,7 @@
                     <div id="SortFilterSelector">
                         <span id="SortOrderLabel">Sort by:&nbsp;</span>
                         <select for="SortOrderLabel" id="SortOrderDropdownList">
+                            <option value="relevance" style="display: none;">Relevance</option>
                             <option value="alphabetical">A to Z</option>
                             <option value="alphabeticalReverse">Z to A</option>
                             <option value="newestFirst" selected>Most Recent First</option>
@@ -119,7 +137,71 @@
                         </div>
                     </div>
                 </template>
-            </main>        
+
+                <!-- template for chatbot loader -->
+                <template id="ChatLoaderTemplate">
+                    <div class="BotMessage" id="ChatLoaderContainer">
+                        <div class="BotMessageContent">
+                            <div class="ChatLoader"></div>
+                            <p class="ChatLoaderText">Please wait...</p>
+                        </div>
+                    </div>
+                </template>
+            </main>  
+            <div id="ChatBotSection" hidden>
+                <div id="ChatBotHeader">
+                    <h2>Chatbot</h2>
+                    <span id="ChatBotShortcut">Press Shift+Enter to close</span>
+                    <button id="ChatBotCloseButton">&times;</button>
+                </div>
+                <div id="ChatBotContent">
+                    
+                </div>
+                <!-- Chat Options Screen (shown initially) -->
+                <div id="ChatOptionsScreen" style="display: none;">
+                    <div class="chat-options-container">
+                        <h3>Chat Options</h3>
+                        <p>How would you like to proceed?</p>
+                        <div class="chat-option-buttons">
+                            <button id="StartNewChatButton" class="chat-option-btn">
+                                <span class="option-icon">💬</span>
+                                <span class="option-text">Start a New Chat</span>
+                                <span class="option-shortcut">Press Shift + N</span>
+                            </button>
+                            <button id="LoadChatButton" class="chat-option-btn">
+                                <span class="option-icon">📁</span>
+                                <span class="option-text">Load a Previously Saved Chat</span>
+                                <span class="option-shortcut">Press Shift + L</span>
+                            </button>
+                        </div>
+                        <input type="file" id="ChatFileInput" accept=".json" style="display: none;">
+                    </div>
+                </div>
+                <!-- Chat Download Prompt (shown after filters applied) -->
+                <div id="ChatDownloadPrompt" style="display: none;">
+                    <div class="chat-download-container">
+                        <h4>Save Your Chat</h4>
+                        <p>Do you want to download this chat? You can load it later as and when needed.</p>
+                        <div class="chat-download-buttons">
+                            <button id="DownloadChatYesButton" class="download-btn download-yes">Yes, Download</button>
+                            <button id="DownloadChatNoButton" class="download-btn download-no">No, Thanks</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="ChatBotInput">
+                    <input type="text" id="ChatBotInputTextbox" placeholder="Ask me about accessibility tools...">
+                    <button id="ChatBotSendButton">Send</button>
+                </div>
+            </div>      
+        </div>
+
+        <div id="FloatingChatBotContainer">
+            <div id="FloatingChatBotShortcutText">Press Shift+Enter</div>
+            <button id="FloatingChatBotButton">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4C22,2.89 21.1,2 20,2Z"/>
+                </svg>
+            </button>
         </div>
     </body>
 </html>
