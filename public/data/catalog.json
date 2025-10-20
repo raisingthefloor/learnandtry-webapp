@@ -9,7 +9,9 @@
       "reading",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -40,7 +42,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -470,7 +474,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -490,7 +496,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -517,7 +525,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -544,7 +554,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -570,7 +582,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -590,7 +604,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -611,7 +627,9 @@
       "cognitive",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos"
     ],
@@ -643,7 +661,9 @@
       "reading",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -691,7 +711,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -711,7 +733,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -731,7 +755,9 @@
     "functions": [
       "cognitive"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -751,7 +777,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -771,7 +799,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -792,7 +822,9 @@
       "cognitive",
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -810,7 +842,9 @@
     "description": "iPhone can provide subtitles, closed captions, and transcriptions so you can follow along more easily with audio and video.",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/display-subtitles-and-captions-iph3e2e23d1/17.0/ios/17.0",
     "functions": [],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -828,7 +862,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -846,7 +882,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -861,8 +899,12 @@
     "company": "Apple",
     "description": "You can change how quickly or when Siri responds, use text to make requests to Siri, have Siri audibly share notifications, and announce and end calls.",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/change-siri-accessibility-settings-iphaff1d606/17.0/ios/17.0",
-    "functions": [],
-    "installTypes": [],
+    "functions": [
+      "speech"
+    ],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -880,9 +922,12 @@
     "description": "If you have hearing or speech difficulties, you can communicate by telephone using Teletype (TTY) or real-time text (RTT)—protocols that transmit text as you type and allow the recipient to read the message right away. RTT is a more advanced protocol that transmits audio as you type text.",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/set-up-and-use-rtt-and-tty-iph3e2e47fe/17.0/ios/17.0",
     "functions": [
-      "hearing"
+      "hearing",
+      "speech"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -900,7 +945,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -920,7 +967,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -937,7 +986,9 @@
     "description": "You can use mono audio, adjust left-right stereo balance, and—with supported headphones—amplify soft sounds and adjust certain frequencies to best suit your hearing needs. You can also use data from an audiogram to improve the accuracy and sound quality of your headphones.",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/adjust-audio-settings-iphb80ab7516/17.0/ios/17.0",
     "functions": [],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -954,8 +1005,12 @@
     "company": "Apple",
     "description": "With Live Speech on iPhone, you can type and have your words spoken in person, on Phone and FaceTime calls, and in assistive communication apps using any of dozens of voices, including your Personal Voice. (Available in select languages.)",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/type-to-speak-iphcf92d2d9b/17.0/ios/17.0",
-    "functions": [],
-    "installTypes": [],
+    "functions": [
+      "speech"
+    ],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -972,8 +1027,12 @@
     "company": "Apple",
     "description": "If you’re at risk of speech loss or someone with a speech disability, you can create a personalized voice on iPhone to use with Live Speech. With Personal Voice, you can create a voice that sounds like your own to use to type to speak in FaceTime, Phone, and assistive communication apps. (Available in select languages.)",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/record-a-personal-voice-iph51936468d/17.0/ios/17.0",
-    "functions": [],
-    "installTypes": [],
+    "functions": [
+      "speech"
+    ],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -1029,7 +1088,8 @@
     "vendorProductPageUrl": "https://www.assistiveware.com/products/proloquo4text",
     "functions": [
       "reading",
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -1061,7 +1121,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -1404,7 +1466,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -1429,7 +1493,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -1449,7 +1515,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados"
     ],
@@ -1467,7 +1535,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -1649,7 +1719,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -1812,7 +1884,9 @@
       "physical",
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -1832,7 +1906,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -1850,7 +1926,8 @@
     "description": "Voiceitt is an speech recognition technology designed to understand non-standard speech and help people talk to others and use computers. It learns your unique way of speaking and translates it clearly. You can use it to have conversations, control your smart home, dictate, write emails, and even have personalized live captions during video calls.",
     "vendorProductPageUrl": "https://voiceitt.com/",
     "functions": [
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -1892,7 +1969,8 @@
       "reading",
       "cognitive",
       "vision",
-      "hearing"
+      "hearing",
+      "speech"
     ],
     "installTypes": [],
     "supportedPlatforms": [
@@ -1989,7 +2067,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -2049,7 +2129,9 @@
     "description": "You can change how quickly or when Siri responds, use text to make requests to Siri, have Siri audibly share notifications, and announce and end calls.",
     "vendorProductPageUrl": "https://support.apple.com/guide/iphone/change-siri-accessibility-settings-iphaff1d606/17.0/ios/17.0#iph7f0e160b0",
     "functions": [],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -2066,7 +2148,9 @@
     "company": "TobiiDynavox",
     "description": "TD Talk is a text to speech app that helps people to talk just using their fingers. You can express yourself naturally with a selection of voices, and switch between different languages and conversation topics. You can engage actively in conversations with word and phrase prediction, and easy in-sentence editing.",
     "vendorProductPageUrl": "https://us.tobiidynavox.com/products/td-talk",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -2091,7 +2175,9 @@
     "company": "TobiiDynavox",
     "description": "TD Snap offers different communication solutions for people with communication disabilities. It has a variety of page sets that individuals, professionals, and families can choose from to find the best fit for their needs. Some page sets are made by Tobii Dynavox, while others are created by third parties and can be bought within the app. All TD Snap page sets can be accessed by touch, switch, or keyguard and have clear speech output. They also include helpful tools like search, editing, visual supports, and Google Assistant.",
     "vendorProductPageUrl": "https://us.tobiidynavox.com/products/td-snap",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -2117,7 +2203,8 @@
     "description": "Helps non-verbal individuals or those with speech impairments communicate using pictures and symbols",
     "vendorProductPageUrl": "https://apps.apple.com/us/app/proloquo/id1521978238",
     "functions": [
-      "reading"
+      "reading",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -2150,7 +2237,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2177,7 +2266,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2202,7 +2293,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2229,7 +2322,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2254,7 +2349,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2279,7 +2376,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2306,7 +2405,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -2333,7 +2434,9 @@
       "cognitive",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -2370,7 +2473,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -2395,7 +2500,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -2476,7 +2583,8 @@
     "vendorProductPageUrl": "https://support.google.com/accessibility/android/answer/11150722?sjid=7263537158122082526-NA",
     "functions": [
       "vision",
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -2507,7 +2615,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows",
       "macos",
@@ -2598,7 +2708,8 @@
     "functions": [
       "reading",
       "cognitive",
-      "vision"
+      "vision",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -2777,7 +2888,8 @@
     "vendorProductPageUrl": "https://dictanote.co/",
     "functions": [
       "cognitive",
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -3138,7 +3250,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -3167,7 +3281,9 @@
       "physical",
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -3192,7 +3308,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows",
       "macos",
@@ -3280,7 +3398,8 @@
     "vendorProductPageUrl": "https://www.gingersoftware.com/",
     "functions": [
       "reading",
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -3313,7 +3432,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -3612,7 +3733,8 @@
     "vendorProductPageUrl": "https://usaspeechtablets.com/",
     "functions": [
       "cognitive",
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -3634,7 +3756,8 @@
     "description": "TouchChat AAC (Augmentative and Alternative Communication) is a mobile app designed to help individuals with speech or communication difficulties express themselves using symbol-based and text-to-speech communication. It’s widely used by people with autism, cerebral palsy, Down syndrome, and other speech-related challenges. The app is customizable to suit each user’s communication needs and is available on iOS devices such as iPads and iPhones.",
     "vendorProductPageUrl": "https://touchchatapp.com/",
     "functions": [
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -3662,7 +3785,8 @@
     "description": "Avaz AAC is an augmentative and alternative communication (AAC) app designed to help individuals with speech and language disabilities communicate more effectively. Developed for people with autism, cerebral palsy, Down syndrome, and other conditions affecting communication, Avaz AAC offers a range of customizable tools and features to support language development and facilitate social interaction. Available on both iOS and Android devices, the app is widely used by children and adults alike.",
     "vendorProductPageUrl": "https://avazapp.com/",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -3727,7 +3851,8 @@
     "description": "FreeSpeech helps anyone with learning languages and grammar skills. Drag and rearrange picture tiles, and FreeSpeech will convert them into a perfectly grammatical english sentence. It’s a great sentence composition tool for students. Explore how tenses, sentence forms, parts of speech, and other grammatical properties change the structure of English — and it’s all visual.",
     "vendorProductPageUrl": "https://avazapp.com/products/avaz-freespeech/",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -3761,9 +3886,12 @@
     "functions": [
       "vision",
       "physical",
-      "hearing"
+      "hearing",
+      "speech"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows",
       "macos",
@@ -3795,6 +3923,7 @@
       "vision"
     ],
     "installTypes": [
+      "builtIn",
       "installable"
     ],
     "supportedPlatforms": [
@@ -4048,7 +4177,8 @@
     "functions": [
       "cognitive",
       "vision",
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -4099,7 +4229,8 @@
     "vendorProductPageUrl": "https://play.google.com/store/apps/details?id=com.google.android.apps.accessibility.maui.actionblocks&hl=en_US",
     "functions": [
       "cognitive",
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -4185,7 +4316,8 @@
     "vendorProductPageUrl": "https://support.google.com/accessibility/android/answer/3535226?hl=en",
     "functions": [
       "vision",
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -4212,7 +4344,8 @@
     "description": "Coughdrop is a cloud-based augmentative and alternative communication (AAC) app designed for people with speech impairments, offering customizable symbol-based communication boards.",
     "vendorProductPageUrl": "https://www.coughdrop.com/",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -4301,7 +4434,9 @@
     "company": "Speech Assistant BV",
     "description": "SpeechAssistant AAC is an augmentative and alternative communication (AAC) app designed for people who have difficulty speaking, converting typed text into speech with customizable options.",
     "vendorProductPageUrl": "https://apps.apple.com/us/app/speech-assistant-aac/id1139762358",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -4356,7 +4491,8 @@
     "description": "MyTalkTools is an augmentative and alternative communication (AAC) app designed to support non-verbal individuals in expressing themselves. It enables users to communicate using a combination of symbols, images, and text-to-speech functionality. The app provides a customizable interface, allowing users to create personalized communication boards that reflect their unique needs and preferences, facilitating effective and meaningful interactions.",
     "vendorProductPageUrl": "http://www.mytalktools.com/dnn/2/Home.aspx",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -4645,7 +4781,8 @@
     "description": "Grid 3 is an advanced communication software designed to facilitate interaction for individuals with communication challenges. It offers a variety of symbol-based augmentative and alternative communication (AAC) tools that enable users to express themselves effectively. In addition to communication, Grid 3 provides features that allow users to control their environment, such as operating smart home devices, computers, and other accessible technology.",
     "vendorProductPageUrl": "https://thinksmartbox.com/try-grid/",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -4710,7 +4847,9 @@
       "cognitive",
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4735,7 +4874,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4760,7 +4901,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4785,7 +4928,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4810,7 +4955,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4836,7 +4983,9 @@
       "vision",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4862,7 +5011,9 @@
       "reading",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4888,7 +5039,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4914,7 +5067,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4939,7 +5094,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4963,9 +5120,12 @@
     "vendorProductPageUrl": "https://support.google.com/accessibility/android/answer/9042284?hl=en",
     "functions": [
       "cognitive",
-      "hearing"
+      "hearing",
+      "speech"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -4990,7 +5150,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -5015,7 +5177,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -5102,7 +5266,8 @@
     "description": "Project Activate is a communication app that allows people who are unable to speak or use technology with their hands. Users can send a text message, place a call, speak a phrase, or play an audio file when they make gestures.",
     "vendorProductPageUrl": "https://support.google.com/accessibility/android/answer/11348365?hl=en",
     "functions": [
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -5129,7 +5294,8 @@
     "description": "Look to Speak is an app designed to assist users with limited mobility or speech challenges. By using the device's front-facing camera, the app can detect eye gaze gestures, allowing users to select pre-written phrases or images and have them spoken aloud.",
     "vendorProductPageUrl": "https://blog.google/outreach-initiatives/accessibility/look-to-speak/",
     "functions": [
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -5157,7 +5323,8 @@
     "vendorProductPageUrl": "https://play.google.com/store/apps/details?id=app.virginia.firstrelease&hl=en_US",
     "functions": [
       "cognitive",
-      "hearing"
+      "hearing",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -5177,7 +5344,8 @@
     "description": "An AI-powered application that converts text-to-speech and speech-to-text in real time, so that one side of a phone call can type and read, while the other side can hear and speak, aimed to assist those with hearing loss",
     "vendorProductPageUrl": "https://nagish.com/home",
     "functions": [
-      "hearing"
+      "hearing",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -5268,7 +5436,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -5293,7 +5463,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -5318,7 +5490,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -5341,7 +5515,8 @@
     "description": "Morse code is an accessibility tool that allows users to input text by tapping out dot and dash patterns for each letter. It's part of the Gboard app and can make a real difference for people facing physical challenges. On Android, Morse code works seamlessly with features like Switch Access and TalkBack, so you can use it with assistive technologies.",
     "vendorProductPageUrl": "https://support.google.com/accessibility/android/answer/9011881?hl=en&ref_topic=9079844&sjid=6543886884093678779-NA",
     "functions": [
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -5370,7 +5545,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -5401,7 +5578,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -5420,6 +5599,7 @@
       "physical"
     ],
     "installTypes": [
+      "builtIn",
       "installable"
     ],
     "supportedPlatforms": [
@@ -5447,7 +5627,9 @@
     "functions": [
       "cognitive"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -5473,7 +5655,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -5497,7 +5681,8 @@
     "vendorProductPageUrl": "https://apps.apple.com/us/app/text-to-speech/id712104788",
     "functions": [
       "reading",
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -5521,7 +5706,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "chromeos"
     ],
@@ -5548,7 +5735,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -5732,7 +5921,9 @@
       "cognitive",
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -5786,7 +5977,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos"
     ],
@@ -5838,9 +6031,12 @@
     "functions": [
       "cognitive",
       "vision",
-      "physical"
+      "physical",
+      "speech"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows",
       "macos",
@@ -6045,7 +6241,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "windows"
     ],
@@ -6160,7 +6358,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "android"
     ],
@@ -6187,7 +6387,9 @@
       "vision",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -6214,7 +6416,9 @@
       "vision",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -6271,7 +6475,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -6299,7 +6505,9 @@
       "vision",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos"
     ],
@@ -6349,7 +6557,8 @@
     "vendorProductPageUrl": "https://apps.apple.com/us/app/gotalk-now/id454176457",
     "functions": [
       "reading",
-      "vision"
+      "vision",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -6647,7 +6856,9 @@
     "company": "Speech Blubs",
     "description": "Speech Blubs is a speech therapy app that helps children with speech delays and communication challenges. It includes interactive games and fun videos to encourage speech practice and improve pronunciation. The app includes voice-controlled activities, providing instant feedback to enhance learning and offers progress tracking for parents and therapists to monitor improvements.",
     "vendorProductPageUrl": "https://speechblubs.com/",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -6673,7 +6884,9 @@
     "company": "Tactus Therapy",
     "description": "The language Therapy app supports individuals with language disorders, including aphasia, stroke and traumatic brain injury. The app provides therapy exercises to improve language skills focusing on four key areas: Naming, Sentence Building, Auditory Comprehension, and Reading Comprehension.",
     "vendorProductPageUrl": "https://tactustherapy.com/app/language/",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -6759,7 +6972,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -6804,7 +7019,9 @@
     "company": "Cognixion",
     "description": "SpeakProse 3 from Cognixion is a text-to-speech software that allows you to convert written text into spoken words, has the ability to assemble sentences naturally, it also acts as a keyboard. It uses eye-tracking, face and gaze tracking and the ability to personalize your own short phrases to quickly select and send them. Amazon's alexa is also built inside, the user can order groceries and control their home lights if they have alexa.",
     "vendorProductPageUrl": "https://www.cognixion.com/speakprose-3",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -6835,7 +7052,9 @@
       "cognitive",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -6862,7 +7081,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -6975,7 +7196,8 @@
     "description": "LetMeTalk is supported by donationsallows you to read a row of photos as a sentence by arranging the images in a meaningful way. You can also use the built-in camera to take new pictures or upload the and since LetMeTalk doesn't require an internet connection you can use it practically anywhere, even in nursing homes, schools, and hospitals.",
     "vendorProductPageUrl": "https://www.autismconnect.com/resources/apps/app/13",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7003,7 +7225,9 @@
     "company": "Assistive Communication LLC",
     "description": "Cboard is an open-source app to assist with speech and language, aiding communication with symbols and text-to-speech.",
     "vendorProductPageUrl": "https://www.cboard.io/en/",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -7033,7 +7257,8 @@
     "description": "E-Mintza is a customizable and dynamic system of augmentative and alternative communication aimed at people with autism or with barriers of oral or written communication.",
     "vendorProductPageUrl": "https://fundacionorange.es/aplicaciones/e-mintza/",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7063,7 +7288,8 @@
     "description": "Alexicom AAC enables Android or iOS devices to serve as augmentative communication devices. Users can publish Alexicom augmentative communication pages to their devices. Communication pages with text, images, and AT&T Natural Voices speech output can be downloaded directly from the Alexicom server or imported from a PC or Mac using iTunes.",
     "vendorProductPageUrl": "https://apps.apple.com/us/app/alexicom-aac/id395122088 https://play.google.com/store/apps/details?id=org.me.alexicomaac&hl=en_US",
     "functions": [
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7119,7 +7345,9 @@
     "functions": [
       "reading"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -7228,7 +7456,8 @@
     "vendorProductPageUrl": "https://talking-clipboard.soft112.com/",
     "functions": [
       "reading",
-      "cognitive"
+      "cognitive",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7258,7 +7487,8 @@
     "vendorProductPageUrl": "https://wordweb.info/",
     "functions": [
       "cognitive",
-      "hearing"
+      "hearing",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7365,7 +7595,8 @@
     "vendorProductPageUrl": "https://theopenvoicefactory.org/",
     "functions": [
       "cognitive",
-      "vision"
+      "vision",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7457,7 +7688,8 @@
     "vendorProductPageUrl": "https://www.flipwriteraac.org/",
     "functions": [
       "cognitive",
-      "hearing"
+      "hearing",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7539,7 +7771,8 @@
     "vendorProductPageUrl": "https://www.wizkids.co.uk/private/appwriter-private/",
     "functions": [
       "reading",
-      "hearing"
+      "hearing",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -7575,7 +7808,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -7876,7 +8111,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -7903,7 +8140,9 @@
       "cognitive",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8120,7 +8359,9 @@
     "company": "Sensory App House Ltd.",
     "description": "PiCom is an application designed for Augmentative and Alternative Communication (AAC). It enables users to communicate using picture symbols, with options for text-to-speech or recorded voice output. This app is intended to assist individuals who have difficulty speaking and for whom symbol-based communication is considered appropriate.",
     "vendorProductPageUrl": "https://www.sensoryapphouse.com/sensorypicom/",
-    "functions": [],
+    "functions": [
+      "speech"
+    ],
     "installTypes": [
       "installable"
     ],
@@ -8209,7 +8450,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8235,7 +8478,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8262,7 +8507,9 @@
       "cognitive",
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8295,7 +8542,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8322,7 +8571,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8348,7 +8599,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8372,7 +8625,8 @@
     "description": "Produces short commuication sentences vocalized by SAPI5 speech synthesis. Letters in Groups are shown on the screen from which the start of the word is chosen. The groups are to be determined according to the needs of the user: one can choose an alphabetical EJARIN arrangement, or other.",
     "vendorProductPageUrl": "https://ul.gpii.net/content/head-eye-communication-various-models?search_api_views_fulltext=head%20eye%20communication&product_status=1&sort_by=search_api_relevance&sort_order=DESC&items_per_page=25",
     "functions": [
-      "physical"
+      "physical",
+      "speech"
     ],
     "installTypes": [
       "installable"
@@ -8394,7 +8648,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8420,7 +8676,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -8445,7 +8703,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ios"
     ],
@@ -8470,7 +8730,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8498,7 +8760,9 @@
       "reading",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8524,7 +8788,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8551,7 +8817,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8578,7 +8846,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8606,7 +8876,9 @@
       "reading",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8633,7 +8905,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8660,7 +8934,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8686,7 +8962,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8713,7 +8991,9 @@
     "functions": [
       "cognitive"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8740,7 +9020,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8760,7 +9042,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8786,7 +9070,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8805,7 +9091,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -8831,7 +9119,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8858,7 +9148,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8885,7 +9177,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8912,7 +9206,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8939,7 +9235,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8966,7 +9264,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -8993,7 +9293,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -9020,7 +9322,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -9047,7 +9351,9 @@
     "functions": [
       "cognitive"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9073,7 +9379,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9099,7 +9407,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9125,7 +9435,9 @@
     "functions": [
       "physical"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9144,7 +9456,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9173,7 +9487,9 @@
       "physical",
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9196,8 +9512,12 @@
     "company": "Apple",
     "description": "With Personal Voice, you can create a synthesized voice that sounds like your own to communicate with family and friends. You can use your Personal Voice to type to speak in FaceTime and phone calls, assistive communication apps, and in-person conversations.",
     "vendorProductPageUrl": "https://support.apple.com/en-us/104993",
-    "functions": [],
-    "installTypes": [],
+    "functions": [
+      "speech"
+    ],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -9224,7 +9544,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9250,7 +9572,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9276,7 +9600,9 @@
     "functions": [
       "cognitive"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "macos",
       "ipados",
@@ -9303,7 +9629,9 @@
     "functions": [
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9329,7 +9657,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9355,7 +9685,9 @@
     "functions": [
       "hearing"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
@@ -9408,7 +9740,9 @@
       "cognitive",
       "vision"
     ],
-    "installTypes": [],
+    "installTypes": [
+      "builtIn"
+    ],
     "supportedPlatforms": [
       "ipados",
       "ios"
