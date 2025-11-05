@@ -42,6 +42,7 @@ const supportedPlatformsFilters = {
     "ipados": "iPad",   
     "ios": "iPhone",
     "android": "Android",
+    "browser": "Browser",
 };
 //
 // installTypes
