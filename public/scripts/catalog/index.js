@@ -39,16 +39,16 @@ const supportedPlatformsFilters = {
     "windows": "PC (Windows)",
     "macos": "Macintosh",
     "chromeos": "Chromebooks",
-    "ipados": "iPad",   
+    "ipados": "iPad",
     "ios": "iPhone",
     "android": "Android",
-    "browser": "Browser",
 };
 //
 // installTypes
 const installTypesFilters = {
-    "builtIn": "Built-in",
-    "installable": "Installable",
+    "builtIn": "Built-in (no install)",
+    "installable": "Need to install",
+    "online": "On-line (no install)",
 };
 //
 // purchaseOptions
@@ -67,6 +67,9 @@ let isOllamaAccessible = false; // Track Ollama accessibility status
 let hasCompletedInitialOllamaCheck = false; // Track first check completion
 let ollamaCheckIntervalId = null; // Interval id for periodic checks (not used after initial)
 let isCheckingOllama = false; // Prevent multiple simultaneous checks
+let originalToolsListElements = []; // Store original unorganized tools list for restoration
+let currentFunctionFilters = []; // Track current function filters to detect changes
+let organizedListCache = null; // Cache organized list to avoid rebuilding
 
 async function checkOllamaAccessibility() {
     // Prevent multiple simultaneous checks
@@ -448,7 +451,17 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
     checkboxInput.value = value;
     checkboxInput.checked = checked;
     checkboxInput.disabled = disabled;
-    checkboxInput.addEventListener('click', () => { filterToolItemsAndUpdateToolsListCount() });
+    checkboxInput.addEventListener('click', () => {
+        // If "online" filter is checked, automatically check all device checkboxes
+        if (id === 'filter_installTypes_online' && checkboxInput.checked) {
+            // Get all device (supportedPlatforms) checkboxes and check them
+            let deviceCheckboxes = document.querySelectorAll('input[id^="filter_supportedPlatforms_"]');
+            deviceCheckboxes.forEach(checkbox => {
+                checkbox.checked = true;
+            });
+        }
+        filterToolItemsAndUpdateToolsListCount();
+    });
 
     let label = document.createElement('label');
     label.htmlFor = checkboxInput.id;
@@ -475,7 +488,7 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
     popup.style.display = 'none';
     
     let popupContent = document.createElement('div');
-    popupContent.className = 'info-popup-content';
+    popupContent.className = 'info-popup-content'; 
     
     let popupText = document.createElement('p');
     popupText.textContent = getFilterInfoText(value, text);
@@ -830,26 +843,31 @@ function validateIdOrNull(idToValidate) {
 
 function updateToolsListCount() {
     let toolsListAllElements = document.querySelectorAll('.ToolsListElement');
-    let toolsListHiddenElements = document.querySelectorAll('.ToolElementHiddenByFilter, .ToolElementHiddenBySearch');
 
-    const totalElementcount = toolsListAllElements.length;
-    const visibleElementCount = totalElementcount - toolsListHiddenElements.length;
-    const listIsFiltered = (toolsListHiddenElements.length > 0);
+    // Total count should be from the original database list
+    const totalElementcount = originalToolsListElements.length > 0 ? originalToolsListElements.length : toolsListAllElements.length;
+
+    // Count unique visible tools
+    const uniqueVisibleTools = new Set();
+    toolsListAllElements.forEach(el => {
+        if (!el.classList.contains('ToolElementHiddenByFilter') && !el.classList.contains('ToolElementHiddenBySearch')) {
+            const toolKey = el.dataset.toolName + '|' + el.dataset.toolCompany;
+            uniqueVisibleTools.add(toolKey);
+        }
+    });
+
+    const visibleElementCount = uniqueVisibleTools.size;
 
     let toolsListCount = document.getElementById('ToolsListCount');
-    if (listIsFiltered == false) {
-        toolsListCount.innerText = "Showing all tools";
+    let toolsListCountText = "Showing " + visibleElementCount;
+    if (visibleElementCount == 1) {
+        toolsListCountText += " tool";
     } else {
-        let toolsListCountText = "Showing " + visibleElementCount;
-        if (visibleElementCount == 1) {
-            toolsListCountText += " tool";
-        } else {
-            toolsListCountText += " tools";
-        }
-        toolsListCountText += " out of " + totalElementcount;
-
-        toolsListCount.innerText = toolsListCountText;
+        toolsListCountText += " tools";
     }
+    toolsListCountText += " out of " + totalElementcount;
+
+    toolsListCount.innerText = toolsListCountText;
 }
 
 /* code to filter the tools list (called whenever the filter list is updated or filters are selected/unselected) */
@@ -859,15 +877,65 @@ function filterToolItemsAndUpdateToolsListCount() {
     const selectedFilters = getSelectedFilters();
 
     // step 2: apply the filters (i.e. the unselected checkboxes) to the elements
-    // 
-    let toolsList = document.getElementById('ToolsList');
-    let allToolsListElements = toolsList.querySelectorAll('.ToolsListElement');
     //
+    let toolsList = document.getElementById('ToolsList');
+    let allToolsListElements = Array.from(toolsList.querySelectorAll('.ToolsListElement'));
+
+    // Store the original unorganized list if we haven't already (only real elements, not clones)
+    if (originalToolsListElements.length === 0 || !allToolsListElements.some(el => el.classList.contains('DuplicateToolItem'))) {
+        // Only store if the current list doesn't contain duplicates or section headers
+        const hasOrganizedContent = toolsList.querySelector('.FunctionSectionHeader') !== null;
+        if (!hasOrganizedContent) {
+            originalToolsListElements = allToolsListElements.map(el => el);
+        }
+    }
+
+    // Check if function filters have actually changed (to avoid unnecessary reorganization)
+    const functionFiltersChanged = JSON.stringify(currentFunctionFilters) !== JSON.stringify(selectedFilters.selectedFunctions);
+
+    // If function filters are selected, organize tools by function category
+    if (selectedFilters.selectedFunctions && selectedFilters.selectedFunctions.length > 0) {
+        // Only reorganize if function filters changed or we don't have a cached version
+        if (functionFiltersChanged || !organizedListCache) {
+            // Use the original list for organization to avoid duplicate clones
+            const sourceElements = originalToolsListElements.length > 0 ? originalToolsListElements : allToolsListElements;
+
+            // Organize tools by their disability functions
+            const organizedElements = organizeToolsByFunctions(sourceElements, selectedFilters);
+
+            // Cache the organized list for reuse
+            organizedListCache = organizedElements;
+            currentFunctionFilters = [...selectedFilters.selectedFunctions];
+
+            // Replace the tools list with the organized version
+            toolsList.replaceChildren(...organizedElements);
+
+            // Re-query all elements (including section headers and cloned tools)
+            allToolsListElements = Array.from(toolsList.querySelectorAll('.ToolsListElement, .FunctionSectionHeader'));
+        } else {
+            // Function filters haven't changed - just use existing elements
+            allToolsListElements = Array.from(toolsList.querySelectorAll('.ToolsListElement, .FunctionSectionHeader'));
+        }
+    } else {
+        // No function filters selected - restore the original flat list if it was organized
+        const hasOrganizedContent = toolsList.querySelector('.FunctionSectionHeader') !== null;
+        if (hasOrganizedContent && originalToolsListElements.length > 0) {
+            // Restore the original list
+            toolsList.replaceChildren(...originalToolsListElements);
+            allToolsListElements = originalToolsListElements;
+
+            // Clear cache since we're back to unorganized view
+            organizedListCache = null;
+            currentFunctionFilters = [];
+        }
+    }
+
+    // Apply visibility filters to the current elements
     filterToolsListElements(allToolsListElements, selectedFilters);
 
     // step 3: update the tools list count
     updateToolsListCount();
-    
+
     // Clear relevance cache when filters change
     clearRelevanceCache();
 }
@@ -919,71 +987,186 @@ function getSelectedFilters() {
     };
 }
 
-// NOTE: this function filters the list in place
-// NOTE: in the current implementation, we only apply filters in a filter category if at least one checkbox is checked
-function filterToolsListElements(toolsListElements, selectedFilters) {
-    toolsListElements.forEach((toolsListElement) => {
-        // filter: functions
+// Helper function to create a section header for disability function categories
+function createFunctionSectionHeader(functionKey) {
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'FunctionSectionHeader';
+    headerDiv.style.cssText = 'font-size: 1.5em; font-weight: bold; margin: 2em 0 1em 0; padding: 0.5em 0; border-bottom: 2px solid #ccc; color: #333;';
+
+    const functionDisplayName = functionsFilters[functionKey] || functionKey;
+    headerDiv.textContent = functionDisplayName;
+    headerDiv.setAttribute('role', 'heading');
+    headerDiv.setAttribute('aria-level', '2');
+
+    return headerDiv;
+}
+
+// Helper function to add duplicate indicator text to tool name
+function addDuplicateIndicatorToToolName(toolClone, firstAppearanceFunction) {
+    const toolItemHeader = toolClone.querySelector('.ToolItemHeader');
+    if (!toolItemHeader) return;
+
+    const functionDisplayName = functionsFilters[firstAppearanceFunction] || firstAppearanceFunction;
+    const currentText = toolItemHeader.textContent;
+    toolItemHeader.textContent = `${currentText} (also listed in ${functionDisplayName})`;
+}
+
+// Helper function to organize tools by their disability functions
+function organizeToolsByFunctions(toolsListElements, selectedFilters) {
+    // If no function filters are selected, return tools as-is (no organization)
+    if (!selectedFilters.selectedFunctions || selectedFilters.selectedFunctions.length === 0) {
+        return toolsListElements;
+    }
+
+    // Track where each tool first appeared
+    const toolFirstAppearance = new Map(); // Maps "toolName|toolCompany" -> functionKey
+
+    // Group tools by each selected function
+    const organizedElements = [];
+
+    // Iterate through selected functions in their display order
+    selectedFilters.selectedFunctions.forEach((selectedFunction) => {
+        const toolsForThisFunction = [];
+
+        // Find all tools that support this function and pass all other filters
+        toolsListElements.forEach((toolsListElement) => {
+            const toolItemFunctions = toolsListElement.dataset.functions.split(' ');
+
+            // Check if this tool supports the current function
+            if (!toolItemFunctions.includes(selectedFunction)) {
+                return;
+            }
+
+            // Check if tool passes all other filters
+            const passesOtherFilters = checkToolPassesFilters(toolsListElement, selectedFilters, true);
+            if (!passesOtherFilters) {
+                return;
+            }
+
+            // Clone the tool element so we can show it in multiple sections
+            const toolClone = toolsListElement.cloneNode(true);
+
+            // Re-attach event listener for the header click (to toggle expand/collapse)
+            const toolItemHeader = toolClone.querySelector('.ToolItemHeader');
+            if (toolItemHeader) {
+                toolItemHeader.addEventListener('click', () => { toggleToolsListElement(toolClone) });
+            }
+
+            // Check if this tool has already appeared in a previous section
+            const toolKey = toolsListElement.dataset.toolName + '|' + toolsListElement.dataset.toolCompany;
+            if (toolFirstAppearance.has(toolKey)) {
+                // This is a duplicate - mark it with a different style
+                toolClone.style.backgroundColor = '#f9f9f9';
+                toolClone.style.borderLeft = '4px solid #888';
+                toolClone.classList.add('DuplicateToolItem');
+
+                // Add text to the tool name indicating where it was first listed
+                const firstFunction = toolFirstAppearance.get(toolKey);
+                addDuplicateIndicatorToToolName(toolClone, firstFunction);
+            } else {
+                // This is the first appearance - track it
+                toolFirstAppearance.set(toolKey, selectedFunction);
+            }
+
+            toolsForThisFunction.push(toolClone);
+        });
+
+        // Add section header and tools for this function if any tools were found
+        if (toolsForThisFunction.length > 0) {
+            const sectionHeader = createFunctionSectionHeader(selectedFunction);
+            organizedElements.push(sectionHeader);
+            organizedElements.push(...toolsForThisFunction);
+        }
+    });
+
+    return organizedElements;
+}
+
+// Helper function to check if a tool passes all filters (excluding function filter if skipFunctionCheck is true)
+function checkToolPassesFilters(toolsListElement, selectedFilters, skipFunctionCheck = false) {
+    // Check function filter
+    if (!skipFunctionCheck) {
         const toolItemFunctions = toolsListElement.dataset.functions.split(' ');
-        //
         let toolItemSupportsSelectedFunction = false;
         if (selectedFilters.selectedFunctions.length > 0) {
             selectedFilters.selectedFunctions.forEach((selectedFunction) => {
                 if (toolItemFunctions.includes(selectedFunction)) {
                     toolItemSupportsSelectedFunction = true;
                 }
-            });    
+            });
         } else {
             toolItemSupportsSelectedFunction = true;
         }
-        //
-        // filter: supportedPlatforms
-        const toolItemSupportedPlatforms = toolsListElement.dataset.supportedPlatforms.split(' ');
-        //
-        let toolItemSupportsSelectedSupportedPlatforms = false;
-        if (selectedFilters.selectedSupportedPlatforms.length > 0) {
-            selectedFilters.selectedSupportedPlatforms.forEach((selectedSupportedPlatform) => {
-                if (toolItemSupportedPlatforms.includes(selectedSupportedPlatform)) {
-                    toolItemSupportsSelectedSupportedPlatforms = true;
-                }
-            });
-        } else {
-            toolItemSupportsSelectedSupportedPlatforms = true;
+        if (!toolItemSupportsSelectedFunction) {
+            return false;
         }
-        //
-        // filter: installTypes
-        const toolItemInstallTypes = toolsListElement.dataset.installTypes.split(' ');
-        //
-        let toolItemSupportsSelectedInstallTypes = false;
-        if (selectedFilters.selectedInstallTypes.length > 0) {
-            selectedFilters.selectedInstallTypes.forEach((selectedInstallType) => {
-                if (toolItemInstallTypes.includes(selectedInstallType)) {
-                    toolItemSupportsSelectedInstallTypes = true;
-                }
-            });
-        } else {
-            toolItemSupportsSelectedInstallTypes = true;
+    }
+
+    // Check supportedPlatforms filter
+    const toolItemSupportedPlatforms = toolsListElement.dataset.supportedPlatforms.split(' ');
+    let toolItemSupportsSelectedSupportedPlatforms = false;
+    if (selectedFilters.selectedSupportedPlatforms.length > 0) {
+        selectedFilters.selectedSupportedPlatforms.forEach((selectedSupportedPlatform) => {
+            if (toolItemSupportedPlatforms.includes(selectedSupportedPlatform)) {
+                toolItemSupportsSelectedSupportedPlatforms = true;
+            }
+        });
+    } else {
+        toolItemSupportsSelectedSupportedPlatforms = true;
+    }
+    if (!toolItemSupportsSelectedSupportedPlatforms) {
+        return false;
+    }
+
+    // Check installTypes filter
+    const toolItemInstallTypes = toolsListElement.dataset.installTypes.split(' ');
+    let toolItemSupportsSelectedInstallTypes = false;
+    if (selectedFilters.selectedInstallTypes.length > 0) {
+        selectedFilters.selectedInstallTypes.forEach((selectedInstallType) => {
+            if (toolItemInstallTypes.includes(selectedInstallType)) {
+                toolItemSupportsSelectedInstallTypes = true;
+            }
+        });
+    } else {
+        toolItemSupportsSelectedInstallTypes = true;
+    }
+    if (!toolItemSupportsSelectedInstallTypes) {
+        return false;
+    }
+
+    // Check purchaseOptions filter
+    const toolItemPurchaseOptions = toolsListElement.dataset.purchaseOptions.split(' ');
+    let toolItemSupportsSelectedPurchaseOptions = false;
+    if (selectedFilters.selectedPurchaseOptions.length > 0) {
+        selectedFilters.selectedPurchaseOptions.forEach((selectedInstallType) => {
+            if (toolItemPurchaseOptions.includes(selectedInstallType)) {
+                toolItemSupportsSelectedPurchaseOptions = true;
+            }
+        });
+    } else {
+        toolItemSupportsSelectedPurchaseOptions = true;
+    }
+    if (!toolItemSupportsSelectedPurchaseOptions) {
+        return false;
+    }
+
+    return true;
+}
+
+// NOTE: this function filters the list in place
+// NOTE: in the current implementation, we only apply filters in a filter category if at least one checkbox is checked
+function filterToolsListElements(toolsListElements, selectedFilters) {
+    toolsListElements.forEach((toolsListElement) => {
+        // Skip section headers
+        if (toolsListElement.classList.contains('FunctionSectionHeader')) {
+            return;
         }
-        //
-        // filter: purchaseOptions
-        const toolItemPurchaseOptions = toolsListElement.dataset.purchaseOptions.split(' ');
-        //
-        let toolItemSupportsSelectedPurchaseOptions = false;
-        if (selectedFilters.selectedPurchaseOptions.length > 0) {
-            selectedFilters.selectedPurchaseOptions.forEach((selectedInstallType) => {
-                if (toolItemPurchaseOptions.includes(selectedInstallType)) {
-                    toolItemSupportsSelectedPurchaseOptions = true;
-                }
-            });
-        } else {
-            toolItemSupportsSelectedPurchaseOptions = true;
-        }
+
+        // Use the helper function to check if tool passes all filters
+        const passesAllFilters = checkToolPassesFilters(toolsListElement, selectedFilters);
+
         // set/clear ToolItemPresent class on the tool item, depending on whether the element should be filtered out by the selected filter(s)
-        if ((toolItemSupportsSelectedFunction === false) ||
-            (toolItemSupportsSelectedSupportedPlatforms === false) ||
-            (toolItemSupportsSelectedInstallTypes === false) ||
-            (toolItemSupportsSelectedPurchaseOptions === false)
-            ){
+        if (!passesAllFilters) {
             toolsListElement.classList.add('ToolElementHiddenByFilter')
         } else {
             toolsListElement.classList.remove('ToolElementHiddenByFilter');
@@ -1482,8 +1665,9 @@ function getFilterInfoText(filterValue, filterDisplayName) {
         'speech': 'Tools for individuals who are non-verbal or have difficulty speaking or forming clear verbal communication.',
         
         // Install types descriptions
-        'builtIn': 'choosing this option will cause the list to show ONLY those solutions that are built into the computer (so always there and always free)',
-        'installable': 'chosing this option will cause the list to show ONLY those solutions that need to be installed in order to be used',
+        'builtIn': 'Feature is built-into device so is already there and free to use',
+        'online': 'Tool runs inside a browser and works on any computer with a browser (Chrome,  edge, Firefox, Safari,etc.',
+        'installable': 'Is program or browser extension and needs to be installed on device to work) — goes in (i)  pop up',
         
         // Purchase options descriptions
         'free': 'If you check this box under Purchase Options the list will include solutions that are described as FREE (this includes built-in options).',
