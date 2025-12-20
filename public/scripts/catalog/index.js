@@ -255,15 +255,18 @@ function setupElementEvents() {
         floatingChatBotButton.addEventListener('click', openChatBot);
     }
 
-    // Wire up info popup events for the devices info section
-    let devicesInfoButton = document.querySelector('#devices-info').previousElementSibling;
-    if (devicesInfoButton && devicesInfoButton.classList.contains('info-button')) {
-        devicesInfoButton.addEventListener('click', () => toggleInfoPopup('devices-info'));
-    }
+    // Wire up info popup events for the devices info section (if it exists)
+    let devicesInfo = document.querySelector('#devices-info');
+    if (devicesInfo) {
+        let devicesInfoButton = devicesInfo.previousElementSibling;
+        if (devicesInfoButton && devicesInfoButton.classList.contains('info-button')) {
+            devicesInfoButton.addEventListener('click', () => toggleInfoPopup('devices-info'));
+        }
 
-    let devicesInfoCloseButton = document.querySelector('#devices-info .info-close');
-    if (devicesInfoCloseButton) {
-        devicesInfoCloseButton.addEventListener('click', () => toggleInfoPopup('devices-info'));
+        let devicesInfoCloseButton = document.querySelector('#devices-info .info-close');
+        if (devicesInfoCloseButton) {
+            devicesInfoCloseButton.addEventListener('click', () => toggleInfoPopup('devices-info'));
+        }
     }
 }
 
@@ -331,9 +334,9 @@ function sidebarSectionClicked(event) {
 
 async function populateInitialContents() {
     // set up filters sidebar; note that the filter checkboxes are disabled by default (until we have loaded the filter list)
-        populateFiltersSidebar();
+    populateFiltersSidebar();
 
-        let fetchCatalogResponse;
+    let fetchCatalogResponse;
     try {
         fetchCatalogResponse = await fetch('/data/catalog.json');
     } catch {
@@ -347,6 +350,9 @@ async function populateInitialContents() {
         return;
     }
     const catalog = await fetchCatalogResponse.json();
+
+    // Initialize needs hierarchy with catalog data
+    initializeNeedsHierarchy(catalog);
 
     // populate the tools list's elements
     // NOTE: we assemble the full catalog, then push it to the DOM all at once
@@ -460,6 +466,12 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
                 checkbox.checked = true;
             });
         }
+        
+        // If this is a function filter, update the needs hierarchy display
+        if (id.startsWith('filter_functions_')) {
+            updateNeedsHierarchyDisplay();
+        }
+        
         filterToolItemsAndUpdateToolsListCount();
     });
 
@@ -2748,6 +2760,353 @@ async function downloadSetup(platform) {
             
             isDownloading = false;
         }, 2000);
+    }
+}
+
+// Needs Hierarchy Data
+const needsHierarchyData = {
+    "reading": {
+        name: "Reading",
+        description: "Tools for users who have any problems with reading, including dyslexia, meanings of new/unknown words, idioms, eye tracking while reading, or any other reason a person struggles to read text.",
+        includes: "Includes tools and features to read-text-aloud including highlight as you hear, dictionaries, translators, highlighters, dyslexia fonts, tools that put focus on line you are reading, remove distracting text highlight words as you read, help finding the start of the next line of text when reading, change fonts, text size, boldness, colors and contrast, full-page color overlays to reduce visual stress, spacing of characters and lines, breaking words into hyphenated syllables, providing pronunciations, transform pictures scans of paper documents into other document forms including ebooks, transforming one digital document format into another more accessible format for the user, and assistance with reading math.",
+        seeAlso: "See also Vision - since making text larger or clearer can make it easier to read.",
+        children: ["vision"]
+    },
+    "writing": {
+        name: "Writing",
+        description: "Tools for users who have any problems with writing, organizing thoughts, getting started, knowing the right words, spelling, grammar, fear of bad output or any other barrier to writing.",
+        includes: "Includes tools and features for organizing and structuring thoughts and ideas; real-time spelling, grammar, and punctuation checking (including context-aware and phonetic spell checking for dyslexia); help with style, and clarity, tools to suggest words and better phrasing, word predictors (to speed typing) translation dictionaries, read-aloud to better catch errors, and assistance writing/typing math equations; note-taking tools that turn recorded lectures, meetings, or videos into searchable text notes and summaries",
+        seeAlso: "If user has trouble with typing, see also Physical for solutions like speech-to-text, alternatives to standard keyboard input, etc.",
+        children: ["physical"]
+    },
+    "cognitive": {
+        name: "Cognitive",
+        description: "Tools for users who have any problems with thinking, remembering, or complex language or concepts.",
+        includes: "Includes tools and features for breaking complex sentences into simpler chunks/phrases for easier understanding, automatic extraction of key ideas, vocabulary lists, or study questions from text. toolbars to make things easier to find, language simplification, shortcuts that do not involve memorization, memory aids, automatic text, distraction masking and removal, animation control, extra time to read pop-ups, speech instead of typing, reduce contrast, simplify screen layouts, visual and audio presentation of information.",
+        seeAlso: "See also Vision (for making thing larger), Exec/Focus, Reading (for text-read-aloud and more), Writing and Speech/Comm (if users have trouble with communication)",
+        children: ["vision", "reading", "writing", "speech"]
+    },
+    "execFocus": {
+        name: "Exec/Focus",
+        description: "Tools for users who have any problems executive functions, planning, focusing, staying on task, or finishing.",
+        includes: "Includes tools and features to quickly turn on helpful modes, play gentle background sounds (such as rain or waves) to block distracting noise and support calm focus, lock the device to a single app and block certain buttons or touch areas so you don't accidentally leave the task you're working on, hide ads, menus, and other clutter, dim or mask everything on the screen except the line or area you're working on so your eyes stay on one place, help you organize and structure your day, your ideas, your tasks, support executive skills with visual schedules, reminders, and simple goal-setting tools, provide focus timers with planned breaks, \"Do Not Disturb\" to cut down interruptions.",
+        seeAlso: null,
+        children: []
+    },
+    "vision": {
+        name: "Vision",
+        description: "Tools for users who have any type of visual problem (color blindness, blurry or tunnel vision, central loss, contrast, light sensitivity, etc.)",
+        includes: "Includes tools and features to enlarge text, images, and cursors, invert screen colors, apply color filters, enhance contrast so text stands out more clearly, increase overall contrast and choose high-contrast themes so low-contrast text and controls are easier to see, change text size, simplify screen layouts, text-to-speech, image or text to e-book and audio conversions.",
+        seeAlso: "See also Reading tools for ebooks, readaloud features, and other reading aids.",
+        children: ["reading"]
+    },
+    "braille": {
+        name: "Braille",
+        description: "Tools for Braille Users",
+        includes: "Tools to support use of braille displays and braille keyboards to read screen content and interact with apps, convert printed or digital text, web pages, and scanned documents into electronic braille or braille-ready files (including support for multiple languages, mathematics, and music notation), using an on-screen touchscreen as a six-dot braille keyboard, all in parallel with enlarged text and speech output for those with hearing and residual vision.",
+        seeAlso: "See also Vision.",
+        children: ["vision"]
+    },
+    "hearing": {
+        name: "Hearing",
+        description: "Tools for people who have trouble using computers because they cannot hear them or hear them well.",
+        includes: "Includes tools and features to make it easier to hear and understand speech through amplification, filtering, frequency shifting, and reducing background sounds; provide visual indication of any sounds; transform any spoken words and sounds (live or recorded) into text, and also translate them into sign language; show any captions automatically; record transform into text and summarize meetings, provide real-time text alongside spoken conversations, connection of audio directly to hearing aids; and provision of tactile indications for alerts",
+        seeAlso: "See also Writing for people whose native language is sign-language would benefit from writing aids, since writing is in a different language.",
+        children: ["writing"]
+    },
+    "physical": {
+        name: "Physical",
+        description: "Tools for people who have trouble physically using computers or using them efficiently",
+        includes: "Includes tools and features to make it easier to use keyboards with one hand, one finger, mouthstick or headstock, or with tremor or athetodic movements (CP); to type and to control the computer via a wide variety of alternate text input techniques including speech, eye-gaze, head movement or pointing, scanning (one or two switch), morse or other codes, and a wide variety of input devices including larger and smaller keyboards, switches, joysticks, sip and puff, emg, eye-blink; to speed up input with word prediction, word completion, macros, and other techniques; ways to make it easier to use the mouse with tremor and alternate ways to control mouse pointer including keyboards and all of the above devices;",
+        seeAlso: "See also Writing and (for those who cannot speak or speak clearly) Speech/Communication.",
+        children: ["writing", "speech"]
+    },
+    "speech": {
+        name: "Speech/Comm",
+        description: "Tools for people who have trouble speaking or speaking clearly or communicating through language.",
+        includes: "Includes tools and features to clarify people's speech, to recognize some types of difficult to understand speech and re-speak it clearly, to let people communicate in text, sign language, pictures, symbols, or voice of their choosing (including original voice for those who have lost it); to accelerate communication when using non-speech input methods; ability to use artificial but natural voice to control voice operated devices including computers and artificial agents.",
+        seeAlso: "See also Physical for special interfaces and Writing for tools for faster and better expression.",
+        children: ["physical"]
+    }
+};
+
+// Map function IDs to need keys
+const functionToNeedMap = {
+    "reading": "reading",
+    "writing": "writing",
+    "cognitive": "cognitive",
+    "vision": "vision",
+    "physical": "physical",
+    "hearing": "hearing",
+    "speech": "speech"
+};
+
+let catalogData = [];
+let selectedNeeds = new Set();
+let displayedProducts = new Map(); // Track which products have been displayed and where
+
+// Render the needs hierarchy (not used - see updateNeedsHierarchyDisplay instead)
+function renderNeedsHierarchy() {
+    // This function is no longer used
+    // Needs hierarchy is now rendered via updateNeedsHierarchyDisplay()
+}
+
+// Create a need element
+function createNeedElement(needKey, isSelected = false, visited = new Set(), depth = 0) {
+    const need = needsHierarchyData[needKey];
+    if (!need || visited.has(needKey) || depth > 2) return null;
+    
+    visited.add(needKey);
+    
+    const needDiv = document.createElement('div');
+    needDiv.className = 'need-item';
+    needDiv.dataset.needKey = needKey;
+    
+    // Count products for this need
+    const productCount = getProductCountForNeed(needKey);
+    
+    // Create header
+    const header = document.createElement('div');
+    header.className = 'need-header';
+    
+    const headerLeft = document.createElement('div');
+    headerLeft.className = 'need-header-left';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'need-checkbox';
+    checkbox.checked = isSelected || selectedNeeds.has(needKey);
+    checkbox.addEventListener('change', (e) => {
+        e.stopPropagation();
+        handleNeedSelection(needKey, checkbox.checked);
+    });
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'need-name';
+    nameSpan.textContent = need.name;
+    
+    const countSpan = document.createElement('span');
+    countSpan.className = 'need-item-count';
+    countSpan.textContent = `[${productCount} items]`;
+    
+    headerLeft.appendChild(checkbox);
+    headerLeft.appendChild(nameSpan);
+    headerLeft.appendChild(countSpan);
+    
+    const expander = document.createElement('span');
+    expander.className = 'need-expander';
+    expander.textContent = '▶';
+    
+    header.appendChild(headerLeft);
+    header.appendChild(expander);
+    
+    header.addEventListener('click', (e) => {
+        if (e.target !== checkbox) {
+            needDiv.classList.toggle('expanded');
+        }
+    });
+    
+    // Create content
+    const content = document.createElement('div');
+    content.className = 'need-content';
+    
+    // Description
+    const description = document.createElement('div');
+    description.className = 'need-description';
+    description.textContent = need.description;
+    content.appendChild(description);
+    
+    // Includes
+    const includes = document.createElement('div');
+    includes.className = 'need-includes';
+    includes.innerHTML = `<strong>INCLUDES LISTING:</strong> ${need.includes}`;
+    content.appendChild(includes);
+    
+    // See Also
+    if (need.seeAlso) {
+        const seeAlso = document.createElement('div');
+        seeAlso.className = 'need-see-also';
+        seeAlso.innerHTML = `<strong>SEE ALSO:</strong> ${need.seeAlso}`;
+        content.appendChild(seeAlso);
+    }
+    
+    // Products
+    const products = getProductsForNeed(needKey);
+    if (products.length > 0) {
+        const productsDiv = document.createElement('div');
+        productsDiv.className = 'need-products';
+        
+        const productsHeader = document.createElement('div');
+        productsHeader.className = 'need-products-header';
+        productsHeader.textContent = 'PRODUCTS:';
+        productsDiv.appendChild(productsHeader);
+        
+        // Show ALL products, marking duplicates
+        products.forEach(product => {
+            const productCard = createProductCard(product, needKey);
+            productsDiv.appendChild(productCard);
+        });
+        
+        content.appendChild(productsDiv);
+    }
+    
+    // Child needs
+    if (need.children && need.children.length > 0 && depth < 2) {
+        const childrenDiv = document.createElement('div');
+        childrenDiv.className = 'need-children';
+        
+        const childrenHeader = document.createElement('div');
+        childrenHeader.className = 'need-children-header';
+        childrenHeader.textContent = 'CHILD NEEDS:';
+        childrenDiv.appendChild(childrenHeader);
+        
+        need.children.forEach(childKey => {
+            const childNeed = needsHierarchyData[childKey];
+            if (childNeed && !visited.has(childKey)) {
+                const childVisited = new Set(visited);
+                const childItem = createNeedElement(childKey, false, childVisited, depth + 1);
+                if (childItem) {
+                    childrenDiv.appendChild(childItem);
+                }
+            }
+        });
+        
+        content.appendChild(childrenDiv);
+    }
+    
+    needDiv.appendChild(header);
+    needDiv.appendChild(content);
+    
+    return needDiv;
+}
+
+// Create a product card
+function createProductCard(product, currentNeedKey) {
+    const card = document.createElement('div');
+    
+    // Check if this product was already displayed in another category
+    const previousCategory = displayedProducts.get(product.id);
+    
+    if (previousCategory) {
+        // Product already listed - show grey card with reference
+        card.className = 'product-card product-card-duplicate';
+        
+        const name = document.createElement('div');
+        name.className = 'product-name';
+        name.textContent = product.name;
+        
+        const alreadyListed = document.createElement('div');
+        alreadyListed.className = 'product-already-listed';
+        alreadyListed.textContent = `Already listed above under ${needsHierarchyData[previousCategory]?.name || previousCategory}`;
+        
+        card.appendChild(name);
+        card.appendChild(alreadyListed);
+    } else {
+        // First time showing this product - show full card
+        card.className = 'product-card';
+        
+        const name = document.createElement('div');
+        name.className = 'product-name';
+        name.textContent = product.name;
+        
+        const info = document.createElement('div');
+        info.className = 'product-info';
+        
+        const devices = product.supportedPlatforms?.join(', ') || 'N/A';
+        const cost = product.purchaseOptions?.join(', ') || 'N/A';
+        
+        info.textContent = `Devices: ${devices} • Cost: ${cost}`;
+        
+        card.appendChild(name);
+        card.appendChild(info);
+        
+        card.addEventListener('click', () => {
+            // Find and expand the tool in the main list
+            const toolElement = document.querySelector(`[data-tool-id="${product.id}"]`);
+            if (toolElement) {
+                toolElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const header = toolElement.querySelector('.ToolItemHeader');
+                if (header && !toolElement.classList.contains('ToolItemExpanded')) {
+                    header.click();
+                }
+            }
+        });
+        
+        // Mark this product as displayed in this category
+        displayedProducts.set(product.id, currentNeedKey);
+    }
+    
+    return card;
+}
+
+// Get products for a need
+function getProductsForNeed(needKey) {
+    if (!catalogData || catalogData.length === 0) {
+        return [];
+    }
+    
+    return catalogData.filter(product => {
+        return product.functions && product.functions.includes(needKey);
+    });
+}
+
+// Get product count for a need
+function getProductCountForNeed(needKey) {
+    return getProductsForNeed(needKey).length;
+}
+
+// Handle need selection - sync with function filter checkboxes
+function handleNeedSelection(needKey, isChecked) {
+    // Update the corresponding function filter checkbox
+    const functionCheckbox = document.getElementById(`filter_functions_${needKey}`);
+    if (functionCheckbox) {
+        functionCheckbox.checked = isChecked;
+        // Trigger the filter update
+        filterToolItemsAndUpdateToolsListCount();
+    }
+}
+
+
+// Initialize needs hierarchy when catalog data is loaded
+function initializeNeedsHierarchy(data) {
+    catalogData = data;
+    // Don't render initially - wait for filter selection
+}
+
+// Update needs hierarchy display based on selected function filters
+function updateNeedsHierarchyDisplay() {
+    const needsContainer = document.getElementById('NeedsContainer');
+    const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
+    const selectedFunctions = [];
+    
+    functionCheckboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            selectedFunctions.push(checkbox.value);
+        }
+    });
+    
+    if (selectedFunctions.length === 0) {
+        // No functions selected, hide needs container and show tools list
+        needsContainer.innerHTML = '';
+        needsContainer.style.display = 'none';
+        document.body.classList.remove('needs-hierarchy-active');
+        displayedProducts.clear(); // Clear tracking
+    } else {
+        // Show needs hierarchy for selected functions, hide tools list
+        needsContainer.style.display = 'block';
+        document.body.classList.add('needs-hierarchy-active');
+        needsContainer.innerHTML = '';
+        displayedProducts.clear(); // Reset tracking for new render
+        
+        selectedFunctions.forEach(needKey => {
+            const need = needsHierarchyData[needKey];
+            if (need) {
+                const needItem = createNeedElement(needKey, true, new Set(), 0);
+                if (needItem) {
+                    needsContainer.appendChild(needItem);
+                }
+            }
+        });
     }
 }
 

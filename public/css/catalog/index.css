@@ -239,6 +239,11 @@ body {
     grid-template-columns: 1fr;
 }
 
+/* Hide tools list when needs hierarchy is displayed */
+body.needs-hierarchy-active #ToolsList {
+    display: none;
+}
+
 #ToolsListLoadingMessage {
     padding: var(--tool-item-padding);
 }
@@ -1201,4 +1206,179 @@ body {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Needs Hierarchy Styles */
+#NeedsContainer {
+    padding: 12px;
+    margin: 0 8px;
+}
+
+.need-item {
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    background-color: white;
+}
+
+.need-header {
+    padding: 8px;
+    cursor: pointer;
+    background-color: #f5f5f5;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+}
+
+.need-header:hover {
+    background-color: #e8e8e8;
+}
+
+.need-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.need-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.need-name {
+    font-size: 0.95rem;
+}
+
+.need-item-count {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.need-expander {
+    font-size: 1rem;
+    transition: transform 0.2s;
+}
+
+.need-item.expanded .need-expander {
+    transform: rotate(90deg);
+}
+
+.need-content {
+    display: none;
+    padding: 10px;
+    background-color: #fafafa;
+}
+
+.need-item.expanded .need-content {
+    display: block;
+}
+
+.need-description {
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: white;
+    border-left: 2px solid #999;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+.need-includes {
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: white;
+    border-left: 2px solid #999;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+.need-includes strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.need-see-also {
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: white;
+    border-left: 2px solid #999;
+    font-size: 0.85rem;
+    color: #333;
+}
+
+.need-see-also strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #333;
+}
+
+.need-products {
+    margin-bottom: 10px;
+}
+
+.need-products-header {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.product-card {
+    background-color: #f5f5f5;
+    color: #333;
+    padding: 8px;
+    margin-bottom: 6px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.product-card:hover {
+    background-color: #e8e8e8;
+}
+
+.product-card-duplicate {
+    background-color: #e0e0e0;
+    color: #666;
+    cursor: default;
+}
+
+.product-card-duplicate:hover {
+    background-color: #e0e0e0;
+}
+
+.product-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+}
+
+.product-info {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.product-already-listed {
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+    margin-top: 2px;
+}
+
+.need-children {
+    margin-top: 10px;
+    padding-left: 10px;
+    border-left: 2px solid #ccc;
+}
+
+.need-children-header {
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+    color: #666;
 }
