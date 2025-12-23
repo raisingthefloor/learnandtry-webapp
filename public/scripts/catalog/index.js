@@ -350,6 +350,10 @@ async function populateInitialContents() {
         return;
     }
     const catalog = await fetchCatalogResponse.json();
+    
+    // Store catalog data globally for ranking calculations
+    catalogData = catalog;
+    window.catalogData = catalogData; // Expose for debugging
 
     // Initialize needs hierarchy with catalog data
     initializeNeedsHierarchy(catalog);
@@ -411,7 +415,22 @@ async function populateInitialContents() {
 
     // wire up the "sort order" dropdown's change event (so that the user can change the sort order)
     let sortOrderDropdownList = document.getElementById('SortOrderDropdownList');
-    sortOrderDropdownList.addEventListener('change', sortToolsList);
+    sortOrderDropdownList.addEventListener('change', () => {
+        // Clear organized list cache so it gets rebuilt with new sort order
+        organizedListCache = null;
+        
+        // Check if needs hierarchy is currently displayed
+        const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
+        const hasFunctionFiltersSelected = Array.from(functionCheckboxes).some(cb => cb.checked);
+        
+        if (hasFunctionFiltersSelected) {
+            // Rebuild needs hierarchy with new sort order
+            updateNeedsHierarchyDisplay();
+        }
+        
+        // Re-filter and re-sort the tools list
+        filterToolItemsAndUpdateToolsListCount();
+    });
 
     // finally, show the filter button; note that it will not appear if its parent is collapsed
     let filterButton = document.getElementById("FilterButton");
@@ -467,8 +486,11 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
             });
         }
         
-        // If this is a function filter, update the needs hierarchy display
-        if (id.startsWith('filter_functions_')) {
+        // Update needs hierarchy if it's currently displayed
+        // (when function filters are selected, we need to rebuild on any filter change for ranking)
+        const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
+        const hasFunctionFiltersSelected = Array.from(functionCheckboxes).some(cb => cb.checked);
+        if (hasFunctionFiltersSelected) {
             updateNeedsHierarchyDisplay();
         }
         
@@ -910,9 +932,14 @@ function filterToolItemsAndUpdateToolsListCount() {
         // Only reorganize if function filters changed or we don't have a cached version
         if (functionFiltersChanged || !organizedListCache) {
             // Use the original list for organization to avoid duplicate clones
-            const sourceElements = originalToolsListElements.length > 0 ? originalToolsListElements : allToolsListElements;
+            let sourceElements = originalToolsListElements.length > 0 ? originalToolsListElements : allToolsListElements;
 
-            // Organize tools by their disability functions
+            // IMPORTANT: Sort the source elements BEFORE organizing into sections
+            // This ensures ranking is applied within each function category
+            const currentSortOrder = getSelectedSortOrder();
+            sourceElements = sortToolsListElements(sourceElements, currentSortOrder);
+
+            // Organize tools by their disability functions (preserving sort order)
             const organizedElements = organizeToolsByFunctions(sourceElements, selectedFilters);
 
             // Cache the organized list for reuse
@@ -940,6 +967,9 @@ function filterToolItemsAndUpdateToolsListCount() {
             organizedListCache = null;
             currentFunctionFilters = [];
         }
+        
+        // For non-function-filtered view, apply sorting
+        sortToolsList();
     }
 
     // Apply visibility filters to the current elements
@@ -1189,6 +1219,49 @@ function filterToolsListElements(toolsListElements, selectedFilters) {
 
 /* functions to sort the tools list elements */
 
+// Calculate match score for a product based on selected filters
+function calculateProductMatchScore(product, selectedFilters) {
+    let score = 0;
+    
+    // Count matches in supportedPlatforms
+    if (selectedFilters.selectedSupportedPlatforms.length > 0) {
+        const productPlatforms = product.supportedPlatforms || [];
+        const matchedPlatforms = selectedFilters.selectedSupportedPlatforms.filter(
+            platform => productPlatforms.includes(platform)
+        );
+        score += matchedPlatforms.length * 10; // Weight: 10 points per platform match
+    }
+    
+    // Count matches in installTypes
+    if (selectedFilters.selectedInstallTypes.length > 0) {
+        const productInstallTypes = product.installTypes || [];
+        const matchedInstallTypes = selectedFilters.selectedInstallTypes.filter(
+            type => productInstallTypes.includes(type)
+        );
+        score += matchedInstallTypes.length * 5; // Weight: 5 points per install type match
+    }
+    
+    // Count matches in purchaseOptions
+    if (selectedFilters.selectedPurchaseOptions.length > 0) {
+        const productPurchaseOptions = product.purchaseOptions || [];
+        const matchedPurchaseOptions = selectedFilters.selectedPurchaseOptions.filter(
+            option => productPurchaseOptions.includes(option)
+        );
+        score += matchedPurchaseOptions.length * 5; // Weight: 5 points per purchase option match
+    }
+    
+    // Count matches in functions
+    if (selectedFilters.selectedFunctions.length > 0) {
+        const productFunctions = product.functions || [];
+        const matchedFunctions = selectedFilters.selectedFunctions.filter(
+            func => productFunctions.includes(func)
+        );
+        score += matchedFunctions.length * 10; // Weight: 10 points per function match
+    }
+    
+    return score;
+}
+
 function getSelectedSortOrder() {
     let sortOrderDropdownList = document.getElementById('SortOrderDropdownList');
     let selectedOption = sortOrderDropdownList[sortOrderDropdownList.selectedIndex];
@@ -1258,38 +1331,77 @@ function sortToolsList() {
 }
 
 function sortToolsListElements(toolsListElements, sortOrder) {
-    // capture each tools list element's name and original index #
-    let arrayIndicesAndNames = {};
-    let arrayIndicesAndOriginalIndices = {};
+    // Get selected filters for ranking
+    const selectedFilters = getSelectedFilters();
+    
+    // Calculate match scores for each element
+    const arrayIndicesAndScores = {};
+    const arrayIndicesAndNames = {};
+    const arrayIndicesAndOriginalIndices = {};
+    
     for (let index = 0; index < toolsListElements.length; index += 1) {
-        // store the sortable name of each element along with its index number
-        arrayIndicesAndNames["" + index] = toolsListElements[index].dataset.sortableName;
-        arrayIndicesAndOriginalIndices["" + index] = toolsListElements[index].dataset.sortableIndex;
+        const element = toolsListElements[index];
+        arrayIndicesAndNames["" + index] = element.dataset.sortableName;
+        arrayIndicesAndOriginalIndices["" + index] = element.dataset.sortableIndex;
+        
+        // Calculate match score for this product
+        const toolId = element.dataset.toolId;
+        const product = catalogData.find(p => p.id === toolId);
+        const matchScore = product ? calculateProductMatchScore(product, selectedFilters) : 0;
+        arrayIndicesAndScores["" + index] = matchScore;
     }
-    // capture the tools list array indices and names (for sorting); do the same for the original index #s
-    let arrayIndicesAndSortedNames = Object.entries(arrayIndicesAndNames);
-    let arrayIndicesAndSortedIndices = Object.entries(arrayIndicesAndOriginalIndices);
-
+    
+    const arrayIndicesAndSortedNames = Object.entries(arrayIndicesAndNames);
+    const arrayIndicesAndSortedIndices = Object.entries(arrayIndicesAndOriginalIndices);
 
     let sortedArrayIndices;
     switch (sortOrder) {
+        case "default":
+            // Pure ranking by match score (highest first)
+            const arrayIndicesScoresDefault = Object.entries(arrayIndicesAndScores);
+            arrayIndicesScoresDefault.sort((lhs, rhs) => {
+                const scoreDiff = rhs[1] - lhs[1]; // Higher scores first
+                if (scoreDiff !== 0) return scoreDiff;
+                // If scores are equal, maintain original order
+                const nameA = arrayIndicesAndNames[lhs[0]];
+                const nameB = arrayIndicesAndNames[rhs[0]];
+                return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+            });
+            sortedArrayIndices = arrayIndicesScoresDefault.map((x) => x[0]);
+            break;
         case "alphabetical":
-            // alphabetical sort (invariant)
-            arrayIndicesAndSortedNames.sort((lhs, rhs) => lhs[1].localeCompare(rhs[1], undefined, { sensitivity: 'base' }));
-            sortedArrayIndices = arrayIndicesAndSortedNames.map((x) => x[0]);
+            // Alphabetical sort with ranking (rank within alphabetical groups)
+            const arrayIndicesScoresAlpha = Object.entries(arrayIndicesAndScores);
+            arrayIndicesScoresAlpha.sort((lhs, rhs) => {
+                const scoreDiff = rhs[1] - lhs[1]; // Higher scores first
+                if (scoreDiff !== 0) return scoreDiff;
+                // Within same score, sort alphabetically
+                const nameA = arrayIndicesAndNames[lhs[0]];
+                const nameB = arrayIndicesAndNames[rhs[0]];
+                return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+            });
+            sortedArrayIndices = arrayIndicesScoresAlpha.map((x) => x[0]);
             break;
         case "alphabeticalReverse":
-            // reverse alphabetical sort (invariant)
-            arrayIndicesAndSortedNames.sort((lhs, rhs) => -(lhs[1].localeCompare(rhs[1], undefined, { sensitivity: 'base' })));
-            sortedArrayIndices = arrayIndicesAndSortedNames.map((x) => x[0]);
+            // Reverse alphabetical sort with ranking (rank within reverse alphabetical groups)
+            const arrayIndicesScoresAlphaRev = Object.entries(arrayIndicesAndScores);
+            arrayIndicesScoresAlphaRev.sort((lhs, rhs) => {
+                const scoreDiff = rhs[1] - lhs[1]; // Higher scores first
+                if (scoreDiff !== 0) return scoreDiff;
+                // Within same score, sort reverse alphabetically
+                const nameA = arrayIndicesAndNames[lhs[0]];
+                const nameB = arrayIndicesAndNames[rhs[0]];
+                return -(nameA.localeCompare(nameB, undefined, { sensitivity: 'base' }));
+            });
+            sortedArrayIndices = arrayIndicesScoresAlphaRev.map((x) => x[0]);
             break;
         case "newestFirst":
-            // newest (most recently added) first; this is simply a reversal of the default ordering
+            // Newest first - NO RANKING, pure date sort
             arrayIndicesAndSortedIndices.sort((lhs, rhs) => -(lhs[1].localeCompare(rhs[1], undefined, { numeric: true })));
             sortedArrayIndices = arrayIndicesAndSortedIndices.map((x) => x[0]);
             break;
         case "oldestFirst":
-            // oldest (least recently added) first; this is simply the original ordering
+            // Oldest first - NO RANKING, pure date sort
             arrayIndicesAndSortedIndices.sort((lhs, rhs) => lhs[1].localeCompare(rhs[1], undefined, { numeric: true }));
             sortedArrayIndices = arrayIndicesAndSortedIndices.map((x) => x[0]);
             break;
@@ -2902,7 +3014,13 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     
     header.addEventListener('click', (e) => {
         if (e.target !== checkbox) {
+            const wasExpanded = needDiv.classList.contains('expanded');
             needDiv.classList.toggle('expanded');
+            
+            // Lazy load products on first expand
+            if (!wasExpanded && needDiv.classList.contains('expanded')) {
+                loadProductsForNeed(needKey, content);
+            }
         }
     });
     
@@ -2930,22 +3048,18 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
         content.appendChild(seeAlso);
     }
     
-    // Products
-    const products = getProductsForNeed(needKey);
+    // Products placeholder (lazy load on expand)
+    let products = getProductsForNeed(needKey);
     if (products.length > 0) {
         const productsDiv = document.createElement('div');
         productsDiv.className = 'need-products';
+        productsDiv.dataset.needKey = needKey;
+        productsDiv.dataset.loaded = 'false';
         
         const productsHeader = document.createElement('div');
         productsHeader.className = 'need-products-header';
-        productsHeader.textContent = 'PRODUCTS:';
+        productsHeader.textContent = `PRODUCTS: (${products.length} items - click to expand to load)`;
         productsDiv.appendChild(productsHeader);
-        
-        // Show ALL products, marking duplicates
-        products.forEach(product => {
-            const productCard = createProductCard(product, needKey);
-            productsDiv.appendChild(productCard);
-        });
         
         content.appendChild(productsDiv);
     }
@@ -2980,63 +3094,215 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     return needDiv;
 }
 
-// Create a product card
-function createProductCard(product, currentNeedKey) {
-    const card = document.createElement('div');
+// Lazy load products for a need section
+function loadProductsForNeed(needKey, contentDiv) {
+    const productsDiv = contentDiv.querySelector('.need-products');
+    if (!productsDiv || productsDiv.dataset.loaded === 'true') {
+        return; // Already loaded
+    }
     
+    // Mark as loaded
+    productsDiv.dataset.loaded = 'true';
+    
+    // Get and sort products
+    let products = getProductsForNeed(needKey);
+    
+    // Apply ranking and sorting to products
+    const selectedFilters = getSelectedFilters();
+    const currentSortOrder = getSelectedSortOrder();
+    
+    // Calculate match scores for each product
+    const productsWithScores = products.map(product => ({
+        product: product,
+        matchScore: calculateProductMatchScore(product, selectedFilters)
+    }));
+    
+    // Sort products based on match scores and sort order
+    productsWithScores.sort((a, b) => {
+        const scoreA = a.matchScore;
+        const scoreB = b.matchScore;
+        const nameA = a.product.name.toLowerCase();
+        const nameB = b.product.name.toLowerCase();
+        
+        switch (currentSortOrder) {
+            case 'default':
+                // Pure ranking: highest score first
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                // If scores are equal, sort alphabetically
+                return nameA.localeCompare(nameB);
+                
+            case 'alphabetical':
+                // Rank within alphabetical groups
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                return nameA.localeCompare(nameB);
+                
+            case 'alphabeticalReverse':
+                // Rank within reverse alphabetical groups
+                if (scoreB !== scoreA) return scoreB - scoreA;
+                return nameB.localeCompare(nameA);
+                
+            case 'newestFirst':
+            case 'oldestFirst':
+                // No ranking for date-based sorts - just by date
+                const dateCompare = currentSortOrder === 'newestFirst' ?
+                    b.product.sortableIndex - a.product.sortableIndex :
+                    a.product.sortableIndex - b.product.sortableIndex;
+                return dateCompare;
+                
+            default:
+                return 0;
+        }
+    });
+    
+    // Extract sorted products
+    products = productsWithScores.map(item => item.product);
+    
+    // Update header
+    const productsHeader = productsDiv.querySelector('.need-products-header');
+    productsHeader.textContent = 'PRODUCTS:';
+    
+    // Render products
+    products.forEach(product => {
+        const productCard = createProductCard(product, needKey);
+        productsDiv.appendChild(productCard);
+    });
+}
+
+// Create a product card using the same template as the main tools list
+function createProductCard(product, currentNeedKey) {
     // Check if this product was already displayed in another category
     const previousCategory = displayedProducts.get(product.id);
+    const isDuplicate = previousCategory !== undefined;
     
-    if (previousCategory) {
-        // Product already listed - show grey card with reference
-        card.className = 'product-card product-card-duplicate';
+    // Always clone the full template
+    let toolItemElement = document.getElementById('ToolItemTemplate').content.cloneNode(true);
+    let toolsListElement = toolItemElement.querySelector('.ToolsListElement');
+    
+    // Add a class to indicate this is in the needs hierarchy
+    toolsListElement.classList.add('needs-hierarchy-item');
+    
+    // Add duplicate class if this is a duplicate
+    if (isDuplicate) {
+        toolsListElement.classList.add('needs-hierarchy-duplicate');
+    }
+    
+    var validatedToolId = validateIdOrNull(product.id);
+    if (validatedToolId !== null) {
+        toolsListElement.id = 'NeedsToolItem_' + validatedToolId + '_' + currentNeedKey;
+        toolsListElement.dataset.toolId = validatedToolId;
+    }
+    
+    // Preserve original backend id_tag (database id) if provided
+    if (isOfStringType(product.dbId) === true && product.dbId.trim().length > 0) {
+        toolsListElement.dataset.dbId = product.dbId.trim();
+    } else if (isOfStringType(product.id) === true && product.id.trim().length > 0) {
+        toolsListElement.dataset.dbId = product.id.trim();
+    }
+    
+    let toolItemHeader = toolItemElement.querySelector('.ToolItemHeader');
+    toolItemHeader.addEventListener('click', () => { toggleToolsListElement(toolsListElement) });
+    
+    // Populate "Name of AT" (in header)
+    let nameGridCell = toolItemElement.querySelector('.ToolItemHeader');
+    if (isOfStringType(product.name) === true) {
+        nameGridCell.textContent = product.name;
         
-        const name = document.createElement('div');
-        name.className = 'product-name';
-        name.textContent = product.name;
-        
-        const alreadyListed = document.createElement('div');
-        alreadyListed.className = 'product-already-listed';
-        alreadyListed.textContent = `Already listed above under ${needsHierarchyData[previousCategory]?.name || previousCategory}`;
-        
-        card.appendChild(name);
-        card.appendChild(alreadyListed);
-    } else {
-        // First time showing this product - show full card
-        card.className = 'product-card';
-        
-        const name = document.createElement('div');
-        name.className = 'product-name';
-        name.textContent = product.name;
-        
-        const info = document.createElement('div');
-        info.className = 'product-info';
-        
-        const devices = product.supportedPlatforms?.join(', ') || 'N/A';
-        const cost = product.purchaseOptions?.join(', ') || 'N/A';
-        
-        info.textContent = `Devices: ${devices} • Cost: ${cost}`;
-        
-        card.appendChild(name);
-        card.appendChild(info);
-        
-        card.addEventListener('click', () => {
-            // Find and expand the tool in the main list
-            const toolElement = document.querySelector(`[data-tool-id="${product.id}"]`);
-            if (toolElement) {
-                toolElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                const header = toolElement.querySelector('.ToolItemHeader');
-                if (header && !toolElement.classList.contains('ToolItemExpanded')) {
-                    header.click();
+        // Add duplicate indicator to the header if this is a duplicate
+        if (isDuplicate) {
+            const duplicateIndicator = document.createElement('span');
+            duplicateIndicator.className = 'duplicate-indicator';
+            duplicateIndicator.textContent = ` (Already listed above under ${needsHierarchyData[previousCategory]?.name || previousCategory})`;
+            nameGridCell.appendChild(duplicateIndicator);
+        }
+    }
+    
+    // Populate "Description"
+    let descriptionGridContent = toolItemElement.querySelector('.ToolItemDescriptionGridContent');
+    if (isOfStringType(product.description) === true) {
+        descriptionGridContent.textContent = product.description;
+    }
+    
+    // Populate "Primary Video"
+    let primaryVideoGridCell = toolItemElement.querySelector('.ToolItemPrimaryVideoGridCell');
+    if (isOfStringType(product.primaryVideoUrl) === true) {
+        try {
+            const primaryVideoUrl = new URL(product.primaryVideoUrl);
+            const primaryVideo = document.createElement('iframe');
+            primaryVideo.className = 'ToolItemPrimaryVideo';
+            primaryVideo.src = primaryVideoUrl.href;
+            primaryVideo.title = 'Primary Video';
+            primaryVideo.frameBorder = '0';
+            primaryVideo.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+            primaryVideo.allowFullscreen = true;
+            primaryVideoGridCell.appendChild(primaryVideo);
+        } catch {
+            console.log("product's primaryVideoUrl field contains an invalid url.");
+        }
+    }
+    
+    // Populate "Secondary Videos"
+    let secondaryVideosGridCell = toolItemElement.querySelector('.ToolItemSecondaryVideosGridCell');
+    if (Array.isArray(product.secondaryVideoUrls) === true && product.secondaryVideoUrls.length > 0) {
+        product.secondaryVideoUrls.forEach((secondaryVideoUrl) => {
+            if (isOfStringType(secondaryVideoUrl) === true) {
+                try {
+                    const videoUrl = new URL(secondaryVideoUrl);
+                    const secondaryVideo = document.createElement('iframe');
+                    secondaryVideo.className = 'ToolItemSecondaryVideo';
+                    secondaryVideo.src = videoUrl.href;
+                    secondaryVideo.title = 'Secondary Video';
+                    secondaryVideo.frameBorder = '0';
+                    secondaryVideo.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+                    secondaryVideo.allowFullscreen = true;
+                    secondaryVideosGridCell.appendChild(secondaryVideo);
+                } catch {
+                    console.log("product's secondaryVideoUrl contains an invalid url.");
                 }
             }
         });
-        
-        // Mark this product as displayed in this category
+    }
+    
+    // Populate "Link to Vendor Page"
+    let toolItemVendorProductPageUrlAnchor = toolItemElement.querySelector('.ToolItemVendorProductPageUrlAnchor');
+    if (isOfStringType(product.vendorProductPageUrl) === true) {
+        try {
+            const vendorProductPageUrl = new URL(product.vendorProductPageUrl);
+            toolItemVendorProductPageUrlAnchor.href = vendorProductPageUrl.href;
+            toolItemVendorProductPageUrlAnchor.style.visibility = 'visible';
+        } catch {
+            console.log("product's vendorProductPageUrl field contains an invalid url.");
+            toolItemVendorProductPageUrlAnchor.style.visibility = 'hidden';        
+        }
+    } else {
+        toolItemVendorProductPageUrlAnchor.style.visibility = 'hidden';
+    }
+    
+    // Populate "Functions"
+    let functionsGridCell = toolItemElement.querySelector('.ToolItemFunctionsGridCell');
+    const populatedFunctions = populateFunctionsGridCell(product, functionsGridCell);
+    toolsListElement.dataset.functions = populatedFunctions.join(' ');
+    
+    // Populate "Need to install?"
+    let needToInstallGridCell = toolItemElement.querySelector('.ToolItemNeedToInstallGridCell');
+    const populatedInstallTypes = populateNeedToInstallGridCell(product, needToInstallGridCell);
+    toolsListElement.dataset.installTypes = populatedInstallTypes.join(' ');
+    
+    // Populate "Devices"
+    let supportedPlatformsGridCell = toolItemElement.querySelector('.ToolItemSupportedPlatformsGridCell');
+    const populatedSupportedPlatforms = populateSupportedPlatformsGridCell(product, supportedPlatformsGridCell);
+    toolsListElement.dataset.supportedPlatforms = populatedSupportedPlatforms.join(' ');
+    
+    // Populate "Purchase Options"
+    let purchaseOptionsGridCell = toolItemElement.querySelector('.ToolItemPurchaseOptionsGridCell');
+    const populatedPurchaseOptions = populatePurchaseOptionsGridCell(product, purchaseOptionsGridCell);
+    toolsListElement.dataset.purchaseOptions = populatedPurchaseOptions.join(' ');
+    
+    // Mark this product as displayed in this category (only if not already marked)
+    if (!isDuplicate) {
         displayedProducts.set(product.id, currentNeedKey);
     }
     
-    return card;
+    return toolsListElement;
 }
 
 // Get products for a need

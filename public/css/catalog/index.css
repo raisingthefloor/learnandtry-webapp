@@ -1328,39 +1328,30 @@ body.needs-hierarchy-active #ToolsList {
     color: #333;
 }
 
-.product-card {
-    background-color: #f5f5f5;
-    color: #333;
-    padding: 8px;
-    margin-bottom: 6px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    transition: background-color 0.2s;
+/* Style for items in needs hierarchy (use same template as main list) */
+.needs-hierarchy-item {
+    /* Inherits all styles from .ToolsListElement */
 }
 
-.product-card:hover {
+/* Duplicate product styling - grey out the header and content */
+.needs-hierarchy-duplicate .ToolItemHeader {
     background-color: #e8e8e8;
-}
-
-.product-card-duplicate {
-    background-color: #e0e0e0;
     color: #666;
-    cursor: default;
 }
 
-.product-card-duplicate:hover {
+.needs-hierarchy-duplicate .ToolItemHeader:hover {
     background-color: #e0e0e0;
 }
 
-.product-name {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 3px;
+.needs-hierarchy-duplicate.ToolItemExpanded .ToolItemHeader {
+    background-color: #d8d8d8;
 }
 
-.product-info {
-    font-size: 0.75rem;
-    color: #666;
+.needs-hierarchy-duplicate .duplicate-indicator {
+    font-size: 0.85em;
+    font-weight: normal;
+    font-style: italic;
+    color: #888;
 }
 
 .product-already-listed {
