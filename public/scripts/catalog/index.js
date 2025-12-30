@@ -424,8 +424,8 @@ async function populateInitialContents() {
         const hasFunctionFiltersSelected = Array.from(functionCheckboxes).some(cb => cb.checked);
         
         if (hasFunctionFiltersSelected) {
-            // Rebuild needs hierarchy with new sort order
-            updateNeedsHierarchyDisplay();
+            // Just refresh products with new sort (no need to rebuild structure)
+            refreshNeedsProducts();
         }
         
         // Re-filter and re-sort the tools list
@@ -487,11 +487,14 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
         }
         
         // Update needs hierarchy if it's currently displayed
-        // (when function filters are selected, we need to rebuild on any filter change for ranking)
+        // Check if this is a function filter change
+        const isFunctionFilter = id.includes('filter_functions_');
         const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
         const hasFunctionFiltersSelected = Array.from(functionCheckboxes).some(cb => cb.checked);
+        
         if (hasFunctionFiltersSelected) {
-            updateNeedsHierarchyDisplay();
+            // If function filter changed, full rebuild. Otherwise just refresh products (faster!)
+            updateNeedsHierarchyDisplay(isFunctionFilter);
         }
         
         filterToolItemsAndUpdateToolsListCount();
@@ -876,32 +879,65 @@ function validateIdOrNull(idToValidate) {
 /* code to update the current visible count of tools (i.e. removing the elements hidden by search text, unchecked filters, etc.) */
 
 function updateToolsListCount() {
-    let toolsListAllElements = document.querySelectorAll('.ToolsListElement');
-
-    // Total count should be from the original database list
-    const totalElementcount = originalToolsListElements.length > 0 ? originalToolsListElements.length : toolsListAllElements.length;
-
-    // Count unique visible tools
-    const uniqueVisibleTools = new Set();
-    toolsListAllElements.forEach(el => {
-        if (!el.classList.contains('ToolElementHiddenByFilter') && !el.classList.contains('ToolElementHiddenBySearch')) {
-            const toolKey = el.dataset.toolName + '|' + el.dataset.toolCompany;
-            uniqueVisibleTools.add(toolKey);
-        }
-    });
-
-    const visibleElementCount = uniqueVisibleTools.size;
-
     let toolsListCount = document.getElementById('ToolsListCount');
-    let toolsListCountText = "Showing " + visibleElementCount;
-    if (visibleElementCount == 1) {
-        toolsListCountText += " tool";
+    
+    // Check if needs hierarchy is active
+    const needsHierarchyActive = document.body.classList.contains('needs-hierarchy-active');
+    
+    if (needsHierarchyActive) {
+        // Count UNIQUE products across all needs hierarchy (using product name + company as key)
+        const hierarchyProducts = document.querySelectorAll('.needs-hierarchy-item');
+        const uniqueProducts = new Set();
+        
+        hierarchyProducts.forEach(productCard => {
+            const toolName = productCard.dataset.toolName || '';
+            const toolCompany = productCard.dataset.toolCompany || '';
+            const productKey = `${toolName}|${toolCompany}`;
+            uniqueProducts.add(productKey);
+        });
+        
+        const visibleElementCount = uniqueProducts.size;
+        
+        // Total count from catalog
+        const totalElementcount = catalogData ? catalogData.length : 0;
+        
+        let toolsListCountText = "Showing " + visibleElementCount;
+        if (visibleElementCount == 1) {
+            toolsListCountText += " tool";
+        } else {
+            toolsListCountText += " tools";
+        }
+        toolsListCountText += " out of " + totalElementcount;
+        
+        toolsListCount.innerText = toolsListCountText;
     } else {
-        toolsListCountText += " tools";
-    }
-    toolsListCountText += " out of " + totalElementcount;
+        // Original logic for regular tools list
+        let toolsListAllElements = document.querySelectorAll('.ToolsListElement');
 
-    toolsListCount.innerText = toolsListCountText;
+        // Total count should be from the original database list
+        const totalElementcount = originalToolsListElements.length > 0 ? originalToolsListElements.length : toolsListAllElements.length;
+
+        // Count unique visible tools
+        const uniqueVisibleTools = new Set();
+        toolsListAllElements.forEach(el => {
+            if (!el.classList.contains('ToolElementHiddenByFilter') && !el.classList.contains('ToolElementHiddenBySearch')) {
+                const toolKey = el.dataset.toolName + '|' + el.dataset.toolCompany;
+                uniqueVisibleTools.add(toolKey);
+            }
+        });
+
+        const visibleElementCount = uniqueVisibleTools.size;
+
+        let toolsListCountText = "Showing " + visibleElementCount;
+        if (visibleElementCount == 1) {
+            toolsListCountText += " tool";
+        } else {
+            toolsListCountText += " tools";
+        }
+        toolsListCountText += " out of " + totalElementcount;
+
+        toolsListCount.innerText = toolsListCountText;
+    }
 }
 
 /* code to filter the tools list (called whenever the filter list is updated or filters are selected/unselected) */
@@ -2971,10 +3007,10 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     visited.add(needKey);
     
     const needDiv = document.createElement('div');
-    needDiv.className = 'need-item';
+    needDiv.className = 'need-item expanded'; // Expanded by default
     needDiv.dataset.needKey = needKey;
     
-    // Count products for this need
+    // Count actual products for this need (will be displayed)
     const productCount = getProductCountForNeed(needKey);
     
     // Create header
@@ -2984,15 +3020,6 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     const headerLeft = document.createElement('div');
     headerLeft.className = 'need-header-left';
     
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.className = 'need-checkbox';
-    checkbox.checked = isSelected || selectedNeeds.has(needKey);
-    checkbox.addEventListener('change', (e) => {
-        e.stopPropagation();
-        handleNeedSelection(needKey, checkbox.checked);
-    });
-    
     const nameSpan = document.createElement('span');
     nameSpan.className = 'need-name';
     nameSpan.textContent = need.name;
@@ -3001,26 +3028,24 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     countSpan.className = 'need-item-count';
     countSpan.textContent = `[${productCount} items]`;
     
-    headerLeft.appendChild(checkbox);
     headerLeft.appendChild(nameSpan);
     headerLeft.appendChild(countSpan);
     
     const expander = document.createElement('span');
     expander.className = 'need-expander';
-    expander.textContent = '▶';
+    expander.textContent = '▼'; // Expanded by default
     
     header.appendChild(headerLeft);
     header.appendChild(expander);
     
     header.addEventListener('click', (e) => {
-        if (e.target !== checkbox) {
-            const wasExpanded = needDiv.classList.contains('expanded');
-            needDiv.classList.toggle('expanded');
-            
-            // Lazy load products on first expand
-            if (!wasExpanded && needDiv.classList.contains('expanded')) {
-                loadProductsForNeed(needKey, content);
-            }
+        const wasExpanded = needDiv.classList.contains('expanded');
+        needDiv.classList.toggle('expanded');
+        expander.textContent = needDiv.classList.contains('expanded') ? '▼' : '▶';
+        
+        // Lazy load products on first expand
+        if (!wasExpanded && needDiv.classList.contains('expanded')) {
+            loadProductsForNeed(needKey, content);
         }
     });
     
@@ -3031,7 +3056,9 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     // Description
     const description = document.createElement('div');
     description.className = 'need-description';
-    description.textContent = need.description;
+    // Add "This group contains " prefix and make first letter of description lowercase
+    const descriptionText = need.description.charAt(0).toLowerCase() + need.description.slice(1);
+    description.textContent = `This group contains ${descriptionText}`;
     content.appendChild(description);
     
     // Includes
@@ -3064,7 +3091,14 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
         content.appendChild(productsDiv);
     }
     
-    // Child needs
+    needDiv.appendChild(header);
+    needDiv.appendChild(content);
+    
+    // Load parent products FIRST before creating children
+    // This ensures duplicate tracking works in the correct visual order
+    loadProductsForNeed(needKey, content);
+    
+    // THEN create child needs (after parent products are loaded)
     if (need.children && need.children.length > 0 && depth < 2) {
         const childrenDiv = document.createElement('div');
         childrenDiv.className = 'need-children';
@@ -3087,9 +3121,6 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
         
         content.appendChild(childrenDiv);
     }
-    
-    needDiv.appendChild(header);
-    needDiv.appendChild(content);
     
     return needDiv;
 }
@@ -3192,6 +3223,14 @@ function createProductCard(product, currentNeedKey) {
         toolsListElement.dataset.toolId = validatedToolId;
     }
     
+    // Set tool name and company for unique product tracking
+    if (isOfStringType(product.name) === true) {
+        toolsListElement.dataset.toolName = product.name;
+    }
+    if (isOfStringType(product.company) === true) {
+        toolsListElement.dataset.toolCompany = product.company;
+    }
+    
     // Preserve original backend id_tag (database id) if provided
     if (isOfStringType(product.dbId) === true && product.dbId.trim().length > 0) {
         toolsListElement.dataset.dbId = product.dbId.trim();
@@ -3222,44 +3261,36 @@ function createProductCard(product, currentNeedKey) {
         descriptionGridContent.textContent = product.description;
     }
     
-    // Populate "Primary Video"
+    // Populate "Primary Video" (YouTube)
     let primaryVideoGridCell = toolItemElement.querySelector('.ToolItemPrimaryVideoGridCell');
-    if (isOfStringType(product.primaryVideoUrl) === true) {
-        try {
-            const primaryVideoUrl = new URL(product.primaryVideoUrl);
-            const primaryVideo = document.createElement('iframe');
-            primaryVideo.className = 'ToolItemPrimaryVideo';
-            primaryVideo.src = primaryVideoUrl.href;
-            primaryVideo.title = 'Primary Video';
-            primaryVideo.frameBorder = '0';
-            primaryVideo.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-            primaryVideo.allowFullscreen = true;
-            primaryVideoGridCell.appendChild(primaryVideo);
-        } catch {
-            console.log("product's primaryVideoUrl field contains an invalid url.");
-        }
+    if (product.youTubeVideos && product.youTubeVideos.length > 0) {
+        var vendorVideoIFrame = createYouTubeVideoEmbedIframe(product.youTubeVideos[0].embedUrl, product.youTubeVideos[0].title, product.youTubeVideos[0].aspectRatio);
+        vendorVideoIFrame.className = "ToolItemPrimaryVideoIframe";
+        primaryVideoGridCell.replaceChildren(vendorVideoIFrame);
+    } else {
+        primaryVideoGridCell.replaceChildren();
     }
     
-    // Populate "Secondary Videos"
+    // Populate "Secondary Videos" (Additional YouTube videos)
     let secondaryVideosGridCell = toolItemElement.querySelector('.ToolItemSecondaryVideosGridCell');
-    if (Array.isArray(product.secondaryVideoUrls) === true && product.secondaryVideoUrls.length > 0) {
-        product.secondaryVideoUrls.forEach((secondaryVideoUrl) => {
-            if (isOfStringType(secondaryVideoUrl) === true) {
-                try {
-                    const videoUrl = new URL(secondaryVideoUrl);
-                    const secondaryVideo = document.createElement('iframe');
-                    secondaryVideo.className = 'ToolItemSecondaryVideo';
-                    secondaryVideo.src = videoUrl.href;
-                    secondaryVideo.title = 'Secondary Video';
-                    secondaryVideo.frameBorder = '0';
-                    secondaryVideo.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-                    secondaryVideo.allowFullscreen = true;
-                    secondaryVideosGridCell.appendChild(secondaryVideo);
-                } catch {
-                    console.log("product's secondaryVideoUrl contains an invalid url.");
-                }
-            }
-        });
+    if (product.youTubeVideos && product.youTubeVideos.length > 1) {
+        var vendorVideoDivs = [];
+        for (var index = 1; index < Math.min(5, product.youTubeVideos.length); index += 1) {
+            var embedUrl = product.youTubeVideos[index].embedUrl;
+            var title = product.youTubeVideos[index].title;
+            var aspectRatio = product.youTubeVideos[index].aspectRatio;
+            //
+            var vendorVideoIframe = createYouTubeVideoEmbedIframe(embedUrl, title, aspectRatio);
+            vendorVideoIframe.className = "ToolItemSecondaryVideoIframe";
+            //
+            var vendorVideoDiv = document.createElement('div')
+            vendorVideoDiv.className = 'ToolItemSecondaryVideosSubGridCell'
+            vendorVideoDiv.replaceChildren(vendorVideoIframe);
+            vendorVideoDivs.push(vendorVideoDiv);
+        }
+        secondaryVideosGridCell.replaceChildren(...vendorVideoDivs);
+    } else {
+        secondaryVideosGridCell.replaceChildren();
     }
     
     // Populate "Link to Vendor Page"
@@ -3306,18 +3337,82 @@ function createProductCard(product, currentNeedKey) {
 }
 
 // Get products for a need
+// Check if a product object passes all selected filters
+function checkProductPassesFilters(product, selectedFilters, skipFunctionCheck = false) {
+    // Check function filter
+    if (!skipFunctionCheck) {
+        if (selectedFilters.selectedFunctions.length > 0) {
+            const productFunctions = product.functions || [];
+            const hasMatchingFunction = selectedFilters.selectedFunctions.some(func => 
+                productFunctions.includes(func)
+            );
+            if (!hasMatchingFunction) {
+                return false;
+            }
+        }
+    }
+    
+    // Check supportedPlatforms filter
+    if (selectedFilters.selectedSupportedPlatforms.length > 0) {
+        const productPlatforms = product.supportedPlatforms || [];
+        const hasMatchingPlatform = selectedFilters.selectedSupportedPlatforms.some(platform => 
+            productPlatforms.includes(platform)
+        );
+        if (!hasMatchingPlatform) {
+            return false;
+        }
+    }
+    
+    // Check installTypes filter
+    if (selectedFilters.selectedInstallTypes.length > 0) {
+        const productInstallTypes = product.installTypes || [];
+        const hasMatchingInstallType = selectedFilters.selectedInstallTypes.some(type => 
+            productInstallTypes.includes(type)
+        );
+        if (!hasMatchingInstallType) {
+            return false;
+        }
+    }
+    
+    // Check purchaseOptions filter
+    if (selectedFilters.selectedPurchaseOptions.length > 0) {
+        const productPurchaseOptions = product.purchaseOptions || [];
+        const hasMatchingPurchaseOption = selectedFilters.selectedPurchaseOptions.some(option => 
+            productPurchaseOptions.includes(option)
+        );
+        if (!hasMatchingPurchaseOption) {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 function getProductsForNeed(needKey) {
     if (!catalogData || catalogData.length === 0) {
         return [];
     }
     
+    // Get selected filters
+    const selectedFilters = getSelectedFilters();
+    
+    // Filter products that match the need and all other selected filters
     return catalogData.filter(product => {
-        return product.functions && product.functions.includes(needKey);
+        // First check if product has this function
+        if (!product.functions || !product.functions.includes(needKey)) {
+            return false;
+        }
+        
+        // Then check if it passes all other filters (skip function check since we already did it)
+        return checkProductPassesFilters(product, selectedFilters, true);
     });
 }
 
-// Get product count for a need
+// Get product count for a need (including children, with current filters applied)
+// Get product count for a specific need (not including children)
+// This shows how many products match this need with current filters
 function getProductCountForNeed(needKey) {
+    // Count products for this specific need only (already filtered by getProductsForNeed)
     return getProductsForNeed(needKey).length;
 }
 
@@ -3339,8 +3434,29 @@ function initializeNeedsHierarchy(data) {
     // Don't render initially - wait for filter selection
 }
 
+// Track currently displayed functions to detect changes
+let currentlyDisplayedFunctions = [];
+
+// Debounce timer for refresh operations
+let refreshDebounceTimer = null;
+
+// Loading overlay helpers
+function showNeedsLoadingOverlay() {
+    const overlay = document.getElementById('NeedsLoadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+function hideNeedsLoadingOverlay() {
+    const overlay = document.getElementById('NeedsLoadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
 // Update needs hierarchy display based on selected function filters
-function updateNeedsHierarchyDisplay() {
+function updateNeedsHierarchyDisplay(functionFiltersChanged = true) {
     const needsContainer = document.getElementById('NeedsContainer');
     const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
     const selectedFunctions = [];
@@ -3351,28 +3467,118 @@ function updateNeedsHierarchyDisplay() {
         }
     });
     
+    // Check if function selection actually changed
+    const functionsString = selectedFunctions.sort().join(',');
+    const currentString = currentlyDisplayedFunctions.sort().join(',');
+    const actuallyChanged = functionsString !== currentString;
+    
     if (selectedFunctions.length === 0) {
         // No functions selected, hide needs container and show tools list
+        hideNeedsLoadingOverlay();
         needsContainer.innerHTML = '';
         needsContainer.style.display = 'none';
         document.body.classList.remove('needs-hierarchy-active');
         displayedProducts.clear(); // Clear tracking
-    } else {
-        // Show needs hierarchy for selected functions, hide tools list
-        needsContainer.style.display = 'block';
-        document.body.classList.add('needs-hierarchy-active');
-        needsContainer.innerHTML = '';
-        displayedProducts.clear(); // Reset tracking for new render
+        currentlyDisplayedFunctions = [];
+    } else if (actuallyChanged || functionFiltersChanged) {
+        // Function selection changed - full rebuild needed
+        showNeedsLoadingOverlay();
         
-        selectedFunctions.forEach(needKey => {
-            const need = needsHierarchyData[needKey];
-            if (need) {
-                const needItem = createNeedElement(needKey, true, new Set(), 0);
-                if (needItem) {
-                    needsContainer.appendChild(needItem);
-                }
-            }
+        // Use requestAnimationFrame + setTimeout to ensure loading overlay renders before heavy work
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                needsContainer.style.display = 'block';
+                document.body.classList.add('needs-hierarchy-active');
+                needsContainer.innerHTML = '';
+                displayedProducts.clear(); // Reset tracking for new render
+                
+                selectedFunctions.forEach(needKey => {
+                    const need = needsHierarchyData[needKey];
+                    if (need) {
+                        const needItem = createNeedElement(needKey, true, new Set(), 0);
+                        if (needItem) {
+                            needsContainer.appendChild(needItem);
+                        }
+                    }
+                });
+                
+                currentlyDisplayedFunctions = [...selectedFunctions];
+                updateNeedsCountBadges(); // Update all count badges
+                updateToolsListCount(); // Update count with hierarchy products
+                hideNeedsLoadingOverlay();
+            }, 0);
         });
+    } else {
+        // Function selection unchanged - just refresh products (much faster!)
+        showNeedsLoadingOverlay();
+        refreshNeedsProducts();
     }
+}
+
+// Update count badges for all needs in the hierarchy
+function updateNeedsCountBadges() {
+    const needItems = document.querySelectorAll('.need-item');
+    needItems.forEach(needItem => {
+        const needKey = needItem.dataset.needKey;
+        if (needKey) {
+            const countSpan = needItem.querySelector('.need-item-count');
+            if (countSpan) {
+                const updatedCount = getProductCountForNeed(needKey);
+                countSpan.textContent = `[${updatedCount} items]`;
+            }
+        }
+    });
+}
+
+// Efficiently refresh products without rebuilding structure
+function refreshNeedsProducts() {
+    // Debounce rapid filter changes for better performance
+    clearTimeout(refreshDebounceTimer);
+    refreshDebounceTimer = setTimeout(() => {
+        performNeedsProductsRefresh();
+    }, 150); // Wait 150ms after last change before refreshing
+}
+
+// Actual refresh implementation
+function performNeedsProductsRefresh() {
+    displayedProducts.clear(); // Reset duplicate tracking
+    
+    // Get all need sections
+    const needItems = document.querySelectorAll('.need-item');
+    
+    needItems.forEach(needItem => {
+        const needKey = needItem.dataset.needKey;
+        if (!needKey) return;
+        
+        const productsDiv = needItem.querySelector('.need-products');
+        if (!productsDiv) return;
+        
+        // Only refresh if products were already loaded
+        if (productsDiv.dataset.loaded === 'true') {
+            const content = needItem.querySelector('.need-content');
+            
+            // Clear products but keep the header
+            const productsHeader = productsDiv.querySelector('.need-products-header');
+            productsDiv.innerHTML = '';
+            if (productsHeader) {
+                productsDiv.appendChild(productsHeader);
+            }
+            
+            // Reset loaded flag so loadProductsForNeed will reload
+            productsDiv.dataset.loaded = 'false';
+            
+            // Reload products with current filters/sort
+            loadProductsForNeed(needKey, content);
+        }
+    });
+    
+    // Update all count badges with current filter counts
+    updateNeedsCountBadges();
+    
+    // Update the top-level count display
+    updateToolsListCount();
+    
+    // Hide loading overlay after refresh completes
+    hideNeedsLoadingOverlay();
 }
 
