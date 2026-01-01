@@ -27,10 +27,13 @@
 // functions
 const functionsFilters = {
     "reading": "Reading",
+    "writing": "Writing",
+    "execFocus": "Exec/Focus",
     "cognitive": "Cognitive",
     "vision": "Vision",
-    "physical": "Physical",
+    "braille": "Braille",
     "hearing": "Hearing",
+    "physical": "Physical",
     "speech": "Speech",
 };
 //
@@ -489,15 +492,31 @@ function appendFilterCheckboxAndLabelToFieldset(id, value, checked, text, disabl
         // Update needs hierarchy if it's currently displayed
         // Check if this is a function filter change
         const isFunctionFilter = id.includes('filter_functions_');
-        const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
-        const hasFunctionFiltersSelected = Array.from(functionCheckboxes).some(cb => cb.checked);
-        
-        if (hasFunctionFiltersSelected) {
-            // If function filter changed, full rebuild. Otherwise just refresh products (faster!)
-            updateNeedsHierarchyDisplay(isFunctionFilter);
+
+        if (isFunctionFilter) {
+            // Hide the main tools list immediately to prevent flash
+            const toolsList = document.getElementById('ToolsList');
+            if (toolsList) {
+                toolsList.style.display = 'none';
+            }
+
+            // Update hierarchy (this handles its own loading overlay)
+            updateNeedsHierarchyDisplay(true);
+
+            // Apply filters to main list (will only show if no function filters selected)
+            filterToolItemsAndUpdateToolsListCount();
+        } else {
+            // For non-function filters
+            const functionCheckboxes = document.querySelectorAll('input[id^="filter_functions_"]');
+            const hasFunctionFiltersSelected = Array.from(functionCheckboxes).some(cb => cb.checked);
+
+            if (hasFunctionFiltersSelected) {
+                // If function filter changed, full rebuild. Otherwise just refresh products (faster!)
+                updateNeedsHierarchyDisplay(false);
+            }
+
+            filterToolItemsAndUpdateToolsListCount();
         }
-        
-        filterToolItemsAndUpdateToolsListCount();
     });
 
     let label = document.createElement('label');
@@ -3000,12 +3019,12 @@ function renderNeedsHierarchy() {
 }
 
 // Create a need element
-function createNeedElement(needKey, isSelected = false, visited = new Set(), depth = 0) {
+function createNeedElement(needKey, isSelected = false, visited = new Set(), depth = 0, skipChildren = false, skipSeeAlso = false, parentNeedNames = null) {
     const need = needsHierarchyData[needKey];
     if (!need || visited.has(needKey) || depth > 2) return null;
-    
+
     visited.add(needKey);
-    
+
     const needDiv = document.createElement('div');
     needDiv.className = 'need-item expanded'; // Expanded by default
     needDiv.dataset.needKey = needKey;
@@ -3056,22 +3075,34 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     // Description
     const description = document.createElement('div');
     description.className = 'need-description';
-    // Add "This group contains " prefix and make first letter of description lowercase
-    const descriptionText = need.description.charAt(0).toLowerCase() + need.description.slice(1);
-    description.textContent = `This group contains ${descriptionText}`;
+
+    // If this is a child/related need, show why it's included
+    if (parentNeedNames && parentNeedNames.length > 0) {
+        description.textContent = `This group included because these are also often useful for those with ${parentNeedNames}.`;
+    } else {
+        // Add "This group contains " prefix and make first letter of description lowercase
+        const descriptionText = need.description.charAt(0).toLowerCase() + need.description.slice(1);
+        description.textContent = `This group contains ${descriptionText}`;
+    }
     content.appendChild(description);
     
     // Includes
     const includes = document.createElement('div');
     includes.className = 'need-includes';
-    includes.innerHTML = `<strong>INCLUDES LISTING:</strong> ${need.includes}`;
+    const includesStrong = document.createElement('strong');
+    includesStrong.textContent = 'INCLUDES LISTING:';
+    includes.appendChild(includesStrong);
+    includes.appendChild(document.createTextNode(` ${need.includes}`));
     content.appendChild(includes);
     
-    // See Also
-    if (need.seeAlso) {
+    // See Also (skip if this is a related/child need)
+    if (!skipSeeAlso && need.seeAlso) {
         const seeAlso = document.createElement('div');
         seeAlso.className = 'need-see-also';
-        seeAlso.innerHTML = `<strong>SEE ALSO:</strong> ${need.seeAlso}`;
+        const seeAlsoStrong = document.createElement('strong');
+        seeAlsoStrong.textContent = 'SEE ALSO:';
+        seeAlso.appendChild(seeAlsoStrong);
+        seeAlso.appendChild(document.createTextNode(` ${need.seeAlso}`));
         content.appendChild(seeAlso);
     }
     
@@ -3097,17 +3128,18 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
     // Load parent products FIRST before creating children
     // This ensures duplicate tracking works in the correct visual order
     loadProductsForNeed(needKey, content);
-    
+
     // THEN create child needs (after parent products are loaded)
-    if (need.children && need.children.length > 0 && depth < 2) {
+    // Skip if skipChildren is true
+    if (!skipChildren && need.children && need.children.length > 0 && depth < 2) {
         const childrenDiv = document.createElement('div');
         childrenDiv.className = 'need-children';
-        
+
         const childrenHeader = document.createElement('div');
         childrenHeader.className = 'need-children-header';
         childrenHeader.textContent = 'CHILD NEEDS:';
         childrenDiv.appendChild(childrenHeader);
-        
+
         need.children.forEach(childKey => {
             const childNeed = needsHierarchyData[childKey];
             if (childNeed && !visited.has(childKey)) {
@@ -3118,10 +3150,10 @@ function createNeedElement(needKey, isSelected = false, visited = new Set(), dep
                 }
             }
         });
-        
+
         content.appendChild(childrenDiv);
     }
-    
+
     return needDiv;
 }
 
@@ -3475,11 +3507,18 @@ function updateNeedsHierarchyDisplay(functionFiltersChanged = true) {
     if (selectedFunctions.length === 0) {
         // No functions selected, hide needs container and show tools list
         hideNeedsLoadingOverlay();
-        needsContainer.innerHTML = '';
+        needsContainer.replaceChildren();
         needsContainer.style.display = 'none';
         document.body.classList.remove('needs-hierarchy-active');
         displayedProducts.clear(); // Clear tracking
         currentlyDisplayedFunctions = [];
+
+        // Show the main tools list
+        const toolsList = document.getElementById('ToolsList');
+        if (toolsList) {
+            toolsList.style.display = 'block';
+        }
+        updateToolsListCount();
     } else if (actuallyChanged || functionFiltersChanged) {
         // Function selection changed - full rebuild needed
         showNeedsLoadingOverlay();
@@ -3489,19 +3528,61 @@ function updateNeedsHierarchyDisplay(functionFiltersChanged = true) {
             setTimeout(() => {
                 needsContainer.style.display = 'block';
                 document.body.classList.add('needs-hierarchy-active');
-                needsContainer.innerHTML = '';
+                needsContainer.replaceChildren();
                 displayedProducts.clear(); // Reset tracking for new render
-                
+
+                // FIRST: Display all SELECTED needs (the ones user checked)
                 selectedFunctions.forEach(needKey => {
                     const need = needsHierarchyData[needKey];
                     if (need) {
-                        const needItem = createNeedElement(needKey, true, new Set(), 0);
+                        // Create need WITHOUT children (depth = 0 prevents children from being added)
+                        const needItem = createNeedElement(needKey, true, new Set(), 0, true); // skipChildren = true
                         if (needItem) {
                             needsContainer.appendChild(needItem);
                         }
                     }
                 });
-                
+
+                // SECOND: Collect all child needs from SEE ALSO that are NOT already selected
+                // Also track which parent needs reference each child
+                const childNeedsToShow = new Map(); // childKey -> Set of parent need names
+                selectedFunctions.forEach(needKey => {
+                    const need = needsHierarchyData[needKey];
+                    if (need && need.children && need.children.length > 0) {
+                        need.children.forEach(childKey => {
+                            // Only add if NOT already in selected functions
+                            if (!selectedFunctions.includes(childKey)) {
+                                if (!childNeedsToShow.has(childKey)) {
+                                    childNeedsToShow.set(childKey, new Set());
+                                }
+                                // Add the parent need name
+                                childNeedsToShow.get(childKey).add(need.name);
+                            }
+                        });
+                    }
+                });
+
+                // Display child needs (if any)
+                if (childNeedsToShow.size > 0) {
+                    // Add a separator/header for child needs
+                    const childNeedsHeader = document.createElement('div');
+                    childNeedsHeader.className = 'child-needs-section-header';
+                    childNeedsHeader.textContent = 'SEE ALSO ITEMS BELOW THAT MIGHT HAVE USEFUL FEATURES:';
+                    needsContainer.appendChild(childNeedsHeader);
+
+                    childNeedsToShow.forEach((parentNeedNamesSet, childKey) => {
+                        const need = needsHierarchyData[childKey];
+                        if (need) {
+                            // Convert Set to comma-separated string
+                            const parentNeedNames = Array.from(parentNeedNamesSet).join(', ');
+                            const needItem = createNeedElement(childKey, false, new Set(), 0, true, true, parentNeedNames); // skipChildren = true, skipSeeAlso = true, parentNeedNames
+                            if (needItem) {
+                                needsContainer.appendChild(needItem);
+                            }
+                        }
+                    });
+                }
+
                 currentlyDisplayedFunctions = [...selectedFunctions];
                 updateNeedsCountBadges(); // Update all count badges
                 updateToolsListCount(); // Update count with hierarchy products
@@ -3559,7 +3640,7 @@ function performNeedsProductsRefresh() {
             
             // Clear products but keep the header
             const productsHeader = productsDiv.querySelector('.need-products-header');
-            productsDiv.innerHTML = '';
+            productsDiv.replaceChildren();
             if (productsHeader) {
                 productsDiv.appendChild(productsHeader);
             }

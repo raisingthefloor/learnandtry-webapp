@@ -1400,3 +1400,13 @@ body.needs-hierarchy-active #ToolsList {
     font-size: 0.85rem;
     color: #666;
 }
+
+.child-needs-section-header {
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin: 30px 0 16px 0;
+    padding: 12px;
+    background-color: #f0f0f0;
+    border-left: 4px solid #005a9e;
+    color: #005a9e;
+}

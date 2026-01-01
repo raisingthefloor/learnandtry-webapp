@@ -2818,7 +2818,7 @@ def main():
     except:
         print("⚠ Warning: Ollama doesn't seem to be running on localhost:11434")
         print("  Make sure to start ollama before using the AI features")
-    
+
     # Check if Qdrant is accessible
     if VECTOR_SEARCH_AVAILABLE:
         try:
