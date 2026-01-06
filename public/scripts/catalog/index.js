@@ -2995,6 +2995,13 @@ const needsHierarchyData = {
         includes: "Includes tools and features to clarify people's speech, to recognize some types of difficult to understand speech and re-speak it clearly, to let people communicate in text, sign language, pictures, symbols, or voice of their choosing (including original voice for those who have lost it); to accelerate communication when using non-speech input methods; ability to use artificial but natural voice to control voice operated devices including computers and artificial agents.",
         seeAlso: "See also Physical for special interfaces and Writing for tools for faster and better expression.",
         children: ["physical"]
+    },
+    "trainingTherapy": {
+        name: "Training/Therapy",
+        description: "Tools and resources for training, therapy, and skill development.",
+        includes: "Includes tools and resources for learning, practicing, and developing skills through structured exercises, therapy activities, educational games, and training programs.",
+        seeAlso: null,
+        children: []
     }
 };
 
