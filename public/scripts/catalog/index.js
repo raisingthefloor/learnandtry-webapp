@@ -35,6 +35,7 @@ const functionsFilters = {
     "hearing": "Hearing",
     "physical": "Physical",
     "speech": "Speech",
+    "trainingTherapy": "Training/Therapy",
 };
 //
 // supportedPlatforms
