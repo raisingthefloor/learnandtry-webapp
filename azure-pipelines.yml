@@ -8,7 +8,7 @@
 #       issues separately from container registry connection or push issues.
 
 trigger:
-- dev
+- preview
 
 pool:
   vmImage: 'ubuntu-24.04' 
@@ -80,17 +80,17 @@ stages:
           git clone https://${GITHUB_USERNAME}:${GITHUB_ACCESS_TOKEN}@github.com/raisingthefloor/deploy-learnandtry-webapp -b ${BRANCH}
           cd deploy-learnandtry-webapp
 
-          # DEBUG: print out the dev deployment file
-          # cat learnandtry-webapp-dev-deployment.yaml
+          # DEBUG: print out the preview deployment file
+          # cat learnandtry-webapp-preview-deployment.yaml
 
           # update our build tag
-          sed -i 's|image: morphic.azurecr.io/learnandtry-webapp:\S*|image: morphic.azurecr.io/learnandtry-webapp:$(TAG)|' learnandtry-webapp-dev-deployment.yaml
+          sed -i 's|image: morphic.azurecr.io/learnandtry-webapp:\S*|image: morphic.azurecr.io/learnandtry-webapp:$(TAG)|' learnandtry-webapp-preview-deployment.yaml
 
-          # DEBUG: print out the dev deployment file
-          # cat learnandtry-webapp-dev-deployment.yaml
+          # DEBUG: print out the preview deployment file
+          # cat learnandtry-webapp-preview-deployment.yaml
 
           # NOTE: we could create a "deploybot" email, but we use a "buildmaster" email instead
           git config --global user.email "buildmaster@raisingthefloor.org"
           git config --global user.name "deploybot-rtf"
-          git commit learnandtry-webapp-dev-deployment.yaml -m "deploybot: updating image tag to ${TAG}"
+          git commit learnandtry-webapp-preview-deployment.yaml -m "deploybot: updating image tag to ${TAG}"
           git push
