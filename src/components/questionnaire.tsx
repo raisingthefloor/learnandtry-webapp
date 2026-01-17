@@ -40,7 +40,7 @@ export default function Questionnaire({ onComplete }: QuestionnaireProps) {
           options: [
             "Reading",
             "Writing",
-            "Focus/Planning (Exec Functions)",
+            "Focus/Planning/Exec",
             "Cognitive",
             "Vision",
             "Braille Tools",

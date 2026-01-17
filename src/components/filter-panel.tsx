@@ -36,7 +36,7 @@ const filterDescriptions: Record<string, string> = {
   Reading:
     "Tools to help individuals with reading disabilities (e.g. dyslexia, low vision or anyone who struggles to read standard text).",
   Writing: "Tools to help individuals who have trouble writing, or writing clearly and correctly for any reason.",
-  "Focus/Planning (Exec Functions)": "Tools to help reduce distractions, stay organized, plan, and manage time.",
+  "Focus/Planning/Exec": "Tools to help reduce distractions, stay organized, plan, and manage time.",
   Cognitive: "Tools to help with memory, understanding and processing.",
   Vision: "Tools to help see more clearly, as well as alternatives to sight.",
   "Braille Tools": "Tools for braille users.",
@@ -52,8 +52,8 @@ const filterDescriptions: Record<string, string> = {
   iPhone: "Products work with iPhones that support latest version of iOS and may work with older iPhones as well.",
   Android: "See each product description to see which versions of Android each product will work with.",
   // Install types
-  "Built-in (no install needed)": "Show solutions that are already part of the computer or browser.",
-  "Web-Based (no install needed)":
+  "Built-in (no install)": "Show solutions that are already part of the computer or browser.",
+  "Web-Based (no install)":
     "Show solutions that are fully on the Web and work without installing any software or browser extension on the computer.",
   "Needs to be installed":
     "Show solutions that need to be installed – including browser extensions that need to be installed.",
@@ -67,7 +67,7 @@ const filterDescriptions: Record<string, string> = {
 function Tooltip({ text, children }: { text: string; children: React.ReactNode }) {
   const [isHovered, setIsHovered] = useState(false)
   const [isClicked, setIsClicked] = useState(false)
-  const [position, setPosition] = useState({ top: 0, left: 0 })
+  const [position, setPosition] = useState({ top: 0, left: 0, rightAlign: false })
   const tooltipRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLSpanElement>(null)
 
@@ -76,9 +76,12 @@ function Tooltip({ text, children }: { text: string; children: React.ReactNode }
   const updatePosition = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const rightAlign = rect.right + 230 > viewportWidth
       setPosition({
         top: rect.top,
-        left: rect.right + 8,
+        left: rightAlign ? rect.left - 8 : rect.right + 8,
+        rightAlign,
       })
     }
   }
@@ -137,16 +140,18 @@ function Tooltip({ text, children }: { text: string; children: React.ReactNode }
         tabIndex={0}
         role="button"
         aria-label="More information"
-        className="cursor-help"
+        className="inline-flex"
       >
         {children}
       </span>
       {isVisible && (
         <span
-          className="fixed w-56 p-2 text-xs bg-foreground text-background rounded-md shadow-lg font-bold"
+          className="fixed max-w-[calc(100vw-2rem)] w-56 p-2 pr-6 text-xs bg-foreground text-background rounded-md shadow-lg font-bold"
           style={{
             top: position.top,
-            left: position.left,
+            left: position.rightAlign ? "auto" : position.left,
+            right: position.rightAlign ? `calc(100vw - ${position.left}px)` : "auto",
+            transform: position.rightAlign ? "translate(0, -100%)" : "translateY(-100%)",
             zIndex: 99999,
           }}
         >
@@ -160,7 +165,7 @@ function Tooltip({ text, children }: { text: string; children: React.ReactNode }
               className="absolute top-1 right-1 p-0.5 hover:bg-background/20 rounded"
               aria-label="Close tooltip"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3 h-3 font-bold" strokeWidth={3} />
             </button>
           )}
           {text}
@@ -240,7 +245,7 @@ export function FilterPanel({
               {[
                 "Reading",
                 "Writing",
-                "Focus/Planning (Exec Functions)",
+                "Focus/Planning/Exec",
                 "Cognitive",
                 "Vision",
                 "Braille Tools",
@@ -301,25 +306,25 @@ export function FilterPanel({
                 <HelpCircle className="w-4 h-4 text-muted-foreground hover:text-primary shrink-0" />
               </Tooltip>
             </legend>
-            <p className="text-xs text-muted-foreground mb-3">Show only tools that don't need to be installed?</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Tools that don't need to be installed can be used even if person has no permission to install things.
+            </p>
             <div className="space-y-2">
-              {["Built-in (no install needed)", "Web-Based (no install needed)", "Needs to be installed"].map(
-                (install) => (
-                  <label key={install} className="flex items-center gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      checked={filters.installTypes.includes(install)}
-                      onChange={(e) => onFilterChange("installTypes", install, e.target.checked)}
-                      className="w-4 h-4 border-2 border-muted-foreground rounded focus:ring-2 focus:ring-primary focus:ring-offset-2 accent-primary shrink-0"
-                      aria-label={`Filter by ${install}`}
-                    />
-                    <span className="text-sm text-foreground">{install}</span>
-                    <Tooltip text={filterDescriptions[install]}>
-                      <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/70 hover:text-primary shrink-0" />
-                    </Tooltip>
-                  </label>
-                ),
-              )}
+              {["Built-in (no install)", "Web-Based (no install)", "Needs to be installed"].map((install) => (
+                <label key={install} className="flex items-center gap-3 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={filters.installTypes.includes(install)}
+                    onChange={(e) => onFilterChange("installTypes", install, e.target.checked)}
+                    className="w-4 h-4 border-2 border-muted-foreground rounded focus:ring-2 focus:ring-primary focus:ring-offset-2 accent-primary shrink-0"
+                    aria-label={`Filter by ${install}`}
+                  />
+                  <span className="text-sm text-foreground">{install}</span>
+                  <Tooltip text={filterDescriptions[install]}>
+                    <HelpCircle className="w-3.5 h-3.5 text-muted-foreground/70 hover:text-primary shrink-0" />
+                  </Tooltip>
+                </label>
+              ))}
             </div>
           </fieldset>
 

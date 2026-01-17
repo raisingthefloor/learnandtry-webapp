@@ -154,7 +154,7 @@ const getFilteredFunctions = (toolFunctions: string[], selectedFilters: string[]
       return (
         normalizedFunc.includes(normalizedFilter) ||
         normalizedFilter.includes(normalizedFunc) ||
-        (normalizedFilter === "focus/planning" &&
+        ((normalizedFilter === "focus/planning" || normalizedFilter === "focus/planning/exec") &&
           (normalizedFunc.includes("focus") || normalizedFunc.includes("exec"))) ||
         (normalizedFilter === "cognitive" && normalizedFunc.includes("cognit")) ||
         (normalizedFilter === "speech/communication" &&
@@ -244,7 +244,7 @@ const getMorePurchaseOptionsCount = (toolOptions: string[], selectedFilters: str
 const FUNCTION_ORDER = [
   "Reading",
   "Writing",
-  "Focus/Planning (Exec Functions)",
+  "Focus/Planning/Exec",
   "Cognitive",
   "Vision",
   "Braille Tools",
@@ -273,7 +273,7 @@ const SEE_ALSO_RELATIONSHIPS: Record<string, { func: string; reason: string }[]>
   cognitive: [
     { func: "Vision", reason: "Making things larger can make things cognitively easier." },
     {
-      func: "Focus/Planning (Exec Functions)",
+      func: "Focus/Planning/Exec",
       reason:
         "People with cognitive disabilities often have problems with focus, planning or other executive functions.",
     },
@@ -341,6 +341,7 @@ function normalizeFilterToFunctionKey(filter: string): string {
   const mapping: Record<string, string> = {
     reading: "reading",
     writing: "writing",
+    "focus/planning/exec": "execfocus",
     "focus/planning (exec functions)": "execfocus",
     "focus/planning": "execfocus",
     cognitive: "cognitive",
@@ -578,6 +579,7 @@ function BrowseAllToolsContent() {
             reading: ["reading"],
             writing: ["writing"],
             "focus/planning": ["execfocus", "execfunction", "focus", "planning", "executive"],
+            "focus/planning/exec": ["execfocus", "execfunction", "focus", "planning", "executive"],
             cognitive: ["cognitive"],
             vision: ["vision"],
             "braille tools": ["braille"],
@@ -737,6 +739,7 @@ function BrowseAllToolsContent() {
             reading: ["reading"],
             writing: ["writing"],
             "focus/planning": ["execfocus", "execfunction", "focus", "planning", "executive"],
+            "focus/planning/exec": ["execfocus", "execfunction", "focus", "planning", "executive"],
             cognitive: ["cognitive"],
             vision: ["vision"],
             "braille tools": ["braille"],
@@ -1324,7 +1327,7 @@ function BrowseAllToolsContent() {
                             </>
                           ),
                         },
-                        "focus/planning": {
+                        "focus/planning/exec": {
                           name: "EXEC/FOCUS",
                           content: (
                             <>
@@ -1654,7 +1657,9 @@ function BrowseAllToolsContent() {
                                             <p className="text-sm italic text-orange-800">See Also - {functionName}</p>
                                           )}
                                         </div>
-                                        <ChevronUp className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-1" />
+                                        <span className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0 mt-1">
+                                          See Less <ChevronUp className="w-4 h-4" />
+                                        </span>
                                       </div>
 
                                       <hr className="border-gray-300 my-3" />
@@ -1668,115 +1673,118 @@ function BrowseAllToolsContent() {
                                       {tool.youTubeVideos && tool.youTubeVideos.length > 0 && (
                                         <>
                                           <h4 className="text-base font-semibold mb-2">Videos</h4>
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {tool.youTubeVideos.slice(0, 2).map((video) => (
-                                              <div key={video.id} className="aspect-video rounded-lg overflow-hidden">
-                                                <iframe
-                                                  src={video.embedUrl}
-                                                  title={video.title}
-                                                  className="w-full h-full"
-                                                  allowFullScreen
-                                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                />
+                                          <div className="flex flex-wrap gap-3">
+                                            {/* First video - large */}
+                                            <div className="w-full sm:w-[calc(50%-6px)] aspect-video rounded-lg overflow-hidden">
+                                              <iframe
+                                                src={tool.youTubeVideos[0].embedUrl}
+                                                title={tool.youTubeVideos[0].title}
+                                                className="w-full h-full"
+                                                allowFullScreen
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                              />
+                                            </div>
+                                            {/* Additional videos - 1/4 size, arranged next to big video */}
+                                            {tool.youTubeVideos.length > 1 && (
+                                              <div className="flex flex-wrap gap-2 w-full sm:w-[calc(50%-6px)]">
+                                                {tool.youTubeVideos.slice(1).map((video) => (
+                                                  <div
+                                                    key={video.id}
+                                                    className="w-[calc(50%-4px)] aspect-video rounded-lg overflow-hidden"
+                                                  >
+                                                    <iframe
+                                                      src={video.embedUrl}
+                                                      title={video.title}
+                                                      className="w-full h-full"
+                                                      allowFullScreen
+                                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    />
+                                                  </div>
+                                                ))}
                                               </div>
-                                            ))}
+                                            )}
                                           </div>
                                           <hr className="border-gray-300 my-3" />
                                         </>
                                       )}
 
-                                      <div className="flex justify-between gap-6 mb-3">
-                                        {/* Left side - Helps With and Devices */}
-                                        <div className="flex gap-6">
-                                          {/* HELPS WITH - Purple badges - horizontal */}
-                                          <div>
-                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                              Helps With:
-                                            </span>
-                                            <div className="flex flex-wrap gap-1">
-                                              {tool.functions &&
-                                                tool.functions.map((func, idx) => (
-                                                  <span
-                                                    key={idx}
-                                                    className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
-                                                  >
-                                                    {mapFunctionToLabel(func)}
-                                                  </span>
-                                                ))}
-                                            </div>
-                                          </div>
-
-                                          {/*DEVICES - Blue badges - horizontal */}
-                                          <div>
-                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                              Devices:
-                                            </span>
-                                            <div className="flex flex-wrap gap-1">
-                                              {tool.supportedPlatforms &&
-                                                tool.supportedPlatforms.map((platform, idx) => (
-                                                  <span
-                                                    key={idx}
-                                                    className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
-                                                  >
-                                                    {mapDeviceToLabel(platform)}
-                                                  </span>
-                                                ))}
-                                            </div>
+                                      {/* CHANGE: Updated SEE ALSO expanded card badges to use 2-row grid on mobile */}
+                                      <div className="grid grid-cols-2 md:flex md:flex-wrap gap-4 md:gap-8 mt-3">
+                                        <div className="mt-0.5">
+                                          <p className="text-xs font-semibold text-muted-foreground mb-1">
+                                            HELPS WITH:
+                                          </p>
+                                          <div className="flex flex-wrap gap-1">
+                                            {tool.functions &&
+                                              tool.functions.map((func, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="px-2 py-0.5 text-xs rounded-full bg-purple-200 text-purple-900"
+                                                >
+                                                  {mapFunctionToLabel(func)}
+                                                </span>
+                                              ))}
                                           </div>
                                         </div>
 
-                                        {/* Right side - Install? and Pricing */}
-                                        <div className="flex gap-6">
-                                          {/* INSTALL? - Buff/Yellow badges - horizontal */}
-                                          <div>
-                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                              Install?:
-                                            </span>
-                                            <div className="flex flex-wrap gap-1">
-                                              {tool.installTypes &&
-                                                tool.installTypes.map((install, idx) => (
-                                                  <span
-                                                    key={idx}
-                                                    className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
-                                                  >
-                                                    {mapInstallToLabel(install)}
-                                                  </span>
-                                                ))}
-                                            </div>
+                                        <div className="mt-0.5">
+                                          <p className="text-xs font-semibold text-muted-foreground mb-1">DEVICES:</p>
+                                          <div className="flex flex-wrap gap-1">
+                                            {tool.supportedPlatforms &&
+                                              tool.supportedPlatforms.map((platform, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-900"
+                                                >
+                                                  {mapDeviceToLabel(platform)}
+                                                </span>
+                                              ))}
                                           </div>
+                                        </div>
 
-                                          {/* PRICING - Green badges - horizontal */}
-                                          <div>
-                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                              Pricing:
-                                            </span>
-                                            <div className="flex flex-wrap gap-1">
-                                              {tool.purchaseOptions &&
-                                                tool.purchaseOptions.map((option, idx) => (
-                                                  <span
-                                                    key={idx}
-                                                    className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
-                                                  >
-                                                    {mapPurchaseToLabel(option)}
-                                                  </span>
-                                                ))}
-                                            </div>
+                                        <div className="mt-0.5">
+                                          <p className="text-xs font-semibold text-muted-foreground mb-1">INSTALL?:</p>
+                                          <div className="flex flex-wrap gap-1">
+                                            {tool.installTypes &&
+                                              tool.installTypes.map((install, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-900"
+                                                >
+                                                  {mapInstallToLabel(install)}
+                                                </span>
+                                              ))}
+                                          </div>
+                                        </div>
+
+                                        <div className="mt-0.5">
+                                          <p className="text-xs font-semibold text-muted-foreground mb-1">PRICING:</p>
+                                          <div className="flex flex-wrap gap-1">
+                                            {tool.purchaseOptions &&
+                                              tool.purchaseOptions.map((option, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-900"
+                                                >
+                                                  {mapPurchaseToLabel(option)}
+                                                </span>
+                                              ))}
                                           </div>
                                         </div>
                                       </div>
+                                      <hr className="my-2 border-gray-200" />
 
-                                      <hr className="border-gray-300 my-3" />
-
-                                      <div className="flex justify-end">
+                                      <div className="flex justify-end mt-2">
                                         <Button
-                                          size="default"
-                                          className="text-sm px-4 py-2"
+                                          variant="outline"
+                                          size="sm"
+                                          className="text-sm bg-transparent"
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             window.open(tool.vendorProductPageUrl, "_blank")
                                           }}
                                         >
-                                          <ExternalLink className="w-4 h-4 mr-2" />
+                                          <ExternalLink className="h-4 w-4 mr-2" />
                                           Visit Product Website
                                         </Button>
                                       </div>
@@ -1794,14 +1802,24 @@ function BrowseAllToolsContent() {
                                             (already shown in {firstShownIn})
                                           </span>
                                           {tool.functions &&
-                                            tool.functions.map((func, idx) => (
-                                              <span
-                                                key={idx}
-                                                className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs ml-1"
-                                              >
-                                                {mapFunctionToLabel(func)}
+                                            getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => {
+                                              const label = mapFunctionToLabel(func)
+                                              if (!label) return null
+                                              return (
+                                                <span
+                                                  key={idx}
+                                                  className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs ml-1"
+                                                >
+                                                  {label}
+                                                </span>
+                                              )
+                                            })}
+                                          {tool.functions &&
+                                            getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
+                                              <span className="text-xs text-muted-foreground ml-1">
+                                                +{getMoreFunctionsCount(tool.functions, filters.functions)}
                                               </span>
-                                            ))}
+                                            )}
                                         </p>
                                       )}
                                       {!isRepeat && (
@@ -1822,8 +1840,8 @@ function BrowseAllToolsContent() {
                                           {/* 1/8 inch whitespace */}
                                           <div className="h-1.5"></div>
 
-                                          <div className="flex items-end justify-between gap-3">
-                                            <div className="grid grid-cols-4 gap-3 flex-1">
+                                          <div className="flex flex-col gap-2">
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
                                               {/* HELPS WITH - Purple badges */}
                                               <div className="mt-0.5">
                                                 <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
@@ -1941,16 +1959,17 @@ function BrowseAllToolsContent() {
                                                 </div>
                                               </div>
                                             </div>
-                                            <button
-                                              className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0 self-end"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                expandAndScrollToTool(currentToolId)
-                                              }}
-                                            >
-                                              See More
-                                              <ChevronDown className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex justify-end">
+                                              <button
+                                                className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap"
+                                                onClick={(e) => {
+                                                  e.stopPropagation()
+                                                  expandAndScrollToTool(currentToolId)
+                                                }}
+                                              >
+                                                See More <ChevronDown className="h-4 w-4" />
+                                              </button>
+                                            </div>
                                           </div>
                                         </>
                                       )}
@@ -1980,7 +1999,6 @@ function BrowseAllToolsContent() {
                                   <span className="text-base font-bold text-purple-900">
                                     ITEMS IN THE FOLLOWING GROUPS MAY ALSO BE HELPFUL BASED ON YOUR SELECTIONS
                                   </span>
-                                  <span className="ml-2 text-sm text-purple-700">(click here to see why)</span>
                                 </div>
                                 {seeAlsoInfoExpanded ? (
                                   <ChevronUp className="h-4 w-4 text-purple-700" />
@@ -2141,7 +2159,7 @@ function BrowseAllToolsContent() {
 
                                               <div className="mb-3">
                                                 <h4 className="text-base font-semibold mb-1">Description</h4>
-                                                <p className="text-foreground leading-snug">{tool.description}</p>
+                                                <p className="foreground leading-snug">{tool.description}</p>
                                               </div>
                                               <hr className="my-2 border-gray-200" />
 
@@ -2274,7 +2292,7 @@ function BrowseAllToolsContent() {
                                                     </span>
                                                   </div>
                                                 </div>
-                                                <span className="text-primary text-sm flex items-center gap-1 shrink-0">
+                                                <span className="text-primary text-sm flex items-center gap-1 whitespace-nowrap flex-shrink-0 self-end">
                                                   See More <ChevronDown className="h-4 w-4" />
                                                 </span>
                                               </div>
@@ -2438,7 +2456,9 @@ function BrowseAllToolsContent() {
                                     <p className="text-sm italic text-orange-800">See Also - {functionName}</p>
                                   )}
                                 </div>
-                                <ChevronUp className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-1" />
+                                <span className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0 mt-1">
+                                  See Less <ChevronUp className="w-4 h-4" />
+                                </span>
                               </div>
 
                               <hr className="border-gray-300 my-3" />
@@ -2452,18 +2472,36 @@ function BrowseAllToolsContent() {
                               {tool.youTubeVideos && tool.youTubeVideos.length > 0 && (
                                 <>
                                   <h4 className="text-base font-semibold mb-2">Videos</h4>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {tool.youTubeVideos.slice(0, 2).map((video) => (
-                                      <div key={video.id} className="aspect-video rounded-lg overflow-hidden">
-                                        <iframe
-                                          src={video.embedUrl}
-                                          title={video.title}
-                                          className="w-full h-full"
-                                          allowFullScreen
-                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        />
+                                  <div className="flex flex-wrap gap-3">
+                                    {/* First video - large */}
+                                    <div className="w-full sm:w-[calc(50%-6px)] aspect-video rounded-lg overflow-hidden">
+                                      <iframe
+                                        src={tool.youTubeVideos[0].embedUrl}
+                                        title={tool.youTubeVideos[0].title}
+                                        className="w-full h-full"
+                                        allowFullScreen
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      />
+                                    </div>
+                                    {/* Additional videos - 1/4 size, arranged next to big video */}
+                                    {tool.youTubeVideos.length > 1 && (
+                                      <div className="flex flex-wrap gap-2 w-full sm:w-[calc(50%-6px)]">
+                                        {tool.youTubeVideos.slice(1).map((video) => (
+                                          <div
+                                            key={video.id}
+                                            className="w-[calc(50%-4px)] aspect-video rounded-lg overflow-hidden"
+                                          >
+                                            <iframe
+                                              src={video.embedUrl}
+                                              title={video.title}
+                                              className="w-full h-full"
+                                              allowFullScreen
+                                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            />
+                                          </div>
+                                        ))}
                                       </div>
-                                    ))}
+                                    )}
                                   </div>
                                   <hr className="border-gray-300 my-3" />
                                 </>
@@ -2568,127 +2606,168 @@ function BrowseAllToolsContent() {
                           ) : (
                             // Collapsed view
                             <div className="px-3 py-0">
-                              <div className="flex items-center gap-4">
-                                <h3 className="text-base font-bold text-foreground">
-                                  {tool.name}
-                                  <span className="font-normal text-muted-foreground"> · {tool.company}</span>
-                                </h3>
-                              </div>
-
-                              {/* Line 2: One line description */}
-                              <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
-
-                              {/* 1/8 inch whitespace */}
-                              <div className="h-1.5"></div>
-
-                              <div className="flex items-end justify-between gap-3">
-                                <div className="grid grid-cols-4 gap-3 flex-1">
-                                  {/* HELPS WITH - Purple badges */}
-                                  <div className="mt-0.5">
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                      Helps With:
+                              {isRepeat && (
+                                // Simplified single-line format for already shown items
+                                <p className="py-1">
+                                  <span className="text-base font-bold text-foreground">{tool.name}</span>
+                                  <span className="text-muted-foreground font-normal"> · {tool.company}</span>
+                                  <span className="text-gray-500 italic"> (already shown in {firstShownIn})</span>
+                                  {tool.functions &&
+                                    getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => {
+                                      const label = mapFunctionToLabel(func)
+                                      if (!label) return null
+                                      return (
+                                        <span
+                                          key={idx}
+                                          className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs ml-1"
+                                        >
+                                          {label}
+                                        </span>
+                                      )
+                                    })}
+                                  {tool.functions && getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
+                                    <span className="text-xs text-muted-foreground ml-1">
+                                      +{getMoreFunctionsCount(tool.functions, filters.functions)}
                                     </span>
-                                    <div className="flex flex-wrap gap-1">
-                                      {tool.functions &&
-                                        getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => (
-                                          <span
-                                            key={idx}
-                                            className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
-                                          >
-                                            {mapFunctionToLabel(func)}
-                                          </span>
-                                        ))}
-                                      {tool.functions &&
-                                        getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
-                                          <span className="text-xs text-muted-foreground ml-0.5">
-                                            +{getMoreFunctionsCount(tool.functions, filters.functions)}
-                                          </span>
-                                        )}
-                                    </div>
+                                  )}
+                                </p>
+                              )}
+                              {!isRepeat && (
+                                <>
+                                  <div className="flex items-center gap-4">
+                                    <h3 className="text-base font-bold text-foreground">
+                                      {tool.name}
+                                      <span className="font-normal text-muted-foreground"> · {tool.company}</span>
+                                    </h3>
                                   </div>
 
-                                  <div className="mt-0.5">
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                      Devices:
-                                    </span>
-                                    <div className="flex flex-wrap gap-1">
-                                      {tool.supportedPlatforms &&
-                                        getFilteredDevices(tool.supportedPlatforms, filters.devices).map(
-                                          (platform, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
-                                            >
-                                              {mapDeviceToLabel(platform)}
-                                            </span>
-                                          ),
-                                        )}
-                                      {tool.supportedPlatforms &&
-                                        getMoreDevicesCount(tool.supportedPlatforms, filters.devices) > 0 && (
-                                          <span className="text-xs text-muted-foreground ml-0.5">
-                                            +{getMoreDevicesCount(tool.supportedPlatforms, filters.devices)}
-                                          </span>
-                                        )}
-                                    </div>
-                                  </div>
+                                  {/* Line 2: One line description */}
+                                  <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
 
-                                  {/* INSTALL? - Buff/Yellow badges */}
-                                  <div className="mt-0.5">
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                      Install?:
-                                    </span>
-                                    <div className="flex flex-wrap gap-1">
-                                      {tool.installTypes &&
-                                        getFilteredInstallTypes(tool.installTypes, filters.installTypes).map(
-                                          (install, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
-                                            >
-                                              {mapInstallToLabel(install)}
-                                            </span>
-                                          ),
-                                        )}
-                                      {tool.installTypes &&
-                                        getMoreInstallTypesCount(tool.installTypes, filters.installTypes) > 0 && (
-                                          <span className="text-xs text-muted-foreground ml-0.5">
-                                            +{getMoreInstallTypesCount(tool.installTypes, filters.installTypes)}
-                                          </span>
-                                        )}
-                                    </div>
-                                  </div>
+                                  {/* 1/8 inch whitespace */}
+                                  <div className="h-1.5"></div>
 
-                                  <div>
-                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                      Pricing:
-                                    </span>
-                                    <div className="flex flex-wrap gap-1">
-                                      {tool.purchaseOptions &&
-                                        getFilteredPurchaseOptions(tool.purchaseOptions, filters.purchaseOptions).map(
-                                          (option, idx) => (
-                                            <span
-                                              key={idx}
-                                              className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
-                                            >
-                                              {mapPurchaseToLabel(option)}
-                                            </span>
-                                          ),
-                                        )}
-                                      {tool.purchaseOptions &&
-                                        getMorePurchaseOptionsCount(tool.purchaseOptions, filters.purchaseOptions) >
-                                          0 && (
-                                          <span className="text-xs text-muted-foreground ml-0.5">
-                                            +
-                                            {getMorePurchaseOptionsCount(tool.purchaseOptions, filters.purchaseOptions)}
-                                          </span>
-                                        )}
+                                  <div className="flex items-end justify-between gap-3">
+                                    <div className="grid grid-cols-4 gap-3 flex-1">
+                                      {/* HELPS WITH - Purple badges */}
+                                      <div className="mt-0.5">
+                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                          Helps With:
+                                        </span>
+                                        <div className="flex flex-wrap gap-1">
+                                          {tool.functions &&
+                                            getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => (
+                                              <span
+                                                key={idx}
+                                                className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
+                                              >
+                                                {mapFunctionToLabel(func)}
+                                              </span>
+                                            ))}
+                                          {tool.functions &&
+                                            getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
+                                              <span className="text-xs text-muted-foreground ml-0.5">
+                                                +{getMoreFunctionsCount(tool.functions, filters.functions)}
+                                              </span>
+                                            )}
+                                        </div>
+                                      </div>
+
+                                      <div className="mt-0.5">
+                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                          Devices:
+                                        </span>
+                                        <div className="flex flex-wrap gap-1">
+                                          {tool.supportedPlatforms &&
+                                            getFilteredDevices(tool.supportedPlatforms, filters.devices).map(
+                                              (platform, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
+                                                >
+                                                  {mapDeviceToLabel(platform)}
+                                                </span>
+                                              ),
+                                            )}
+                                          {tool.supportedPlatforms &&
+                                            getMoreDevicesCount(tool.supportedPlatforms, filters.devices) > 0 && (
+                                              <span className="text-xs text-muted-foreground ml-0.5">
+                                                +{getMoreDevicesCount(tool.supportedPlatforms, filters.devices)}
+                                              </span>
+                                            )}
+                                        </div>
+                                      </div>
+
+                                      {/* INSTALL? - Buff/Yellow badges */}
+                                      <div className="mt-0.5">
+                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                          Install?:
+                                        </span>
+                                        <div className="flex flex-wrap gap-1">
+                                          {tool.installTypes &&
+                                            getFilteredInstallTypes(tool.installTypes, filters.installTypes).map(
+                                              (install, idx) => (
+                                                <span
+                                                  key={idx}
+                                                  className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
+                                                >
+                                                  {mapInstallToLabel(install)}
+                                                </span>
+                                              ),
+                                            )}
+                                          {tool.installTypes &&
+                                            getMoreInstallTypesCount(tool.installTypes, filters.installTypes) > 0 && (
+                                              <span className="text-xs text-muted-foreground ml-0.5">
+                                                +{getMoreInstallTypesCount(tool.installTypes, filters.installTypes)}
+                                              </span>
+                                            )}
+                                        </div>
+                                      </div>
+
+                                      <div>
+                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                          Pricing:
+                                        </span>
+                                        <div className="flex flex-wrap gap-1">
+                                          {tool.purchaseOptions &&
+                                            getFilteredPurchaseOptions(
+                                              tool.purchaseOptions,
+                                              filters.purchaseOptions,
+                                            ).map((option, idx) => (
+                                              <span
+                                                key={idx}
+                                                className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
+                                              >
+                                                {mapPurchaseToLabel(option)}
+                                              </span>
+                                            ))}
+                                          {tool.purchaseOptions &&
+                                            getMorePurchaseOptionsCount(tool.purchaseOptions, filters.purchaseOptions) >
+                                              0 && (
+                                              <span className="text-xs text-muted-foreground ml-0.5">
+                                                +
+                                                {getMorePurchaseOptionsCount(
+                                                  tool.purchaseOptions,
+                                                  filters.purchaseOptions,
+                                                )}
+                                              </span>
+                                            )}
+                                        </div>
+                                      </div>
                                     </div>
+                                    <button
+                                      className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0 self-end"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        expandAndScrollToTool(currentToolId)
+                                      }}
+                                    >
+                                      See More
+                                      <ChevronDown className="w-4 h-4" />
+                                    </button>
                                   </div>
-                                </div>
-                                <span className="text-sm text-primary flex items-center gap-1 whitespace-nowrap flex-shrink-0 self-end">
-                                  See More <ChevronDown className="w-4 h-4" />
-                                </span>
-                              </div>
+                                </>
+                              )}
                             </div>
                           )}
                         </Card>
