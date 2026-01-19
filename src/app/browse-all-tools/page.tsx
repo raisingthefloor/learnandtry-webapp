@@ -37,17 +37,18 @@ interface FilterState {
 }
 
 function removeParentheses(text: string): string {
-  return text.replace(/\s*$$[^)]*$$/g, "").trim()
+  return text.replace(/\s*\([^)]*\)/g, "").trim()
 }
 
 function mapFunctionToLabel(func: string): string {
+  if (!func || func.trim() === "") return ""
   if (func.toLowerCase() === "trainingtherapy" || func.toLowerCase() === "training therapy") {
     return ""
   }
   const functionMap: Record<string, string> = {
     reading: "Reading",
     writing: "Writing",
-    execfocus: "Exec/Focus",
+    execfocus: "Focus/Planning/Exec",
     cognitive: "Cognitive",
     vision: "Vision",
     braille: "Braille",
@@ -139,17 +140,23 @@ function toTitleCase(str: string): string {
 function normalizeFilterValue(value: string): string {
   // Remove parenthetical content and lowercase for comparison
   return value
-    .replace(/\s*$$[^)]*$$/g, "")
+    .replace(/\s*\([^)]*\)/g, "")
     .trim()
     .toLowerCase()
 }
 
 // Helper functions to filter badges based on selected filters
 const getFilteredFunctions = (toolFunctions: string[], selectedFilters: string[]) => {
-  if (selectedFilters.length === 0) return toolFunctions
-  return toolFunctions.filter((func) => {
+  // Filter out empty strings from both inputs
+  const validToolFunctions = toolFunctions.filter(f => f && f.trim() !== "")
+  const validFilters = selectedFilters.filter(f => f && f.trim() !== "")
+  
+  if (validFilters.length === 0) {
+    return validToolFunctions
+  }
+  return validToolFunctions.filter((func) => {
     const normalizedFunc = func.toLowerCase()
-    return selectedFilters.some((filter) => {
+    return validFilters.some((filter) => {
       const normalizedFilter = normalizeFilterValue(filter).toLowerCase()
       return (
         normalizedFunc.includes(normalizedFilter) ||
@@ -165,8 +172,10 @@ const getFilteredFunctions = (toolFunctions: string[], selectedFilters: string[]
 }
 
 const getMoreFunctionsCount = (toolFunctions: string[], selectedFilters: string[]) => {
-  if (selectedFilters.length === 0) return 0
-  return toolFunctions.length - getFilteredFunctions(toolFunctions, selectedFilters).length
+  const validToolFunctions = toolFunctions.filter(f => f && f.trim() !== "")
+  const validFilters = selectedFilters.filter(f => f && f.trim() !== "")
+  if (validFilters.length === 0) return 0
+  return validToolFunctions.length - getFilteredFunctions(toolFunctions, selectedFilters).length
 }
 
 const getFilteredDevices = (toolDevices: string[], selectedFilters: string[]) => {
@@ -183,7 +192,14 @@ const getFilteredDevices = (toolDevices: string[], selectedFilters: string[]) =>
         (normalizedFilter === "chromebook" &&
           (normalizedDevice.includes("chrome") ||
             normalizedDevice.includes("chromeos") ||
-            normalizedDevice.includes("cros")))
+            normalizedDevice.includes("cros"))) ||
+        (normalizedFilter === "iphone" &&
+          (normalizedDevice.includes("iphone") ||
+            normalizedDevice.includes("ios"))) ||
+        (normalizedFilter === "ipad" &&
+          (normalizedDevice.includes("ipad") ||
+            normalizedDevice.includes("ios"))) ||
+        (normalizedFilter === "android" && normalizedDevice.includes("android"))
       )
     })
   })
@@ -792,8 +808,84 @@ function BrowseAllToolsContent() {
     const orderedSeeAlsoFunctions = FUNCTION_ORDER.filter((func) => seeAlsoMap[func])
 
     // Add see-also tools - these are only added if they haven't appeared in main groups
+    // We need to filter from ALL tools (not filteredTools which is already filtered by functions)
+    // but still apply device/install/pricing filters
+    const toolsFilteredByNonFunctions = tools.filter((tool) => {
+      // Apply search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim()
+        const matchesSearch =
+          tool.name.toLowerCase().includes(query) ||
+          tool.company.toLowerCase().includes(query) ||
+          tool.description?.toLowerCase().includes(query)
+        if (!matchesSearch) return false
+      }
+      // Apply device filter
+      if (filters.devices.length > 0) {
+        if (!tool.supportedPlatforms || tool.supportedPlatforms.length === 0) return false
+        const hasMatchingDevice = filters.devices.some((filterDevice) => {
+          const normalizedFilter = filterDevice.toLowerCase().replace(/[^a-z0-9]/g, "")
+          return tool.supportedPlatforms.some((toolDevice) => {
+            const normalizedToolDevice = toolDevice.toLowerCase().replace(/[^a-z0-9]/g, "")
+            if (normalizedFilter === "pcwindows" || normalizedFilter === "pc") {
+              return normalizedToolDevice.includes("pc") || normalizedToolDevice.includes("windows")
+            }
+            if (normalizedFilter === "macintosh" || normalizedFilter === "mac") {
+              return normalizedToolDevice.includes("mac")
+            }
+            if (normalizedFilter === "chromebook") {
+              return normalizedToolDevice.includes("chrome") || normalizedToolDevice.includes("chromeos") || normalizedToolDevice.includes("cros")
+            }
+            return normalizedToolDevice.includes(normalizedFilter) || normalizedFilter.includes(normalizedToolDevice)
+          })
+        })
+        if (!hasMatchingDevice) return false
+      }
+      // Apply install type filter
+      if (filters.installTypes.length > 0) {
+        if (!tool.installTypes || tool.installTypes.length === 0) return false
+        const hasMatchingInstall = filters.installTypes.some((filterInstall) => {
+          const normalizedFilter = filterInstall.toLowerCase().replace(/[-_\s]/g, "")
+          return tool.installTypes.some((toolInstall) => {
+            const normalizedToolInstall = toolInstall.toLowerCase().replace(/[-_\s]/g, "")
+            if (normalizedFilter.includes("builtin")) {
+              return normalizedToolInstall.includes("builtin") || normalizedToolInstall === "builtin"
+            }
+            if (normalizedFilter.includes("webbased") || normalizedFilter.includes("web")) {
+              return normalizedToolInstall.includes("web") || normalizedToolInstall.includes("browser")
+            }
+            if (normalizedFilter.includes("needstobeinstalled") || normalizedFilter.includes("install")) {
+              return normalizedToolInstall.includes("install") && !normalizedToolInstall.includes("builtin")
+            }
+            return normalizedToolInstall.includes(normalizedFilter)
+          })
+        })
+        if (!hasMatchingInstall) return false
+      }
+      // Apply purchase options filter
+      if (filters.purchaseOptions.length > 0) {
+        if (!tool.purchaseOptions || tool.purchaseOptions.length === 0) return false
+        const hasMatchingPurchase = filters.purchaseOptions.some((filterPurchase) => {
+          const normalizedFilter = filterPurchase.toLowerCase()
+          return tool.purchaseOptions.some((toolPurchase) => {
+            const normalizedToolPurchase = toolPurchase.toLowerCase()
+            if (normalizedFilter === "free") {
+              return normalizedToolPurchase === "free"
+            }
+            if (normalizedFilter === "free trial") {
+              return normalizedToolPurchase === "free trial" || normalizedToolPurchase.includes("trial")
+            }
+            return normalizedToolPurchase.includes(normalizedFilter) || normalizedFilter.includes(normalizedToolPurchase)
+          })
+        })
+        if (!hasMatchingPurchase) return false
+      }
+      return true
+    })
+    const sortedToolsForSeeAlso = sortTools(toolsFilteredByNonFunctions, sortBy)
+    
     for (const func of orderedSeeAlsoFunctions) {
-      const matchingTools = tools.filter((tool) => toolMatchesFunction(tool, func))
+      const matchingTools = sortedToolsForSeeAlso.filter((tool) => toolMatchesFunction(tool, func))
       for (const tool of matchingTools) {
         if (!firstShownInMap.has(tool.id)) {
           // Add to display list, marking it as a 'see also' item and including reasons
@@ -1091,15 +1183,20 @@ function BrowseAllToolsContent() {
               </div>
 
               {!urlHasFilters && !sidebarHasFilters && !searchQuery && (
-                <p className="text-base md:text-lg text-muted-foreground mb-6 leading-relaxed whitespace-pre-line">
-                  {"Explore our complete directory of " +
-                    tools.length +
-                    " assistive technology tools. You can search using the search field above or use the filters to narrow your search.\nTo learn more about a product - just click on it to expand the description."}
-                </p>
+                <>
+                  <p className="text-base md:text-lg text-muted-foreground leading-tight">
+                    {"Explore our complete directory of " +
+                      tools.length +
+                      " assistive technology tools. You can search using the search field above or use the filters to narrow your search."}
+                  </p>
+                  <p className="text-base md:text-lg text-muted-foreground mb-6 mt-3">
+                    {"To learn more about a product - just click on it to expand the description."}
+                  </p>
+                </>
               )}
 
               {(hasFilters || searchQuery) && (
-                <div className="mb-6">
+                <div className="mb-1">
                   <p className="text-base md:text-lg text-muted-foreground mb-4 leading-relaxed">
                     We found {filteredTools.length} tools that match your selections.
                   </p>
@@ -1108,7 +1205,7 @@ function BrowseAllToolsContent() {
                     filters.devices.length > 0 ||
                     filters.installTypes.length > 0 ||
                     filters.purchaseOptions.length > 0) && (
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-0">
                       {filters.functions.length > 0 && (
                         <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-purple-200 text-purple-900 rounded-full text-sm">
                           <span className="font-bold">Function(s):</span>{" "}
@@ -1160,7 +1257,7 @@ function BrowseAllToolsContent() {
                       setCurrentPage(1)
                     }}
                   >
-                    <SelectTrigger className="w-28 h-8 text-sm border-gray-400 bg-background">
+                    <SelectTrigger className="w-[130px] h-8 bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -1217,47 +1314,40 @@ function BrowseAllToolsContent() {
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">COGNITIVE</span> contains tools for users who have any
-                                problems with thinking, remembering, or complex language or concepts.
+                                <span className="font-bold">COGNITIVE</span> contains tools for users who have any problems with thinking, remembering, or complex language or concepts.
                               </p>
                               <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>toolbars to make things easier to find and use</li>
                                 <li>language simplification</li>
                                 <li>extra time to read pop-ups</li>
                                 <li>breaking complex sentences into simpler chunks/phrases for easier understanding</li>
-                                <li>
-                                  automatic extraction of key ideas, vocabulary lists, or study questions from text
-                                </li>
+                                <li>automatic extraction of key ideas, vocabulary lists, or study questions from text</li>
                                 <li>memory aids, and shortcuts that do not involve memorization</li>
+                                <li>toolbars to make things easier to find and use</li>
                                 <li>simplified screen layouts</li>
                                 <li>distraction masking and removal</li>
                                 <li>animation control</li>
-                                <li>both visual and audio presentation of information</li>
+                                <li>presentation of information both visually and auditorily</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Vision</span> (for features that make things larger)
+                                  <span className="font-bold">Vision</span> (for additional features that make things larger)
                                 </li>
                                 <li>
-                                  <span className="font-bold">Exec/Focus</span> (for features to help with distraction
-                                  or focus or planning)
+                                  <span className="font-bold">Focus/Planning/Exec</span> (for features to help with distraction, focus, planning or other executive functions)
                                 </li>
                                 <li>
-                                  <span className="font-bold">Reading</span> (for features that read text aloud and
-                                  more)
+                                  <span className="font-bold">Reading</span> (for features that read text aloud and other reading aids)
                                 </li>
                                 <li>
                                   <span className="font-bold">Writing</span> (for things to help with writing)
                                 </li>
                                 <li>
-                                  <span className="font-bold">Speech/Comm</span> (if users have trouble with
-                                  communication)
+                                  <span className="font-bold">Speech/Comm</span> (if person has trouble with communication)
                                 </li>
                               </ul>
                             </>
@@ -1268,28 +1358,32 @@ function BrowseAllToolsContent() {
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">READING</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">READING</span> includes tools for users who have trouble reading, including dyslexia, not understanding the meanings of new/unknown words, idioms, eye tracking while reading, or any other reason a person struggles to read text.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>features for reading text aloud</li>
+                                <li>highlighting words as you read - or as they are read aloud</li>
+                                <li>dictionaries, translators, dyslexia fonts</li>
+                                <li>highlighters and moving rulers or lines that put focus on line you are reading</li>
+                                <li>removing distracting text</li>
+                                <li>help finding the start of the next line of text when reading</li>
+                                <li>changing fonts, text size, boldness, colors and contrast of text</li>
+                                <li>full-page color overlays to reduce visual stress</li>
+                                <li>changing spacing of characters and lines</li>
+                                <li>breaking words into hyphenated syllables</li>
+                                <li>providing pronunciations</li>
+                                <li>transform pictures or scans of paper documents into other accessible documents including ebooks, text, WORD, etc</li>
+                                <li>transforming one digital document format into another more accessible format for the user</li>
+                                <li>assistance with reading math</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Vision</span> (some features for making text larger or clearer might make text easier to read)
                                 </li>
                               </ul>
                             </>
@@ -1300,60 +1394,61 @@ function BrowseAllToolsContent() {
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">WRITING</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">WRITING</span> contains tools for users who have any problems with writing, organizing thoughts, getting started, knowing the right words, spelling, grammar, fear of bad output or any other barrier to writing.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>features for organizing and structuring thoughts and ideas</li>
+                                <li>spelling, grammar, and punctuation checking (including context-aware and phonetic spell checking for dyslexia) (done as you type or when you ask)</li>
+                                <li>helping with style, and clarity</li>
+                                <li>suggesting words and better phrasing</li>
+                                <li>word predictors (to speed typing)</li>
+                                <li>translation dictionaries</li>
+                                <li>reading text aloud to better catch errors</li>
+                                <li>assistance writing/typing math equations</li>
+                                <li>note-takers that turn recorded lectures, meetings, or videos into searchable text notes and summaries</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Physical</span> (for solutions like speech-to-text, alternatives to standard keyboard input, etc. if user has trouble with using keyboard)
                                 </li>
                               </ul>
                             </>
                           ),
                         },
                         "focus/planning/exec": {
-                          name: "EXEC/FOCUS",
+                          name: "FOCUS/PLANNING/EXEC",
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">EXEC/FOCUS</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">FOCUS/PLANNING/EXEC</span> contains tools for users who have any problems with executive functions including planning, focusing, staying on task, or finishing.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>Features for playing gentle background sounds (such as rain or waves) to block distracting noise</li>
+                                <li>supporting calm focus</li>
+                                <li>locking the device to a single app</li>
+                                <li>{"blocking certain buttons or touch areas so a user doesn't accidentally leave the task they are working on"}</li>
+                                <li>hiding ads, menus, and other clutter</li>
+                                <li>dimming or masking everything on the screen except the line or area they are working on so their eyes stay on one place</li>
+                                <li>help organizing and structuring your day, your ideas, your tasks</li>
+                                <li>support for executive skills with visual schedules, reminders, and simple goal-setting tools</li>
+                                <li>providing focus timers with planned breaks</li>
+                                <li>controlling distractions</li>
+                                <li>{"\"Do Not Disturb\" function to cut down interruptions"}</li>
+                                <li>ways to quickly turn on these or other helpful modes or features</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Cognitive</span> (for other related cognitive processing tools that may be helpful)
                                 </li>
                               </ul>
                             </>
@@ -1364,60 +1459,54 @@ function BrowseAllToolsContent() {
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">VISION</span> contains tools for users who have any problems
-                                with xxxxxx.
+                                <span className="font-bold">VISION</span> contains tools for users who have any type of visual problem (color blindness, blurry vision, tunnel vision, central loss, contrast, light sensitivity, etc.)
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>features for enlarging text, images, and cursors</li>
+                                <li>inverting screen colors</li>
+                                <li>applying color filters to shift colors to accommodate people with color blindness (who cannot see some colors)</li>
+                                <li>enhancing text contrast so text stands out more clearly</li>
+                                <li>increasing overall contrast and/or choose high-contrast themes so low-contrast text and controls are easier to see</li>
+                                <li>changing text size</li>
+                                <li>simplified screen layouts</li>
+                                <li>changing text-to-speech</li>
+                                <li>changing image or text to e-book and audio conversions</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Reading</span> (for ebooks, read-aloud features, and other reading aids)
                                 </li>
                               </ul>
                             </>
                           ),
                         },
-                        "braille tools": {
+                        brailletools: {
                           name: "BRAILLE",
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">BRAILLE</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">BRAILLE</span> tools are for people who use braille to access computers.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>support of braille displays and braille keyboards to read screen content and interact with software</li>
+                                <li>converting printed or digital text, web pages, and scanned documents into electronic braille or braille-ready files (including support for multiple languages, mathematics, and music notation)</li>
+                                <li>using an on-screen touchscreen as a six-dot braille keyboard</li>
+                                <li>(for those with hearing) using braille in parallel with speech output</li>
+                                <li>(for those with some vision) using braille in parallel with enlarged text and/or screen</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Vision</span> (most braille users also will use the tools in the Vision category)
                                 </li>
                               </ul>
                             </>
@@ -1428,30 +1517,33 @@ function BrowseAllToolsContent() {
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">HEARING</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">HEARING</span> tools have computer-based features people who have trouble using computers if they cannot hear them or hear them well enough including when computers talk to them.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>features for making it easier to hear and understand speech through amplification, filtering, and/or frequency shifting</li>
+                                <li>reducing background sounds</li>
+                                <li>providing visual indication of or identifying any sounds</li>
+                                <li>transform any spoken words and sounds (live or recorded) into text</li>
+                                <li>translate words into sign language</li>
+                                <li>show any captions automatically</li>
+                                <li>record, transform into text, and summarize meetings</li>
+                                <li>provide real-time text alongside spoken conversations</li>
+                                <li>connection of audio directly to hearing aids</li>
+                                <li>and provision of tactile indications for alerts</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Writing</span> (for people whose native language is sign-language and would benefit from writing aids since writing is done in a language different from sign)
                                 </li>
                               </ul>
+                              <p className="mt-4">
+                                <span className="font-bold">NOTE:</span> The Learn & Try tool does not include hearing aids, neither the medical nor over-the-counter types (ones you can get at a drug store or online). The Learn & Try tool does include features in computers and phones that can help with mild hearing problems. But hearing is so essential and invisible that it should be checked by a qualified person if there is any problem or doubt.
+                              </p>
                             </>
                           ),
                         },
@@ -1460,60 +1552,57 @@ function BrowseAllToolsContent() {
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">PHYSICAL</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">PHYSICAL</span> contains tools for people who have trouble physically using, or using efficiently, computers keyboards, mice, or onscreen controls.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>features for making it easier to use keyboards or mice with one hand, one finger, a mouth-stick or head-stick</li>
+                                <li>making it easier to use keyboard or mice with tremor or athetotic movements (like Cerebral Palsy)</li>
+                                <li>typing and controlling the computer via a wide variety of alternate input techniques - including but not limited to speech, eye-gaze, head movement or pointing, scanning (one or two switch), morse or other codes</li>
+                                <li>providing input using a wide variety of input devices including larger and smaller keyboards, switches, joysticks, sip and puff, eye-blink or EMG (small electrical signals from muscles trying to move)</li>
+                                <li>speeding up input with word prediction, word completion, macros, and other techniques</li>
+                                <li>alternate ways to control a mouse pointer including using a keys on a keyboards (or alternate keyboard)</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Writing</span> (for techniques to speed up and help correct input after using any of the above techniques)
                                 </li>
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Speech/Communication</span> (for those who cannot speak or speak clearly)
                                 </li>
                               </ul>
                             </>
                           ),
                         },
                         "speech/communication": {
-                          name: "SPEECH/COMM",
+                          name: "SPEECH/COMMUNICATION",
                           content: (
                             <>
                               <p className="mb-4">
-                                <span className="font-bold">SPEECH/COMM</span> contains tools for users who have any
-                                problems with xxxxxx.
+                                <span className="font-bold">SPEECH/COMMUNICATION</span> contains tools for people who have trouble speaking or speaking clearly or communicating spoken or written language.
                               </p>
-                              <p className="font-bold mb-2">TYPICAL FEATURES IN THESE TOOLS:</p>
+                              <p className="font-bold mb-2">TYPICAL FEATURES FOUND IN THESE TOOLS:</p>
                               <ul className="list-disc pl-6 mb-4 space-y-1">
-                                <li>yyyyyy</li>
-                                <li>yyyyyy</li>
+                                <li>{"features for clarifying people's speech"}</li>
+                                <li>recognizing some types of difficult to understand speech and re-speaking it clearly</li>
+                                <li>letting people communicate in text, sign language, pictures, symbols, or voice of their choosing (including original voice for those who have lost it)</li>
+                                <li>accelerating communication when using non-speech input methods</li>
+                                <li>allowing people to operate devices including computers and artificial agents via their or artificial speech input</li>
                               </ul>
                               <p className="font-bold mb-2">SEE ALSO:</p>
                               <p className="mb-2">
-                                Some features in the following other categories can be useful and are shown at the
-                                bottom of the list below:
+                                Some features in the following other categories can be useful and are shown at the bottom below the list of your selected Functions:
                               </p>
                               <ul className="list-disc pl-6 space-y-1">
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Physical</span> (for special interfaces for those who cannot use a keyboard or use it well)
                                 </li>
                                 <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
-                                </li>
-                                <li>
-                                  <span className="font-bold">Feature</span> (for features that xxxx)
+                                  <span className="font-bold">Writing</span> (for tools for faster and better written expression)
                                 </li>
                               </ul>
                             </>
@@ -1778,201 +1867,185 @@ function BrowseAllToolsContent() {
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          className="text-sm bg-transparent"
+                                          className="text-sm font-bold bg-green-700 hover:bg-green-800 text-white hover:text-white border-green-700"
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             window.open(tool.vendorProductPageUrl, "_blank")
                                           }}
                                         >
-                                          <ExternalLink className="h-4 w-4 mr-2" />
                                           Visit Product Website
+                                          <ExternalLink className="h-4 w-4 ml-2" />
                                         </Button>
                                       </div>
                                     </div>
+                                  ) : isRepeat ? (
+                                    /* Simplified single-line view for "already shown" items */
+                                    <div className="flex items-center flex-wrap gap-2 py-1">
+                                      <span className="font-bold text-foreground">{tool.name}</span>
+                                      <span className="text-muted-foreground">· {tool.company}</span>
+                                      <span className="italic text-gray-600">(already shown in {firstShownIn})</span>
+                                      <div className="flex flex-wrap gap-1">
+                                        {tool.functions &&
+                                          getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
+                                            >
+                                              {mapFunctionToLabel(func)}
+                                            </span>
+                                          ))}
+                                        {tool.functions &&
+                                          getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
+                                            <span className="text-xs text-muted-foreground ml-0.5">
+                                              +{getMoreFunctionsCount(tool.functions, filters.functions)}
+                                            </span>
+                                          )}
+                                      </div>
+                                    </div>
                                   ) : (
-                                    // Collapsed view
-                                    <div className="px-3 py-0">
-                                      {isRepeat && (
-                                        // Simplified single-line format for already shown items
-                                        <p className="py-1">
-                                          <span className="text-base font-bold text-foreground">{tool.name}</span>
-                                          <span className="text-muted-foreground font-normal"> · {tool.company}</span>
-                                          <span className="text-gray-500 italic">
-                                            {" "}
-                                            (already shown in {firstShownIn})
-                                          </span>
-                                          {tool.functions &&
-                                            getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => {
-                                              const label = mapFunctionToLabel(func)
-                                              if (!label) return null
-                                              return (
-                                                <span
-                                                  key={idx}
-                                                  className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs ml-1"
-                                                >
-                                                  {label}
-                                                </span>
-                                              )
-                                            })}
-                                          {tool.functions &&
-                                            getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
-                                              <span className="text-xs text-muted-foreground ml-1">
-                                                +{getMoreFunctionsCount(tool.functions, filters.functions)}
-                                              </span>
-                                            )}
-                                        </p>
-                                      )}
-                                      {!isRepeat && (
-                                        <>
-                                          <div className="flex items-center gap-4">
-                                            <h3 className="text-base font-bold text-foreground">
-                                              {tool.name}
-                                              <span className="font-normal text-muted-foreground">
-                                                {" "}
-                                                · {tool.company}
-                                              </span>
-                                            </h3>
-                                          </div>
+                                    /* Collapsed view */
+                                    <div>
+                                      <div className="flex items-center gap-4">
+                                        <h3 className="text-base font-bold text-foreground">
+                                          {tool.name}
+                                          <span className="font-normal text-muted-foreground"> · {tool.company}</span>
+                                        </h3>
+                                      </div>
 
-                                          {/* Line 2: One line description */}
-                                          <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
+                                      {/* Line 2: One line description */}
+                                      <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
 
-                                          {/* 1/8 inch whitespace */}
-                                          <div className="h-1.5"></div>
+                                      {/* 1/8 inch whitespace */}
+                                      <div className="h-1.5"></div>
 
-                                          <div className="flex flex-col gap-2">
-                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
-                                              {/* HELPS WITH - Purple badges */}
-                                              <div className="mt-0.5">
-                                                <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                                  Helps With:
-                                                </span>
-                                                <div className="flex flex-wrap gap-1">
-                                                  {tool.functions &&
-                                                    getFilteredFunctions(tool.functions, filters.functions).map(
-                                                      (func, idx) => (
-                                                        <span
-                                                          key={idx}
-                                                          className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
-                                                        >
-                                                          {mapFunctionToLabel(func)}
-                                                        </span>
-                                                      ),
-                                                    )}
-                                                  {tool.functions &&
-                                                    getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
-                                                      <span className="text-xs text-muted-foreground ml-0.5">
-                                                        +{getMoreFunctionsCount(tool.functions, filters.functions)}
-                                                      </span>
-                                                    )}
-                                                </div>
-                                              </div>
+                                      <div className="flex flex-col gap-2">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 flex-1">
+                                          {/* HELPS WITH - Purple badges */}
+                                          
+                                          <div className="mt-0.5">
+                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                              Helps With:
+                                            </span>
 
-                                              <div className="mt-0.5">
-                                                <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                                  Devices:
-                                                </span>
-                                                <div className="flex flex-wrap gap-1">
-                                                  {tool.supportedPlatforms &&
-                                                    getFilteredDevices(tool.supportedPlatforms, filters.devices).map(
-                                                      (platform, idx) => (
-                                                        <span
-                                                          key={idx}
-                                                          className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
-                                                        >
-                                                          {mapDeviceToLabel(platform)}
-                                                        </span>
-                                                      ),
-                                                    )}
-                                                  {tool.supportedPlatforms &&
-                                                    getMoreDevicesCount(tool.supportedPlatforms, filters.devices) >
-                                                      0 && (
-                                                      <span className="text-xs text-muted-foreground ml-0.5">
-                                                        +{getMoreDevicesCount(tool.supportedPlatforms, filters.devices)}
-                                                      </span>
-                                                    )}
-                                                </div>
-                                              </div>
-
-                                              {/* INSTALL? - Buff/Yellow badges */}
-                                              <div className="mt-0.5">
-                                                <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                                  Install?:
-                                                </span>
-                                                <div className="flex flex-wrap gap-1">
-                                                  {tool.installTypes &&
-                                                    getFilteredInstallTypes(
-                                                      tool.installTypes,
-                                                      filters.installTypes,
-                                                    ).map((install, idx) => (
-                                                      <span
-                                                        key={idx}
-                                                        className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
-                                                      >
-                                                        {mapInstallToLabel(install)}
-                                                      </span>
-                                                    ))}
-                                                  {tool.installTypes &&
-                                                    getMoreInstallTypesCount(tool.installTypes, filters.installTypes) >
-                                                      0 && (
-                                                      <span className="text-xs text-muted-foreground ml-0.5">
-                                                        +
-                                                        {getMoreInstallTypesCount(
-                                                          tool.installTypes,
-                                                          filters.installTypes,
-                                                        )}
-                                                      </span>
-                                                    )}
-                                                </div>
-                                              </div>
-
-                                              <div>
-                                                <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                                  Pricing:
-                                                </span>
-                                                <div className="flex flex-wrap gap-1">
-                                                  {tool.purchaseOptions &&
-                                                    getFilteredPurchaseOptions(
-                                                      tool.purchaseOptions,
-                                                      filters.purchaseOptions,
-                                                    ).map((option, idx) => (
-                                                      <span
-                                                        key={idx}
-                                                        className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
-                                                      >
-                                                        {mapPurchaseToLabel(option)}
-                                                      </span>
-                                                    ))}
-                                                  {tool.purchaseOptions &&
-                                                    getMorePurchaseOptionsCount(
-                                                      tool.purchaseOptions,
-                                                      filters.purchaseOptions,
-                                                    ) > 0 && (
-                                                      <span className="text-xs text-muted-foreground ml-0.5">
-                                                        +
-                                                        {getMorePurchaseOptionsCount(
-                                                          tool.purchaseOptions,
-                                                          filters.purchaseOptions,
-                                                        )}
-                                                      </span>
-                                                    )}
-                                                </div>
-                                              </div>
-                                            </div>
-                                            <div className="flex justify-end">
-                                              <button
-                                                className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap"
-                                                onClick={(e) => {
-                                                  e.stopPropagation()
-                                                  expandAndScrollToTool(currentToolId)
-                                                }}
-                                              >
-                                                See More <ChevronDown className="h-4 w-4" />
-                                              </button>
+                                            <div className="flex flex-wrap gap-1">
+                                              {tool.functions &&
+                                                getFilteredFunctions(tool.functions, filters.functions).map(
+                                                  (func, idx) => (
+                                                    <span
+                                                      key={idx}
+                                                      className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
+                                                    >
+                                                      {mapFunctionToLabel(func)}
+                                                    </span>
+                                                  ),
+                                                )}
+                                              {tool.functions &&
+                                                getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
+                                                  <span className="text-xs text-muted-foreground ml-0.5">
+                                                    +{getMoreFunctionsCount(tool.functions, filters.functions)}
+                                                  </span>
+                                                )}
                                             </div>
                                           </div>
-                                        </>
-                                      )}
+
+                                          <div className="mt-0.5">
+                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                              Devices:
+                                            </span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {tool.supportedPlatforms &&
+                                                getFilteredDevices(tool.supportedPlatforms, filters.devices).map(
+                                                  (platform, idx) => (
+                                                    <span
+                                                      key={idx}
+                                                      className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
+                                                    >
+                                                      {mapDeviceToLabel(platform)}
+                                                    </span>
+                                                  ),
+                                                )}
+                                              {tool.supportedPlatforms &&
+                                                getMoreDevicesCount(tool.supportedPlatforms, filters.devices) > 0 && (
+                                                  <span className="text-xs text-muted-foreground ml-0.5">
+                                                    +{getMoreDevicesCount(tool.supportedPlatforms, filters.devices)}
+                                                  </span>
+                                                )}
+                                            </div>
+                                          </div>
+
+                                          {/* INSTALL? - Buff/Yellow badges */}
+                                          <div className="mt-0.5">
+                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                              Install?:
+                                            </span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {tool.installTypes &&
+                                                getFilteredInstallTypes(tool.installTypes, filters.installTypes).map(
+                                                  (install, idx) => (
+                                                    <span
+                                                      key={idx}
+                                                      className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
+                                                    >
+                                                      {mapInstallToLabel(install)}
+                                                    </span>
+                                                  ),
+                                                )}
+                                              {tool.installTypes &&
+                                                getMoreInstallTypesCount(tool.installTypes, filters.installTypes) >
+                                                  0 && (
+                                                  <span className="text-xs text-muted-foreground ml-0.5">
+                                                    +{getMoreInstallTypesCount(tool.installTypes, filters.installTypes)}
+                                                  </span>
+                                                )}
+                                            </div>
+                                          </div>
+
+                                          <div>
+                                            <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                              Pricing:
+                                            </span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {tool.purchaseOptions &&
+                                                getFilteredPurchaseOptions(
+                                                  tool.purchaseOptions,
+                                                  filters.purchaseOptions,
+                                                ).map((option, idx) => (
+                                                  <span
+                                                    key={idx}
+                                                    className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
+                                                  >
+                                                    {mapPurchaseToLabel(option)}
+                                                  </span>
+                                                ))}
+                                              {tool.purchaseOptions &&
+                                                getMorePurchaseOptionsCount(
+                                                  tool.purchaseOptions,
+                                                  filters.purchaseOptions,
+                                                ) > 0 && (
+                                                  <span className="text-xs text-muted-foreground ml-0.5">
+                                                    +
+                                                    {getMorePurchaseOptionsCount(
+                                                      tool.purchaseOptions,
+                                                      filters.purchaseOptions,
+                                                    )}
+                                                  </span>
+                                                )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        {/* See More on its own row */}
+                                        <div className="flex justify-end">
+                                          <button
+                                            className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              expandAndScrollToTool(currentToolId)
+                                            }}
+                                          >
+                                            See More <ChevronDown className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      </div>
                                     </div>
                                   )}
                                 </Card>
@@ -2188,7 +2261,7 @@ function BrowseAllToolsContent() {
                                                 </>
                                               )}
 
-                                              {/* Categories section - left: Helps With & Devices, right: Install & Pricing */}
+                                              {/* Categories section - left: Helps With and Devices, right: Install & Pricing */}
                                               <div className="flex flex-wrap gap-8 mt-3">
                                                 <div className="flex gap-8">
                                                   <div className="mt-0.5">
@@ -2196,19 +2269,17 @@ function BrowseAllToolsContent() {
                                                       HELPS WITH:
                                                     </p>
                                                     <div className="flex flex-wrap gap-1">
-                                                      {seeAlsoMatchingFunctions.map((func, idx) => (
-                                                        <span
-                                                          key={idx}
-                                                          className="px-2 py-0.5 text-xs rounded-full bg-purple-200 text-purple-900"
-                                                        >
-                                                          {mapFunctionToLabel(func)}
-                                                        </span>
-                                                      ))}
-                                                      {otherFunctionsCount > 0 && (
-                                                        <span className="text-xs text-muted-foreground ml-0.5">
-                                                          +{otherFunctionsCount}
-                                                        </span>
-                                                      )}
+                                                      {tool.functions &&
+                                                        tool.functions
+                                                          .filter((f) => f && f.trim() !== "")
+                                                          .map((func, idx) => (
+                                                            <span
+                                                              key={idx}
+                                                              className="px-2 py-0.5 text-xs rounded-full bg-purple-200 text-purple-900"
+                                                            >
+                                                              {mapFunctionToLabel(func)}
+                                                            </span>
+                                                          ))}
                                                     </div>
                                                   </div>
 
@@ -2269,47 +2340,48 @@ function BrowseAllToolsContent() {
                                                 <Button
                                                   variant="outline"
                                                   size="sm"
-                                                  className="text-sm bg-transparent"
+className="text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground border-primary"
                                                   onClick={(e) => {
                                                     e.stopPropagation()
                                                     window.open(tool.vendorProductPageUrl, "_blank")
                                                   }}
                                                 >
-                                                  <ExternalLink className="h-4 w-4 mr-2" />
                                                   Visit Product Website
+                                                  <ExternalLink className="h-4 w-4 ml-2" />
                                                 </Button>
                                               </div>
                                             </div>
                                           ) : (
                                             /* Collapsed view */
                                             <div>
-                                              <div className="flex items-start justify-between gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                  <div className="flex items-center gap-2 flex-wrap">
-                                                    <h3 className="text-base font-bold text-foreground">{tool.name}</h3>
-                                                    <span className="text-muted-foreground text-sm">
-                                                      · {tool.company}
-                                                    </span>
-                                                  </div>
-                                                </div>
-                                                <span className="text-primary text-sm flex items-center gap-1 whitespace-nowrap flex-shrink-0 self-end">
-                                                  See More <ChevronDown className="h-4 w-4" />
-                                                </span>
+                                              <div className="flex items-center gap-4">
+                                                <h3 className="text-base font-bold text-foreground">
+                                                  {tool.name}
+                                                  <span className="font-normal text-muted-foreground">
+                                                    {" "}
+                                                    · {tool.company}
+                                                  </span>
+                                                </h3>
                                               </div>
-                                              <div className="h-px"></div>
-                                              <p className="text-foreground text-sm line-clamp-1">{tool.description}</p>
+
+                                              {/* Line 2: One line description */}
+                                              <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
+
+                                              {/* 1/8 inch whitespace */}
                                               <div className="h-1.5"></div>
-                                              <div className="flex flex-wrap items-end justify-between gap-2">
+
+                                              <div className="flex flex-col gap-2">
                                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 flex-1">
+                                                  {/* HELPS WITH - Purple badges - Show SEE ALSO functions */}
                                                   <div className="mt-0.5">
-                                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">
-                                                      HELPS WITH:
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1 items-center">
+                                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                                      Helps With:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1">
                                                       {seeAlsoMatchingFunctions.map((func, idx) => (
                                                         <span
                                                           key={idx}
-                                                          className="px-2 py-0.5 text-xs rounded-full bg-purple-200 text-purple-900"
+                                                          className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
                                                         >
                                                           {mapFunctionToLabel(func)}
                                                         </span>
@@ -2323,52 +2395,114 @@ function BrowseAllToolsContent() {
                                                   </div>
 
                                                   <div className="mt-0.5">
-                                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">
-                                                      DEVICES:
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1 items-center">
-                                                      {tool.supportedPlatforms.map((platform, idx) => (
-                                                        <span
-                                                          key={idx}
-                                                          className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-900"
-                                                        >
-                                                          {mapDeviceToLabel(platform)}
-                                                        </span>
-                                                      ))}
+                                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                                      Devices:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1">
+                                                      {tool.supportedPlatforms &&
+                                                        getFilteredDevices(
+                                                          tool.supportedPlatforms,
+                                                          filters.devices,
+                                                        ).map((platform, idx) => (
+                                                          <span
+                                                            key={idx}
+                                                            className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
+                                                          >
+                                                            {mapDeviceToLabel(platform)}
+                                                          </span>
+                                                        ))}
+                                                      {tool.supportedPlatforms &&
+                                                        getMoreDevicesCount(tool.supportedPlatforms, filters.devices) >
+                                                          0 && (
+                                                          <span className="text-xs text-muted-foreground ml-0.5">
+                                                            +
+                                                            {getMoreDevicesCount(
+                                                              tool.supportedPlatforms,
+                                                              filters.devices,
+                                                            )}
+                                                          </span>
+                                                        )}
                                                     </div>
                                                   </div>
 
+                                                  {/* INSTALL? - Buff/Yellow badges */}
                                                   <div className="mt-0.5">
-                                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">
-                                                      INSTALL?:
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1 items-center">
-                                                      {tool.installTypes.map((type, idx) => (
-                                                        <span
-                                                          key={idx}
-                                                          className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-900"
-                                                        >
-                                                          {mapInstallToLabel(type)}
-                                                        </span>
-                                                      ))}
+                                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                                      Install?:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1">
+                                                      {tool.installTypes &&
+                                                        getFilteredInstallTypes(
+                                                          tool.installTypes,
+                                                          filters.installTypes,
+                                                        ).map((install, idx) => (
+                                                          <span
+                                                            key={idx}
+                                                            className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
+                                                          >
+                                                            {mapInstallToLabel(install)}
+                                                          </span>
+                                                        ))}
+                                                      {tool.installTypes &&
+                                                        getMoreInstallTypesCount(
+                                                          tool.installTypes,
+                                                          filters.installTypes,
+                                                        ) > 0 && (
+                                                          <span className="text-xs text-muted-foreground ml-0.5">
+                                                            +
+                                                            {getMoreInstallTypesCount(
+                                                              tool.installTypes,
+                                                              filters.installTypes,
+                                                            )}
+                                                          </span>
+                                                        )}
                                                     </div>
                                                   </div>
 
-                                                  <div className="mt-0.5">
-                                                    <p className="text-xs font-semibold text-muted-foreground mb-0.5">
-                                                      PRICING:
-                                                    </p>
-                                                    <div className="flex flex-wrap gap-1 items-center">
-                                                      {tool.purchaseOptions.map((option, idx) => (
-                                                        <span
-                                                          key={idx}
-                                                          className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-900"
-                                                        >
-                                                          {mapPurchaseToLabel(option)}
-                                                        </span>
-                                                      ))}
+                                                  <div>
+                                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                                      Pricing:
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-1">
+                                                      {tool.purchaseOptions &&
+                                                        getFilteredPurchaseOptions(
+                                                          tool.purchaseOptions,
+                                                          filters.purchaseOptions,
+                                                        ).map((option, idx) => (
+                                                          <span
+                                                            key={idx}
+                                                            className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
+                                                          >
+                                                            {mapPurchaseToLabel(option)}
+                                                          </span>
+                                                        ))}
+                                                      {tool.purchaseOptions &&
+                                                        getMorePurchaseOptionsCount(
+                                                          tool.purchaseOptions,
+                                                          filters.purchaseOptions,
+                                                        ) > 0 && (
+                                                          <span className="text-xs text-muted-foreground ml-0.5">
+                                                            +
+                                                            {getMorePurchaseOptionsCount(
+                                                              tool.purchaseOptions,
+                                                              filters.purchaseOptions,
+                                                            )}
+                                                          </span>
+                                                        )}
                                                     </div>
                                                   </div>
+                                                </div>
+                                                {/* CHANGE: Moved See More button to its own row to match regular cards */}
+                                                <div className="flex justify-end">
+                                                  <button
+                                                    className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap"
+                                                    onClick={(e) => {
+                                                      e.stopPropagation()
+                                                      expandAndScrollToTool(currentToolId)
+                                                    }}
+                                                  >
+                                                    See More <ChevronDown className="h-4 w-4" />
+                                                  </button>
                                                 </div>
                                               </div>
                                             </div>
@@ -2547,7 +2681,7 @@ function BrowseAllToolsContent() {
                                   </div>
                                 </div>
 
-                                {/* Right side - Install? and Pricing */}
+                                {/* Right side - Install & Pricing */}
                                 <div className="flex gap-6">
                                   {/* INSTALL? - Buff/Yellow badges - horizontal */}
                                   <div>
@@ -2592,182 +2726,145 @@ function BrowseAllToolsContent() {
                               <div className="flex justify-end">
                                 <Button
                                   size="default"
-                                  className="text-sm px-4 py-2"
+                                  className="text-sm px-4 py-2 font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     window.open(tool.vendorProductPageUrl, "_blank")
                                   }}
                                 >
-                                  <ExternalLink className="w-4 h-4 mr-2" />
                                   Visit Product Website
+                                  <ExternalLink className="w-4 h-4 ml-2" />
                                 </Button>
                               </div>
                             </div>
                           ) : (
-                            // Collapsed view
-                            <div className="px-3 py-0">
-                              {isRepeat && (
-                                // Simplified single-line format for already shown items
-                                <p className="py-1">
-                                  <span className="text-base font-bold text-foreground">{tool.name}</span>
-                                  <span className="text-muted-foreground font-normal"> · {tool.company}</span>
-                                  <span className="text-gray-500 italic"> (already shown in {firstShownIn})</span>
-                                  {tool.functions &&
-                                    getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => {
-                                      const label = mapFunctionToLabel(func)
-                                      if (!label) return null
-                                      return (
-                                        <span
-                                          key={idx}
-                                          className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs ml-1"
-                                        >
-                                          {label}
-                                        </span>
-                                      )
-                                    })}
-                                  {tool.functions && getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
-                                    <span className="text-xs text-muted-foreground ml-1">
-                                      +{getMoreFunctionsCount(tool.functions, filters.functions)}
+                            /* Collapsed view */
+                            <div>
+                              <div className="flex items-center gap-4">
+                                <h3 className="text-base font-bold text-foreground">
+                                  {tool.name}
+                                  <span className="font-normal text-muted-foreground"> · {tool.company}</span>
+                                </h3>
+                              </div>
+
+                              {/* Line 2: One line description */}
+                              <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
+
+                              {/* 1/8 inch whitespace */}
+                              <div className="h-1.5"></div>
+
+                              <div className="flex flex-col gap-2">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1 flex-1">
+                                  {/* HELPS WITH - Purple badges - Show ALL functions when no filters selected */}
+                                  <div className="mt-0.5">
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                      Helps With:
                                     </span>
-                                  )}
-                                </p>
-                              )}
-                              {!isRepeat && (
-                                <>
-                                  <div className="flex items-center gap-4">
-                                    <h3 className="text-base font-bold text-foreground">
-                                      {tool.name}
-                                      <span className="font-normal text-muted-foreground"> · {tool.company}</span>
-                                    </h3>
-                                  </div>
-
-                                  {/* Line 2: One line description */}
-                                  <p className="text-sm text-foreground line-clamp-1">{tool.description}</p>
-
-                                  {/* 1/8 inch whitespace */}
-                                  <div className="h-1.5"></div>
-
-                                  <div className="flex items-end justify-between gap-3">
-                                    <div className="grid grid-cols-4 gap-3 flex-1">
-                                      {/* HELPS WITH - Purple badges */}
-                                      <div className="mt-0.5">
-                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                          Helps With:
-                                        </span>
-                                        <div className="flex flex-wrap gap-1">
-                                          {tool.functions &&
-                                            getFilteredFunctions(tool.functions, filters.functions).map((func, idx) => (
-                                              <span
-                                                key={idx}
-                                                className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
-                                              >
-                                                {mapFunctionToLabel(func)}
-                                              </span>
-                                            ))}
-                                          {tool.functions &&
-                                            getMoreFunctionsCount(tool.functions, filters.functions) > 0 && (
-                                              <span className="text-xs text-muted-foreground ml-0.5">
-                                                +{getMoreFunctionsCount(tool.functions, filters.functions)}
-                                              </span>
-                                            )}
-                                        </div>
-                                      </div>
-
-                                      <div className="mt-0.5">
-                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                          Devices:
-                                        </span>
-                                        <div className="flex flex-wrap gap-1">
-                                          {tool.supportedPlatforms &&
-                                            getFilteredDevices(tool.supportedPlatforms, filters.devices).map(
-                                              (platform, idx) => (
-                                                <span
-                                                  key={idx}
-                                                  className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
-                                                >
-                                                  {mapDeviceToLabel(platform)}
-                                                </span>
-                                              ),
-                                            )}
-                                          {tool.supportedPlatforms &&
-                                            getMoreDevicesCount(tool.supportedPlatforms, filters.devices) > 0 && (
-                                              <span className="text-xs text-muted-foreground ml-0.5">
-                                                +{getMoreDevicesCount(tool.supportedPlatforms, filters.devices)}
-                                              </span>
-                                            )}
-                                        </div>
-                                      </div>
-
-                                      {/* INSTALL? - Buff/Yellow badges */}
-                                      <div className="mt-0.5">
-                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                          Install?:
-                                        </span>
-                                        <div className="flex flex-wrap gap-1">
-                                          {tool.installTypes &&
-                                            getFilteredInstallTypes(tool.installTypes, filters.installTypes).map(
-                                              (install, idx) => (
-                                                <span
-                                                  key={idx}
-                                                  className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
-                                                >
-                                                  {mapInstallToLabel(install)}
-                                                </span>
-                                              ),
-                                            )}
-                                          {tool.installTypes &&
-                                            getMoreInstallTypesCount(tool.installTypes, filters.installTypes) > 0 && (
-                                              <span className="text-xs text-muted-foreground ml-0.5">
-                                                +{getMoreInstallTypesCount(tool.installTypes, filters.installTypes)}
-                                              </span>
-                                            )}
-                                        </div>
-                                      </div>
-
-                                      <div>
-                                        <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
-                                          Pricing:
-                                        </span>
-                                        <div className="flex flex-wrap gap-1">
-                                          {tool.purchaseOptions &&
-                                            getFilteredPurchaseOptions(
-                                              tool.purchaseOptions,
-                                              filters.purchaseOptions,
-                                            ).map((option, idx) => (
-                                              <span
-                                                key={idx}
-                                                className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
-                                              >
-                                                {mapPurchaseToLabel(option)}
-                                              </span>
-                                            ))}
-                                          {tool.purchaseOptions &&
-                                            getMorePurchaseOptionsCount(tool.purchaseOptions, filters.purchaseOptions) >
-                                              0 && (
-                                              <span className="text-xs text-muted-foreground ml-0.5">
-                                                +
-                                                {getMorePurchaseOptionsCount(
-                                                  tool.purchaseOptions,
-                                                  filters.purchaseOptions,
-                                                )}
-                                              </span>
-                                            )}
-                                        </div>
-                                      </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {tool.functions &&
+                                        tool.functions
+                                          .filter((f) => f && f.trim() !== "")
+                                          .map((func, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="inline-flex items-center px-2 py-0.5 bg-purple-200 text-purple-900 rounded text-xs"
+                                            >
+                                              {mapFunctionToLabel(func)}
+                                            </span>
+                                          ))}
                                     </div>
-                                    <button
-                                      className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap flex-shrink-0 self-end"
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        expandAndScrollToTool(currentToolId)
-                                      }}
-                                    >
-                                      See More
-                                      <ChevronDown className="w-4 h-4" />
-                                    </button>
                                   </div>
-                                </>
-                              )}
+
+                                  <div className="mt-0.5">
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                      Devices:
+                                    </span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {tool.supportedPlatforms &&
+                                        getFilteredDevices(tool.supportedPlatforms, filters.devices).map(
+                                          (platform, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-900 rounded text-xs"
+                                            >
+                                              {mapDeviceToLabel(platform)}
+                                            </span>
+                                          ),
+                                        )}
+                                      {tool.supportedPlatforms &&
+                                        getMoreDevicesCount(tool.supportedPlatforms, filters.devices) > 0 && (
+                                          <span className="text-xs text-muted-foreground ml-0.5">
+                                            +{getMoreDevicesCount(tool.supportedPlatforms, filters.devices)}
+                                          </span>
+                                        )}
+                                    </div>
+                                  </div>
+
+                                  {/* INSTALL? - Buff/Yellow badges */}
+                                  <div className="mt-0.5">
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                      Install?:
+                                    </span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {tool.installTypes &&
+                                        getFilteredInstallTypes(tool.installTypes, filters.installTypes).map(
+                                          (install, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-900 rounded text-xs"
+                                            >
+                                              {mapInstallToLabel(install)}
+                                            </span>
+                                          ),
+                                        )}
+                                      {tool.installTypes &&
+                                        getMoreInstallTypesCount(tool.installTypes, filters.installTypes) > 0 && (
+                                          <span className="text-xs text-muted-foreground ml-0.5">
+                                            +{getMoreInstallTypesCount(tool.installTypes, filters.installTypes)}
+                                          </span>
+                                        )}
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <span className="text-xs text-muted-foreground uppercase tracking-wide block mb-1">
+                                      Pricing:
+                                    </span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {tool.purchaseOptions &&
+                                        getFilteredPurchaseOptions(tool.purchaseOptions, filters.purchaseOptions).map(
+                                          (option, idx) => (
+                                            <span
+                                              key={idx}
+                                              className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-900 rounded text-xs"
+                                            >
+                                              {mapPurchaseToLabel(option)}
+                                            </span>
+                                          ),
+                                        )}
+                                      {tool.purchaseOptions &&
+                                        getMorePurchaseOptionsCount(tool.purchaseOptions, filters.purchaseOptions) >
+                                          0 && (
+                                          <span className="text-xs text-muted-foreground ml-0.5">
+                                            +
+                                            {getMorePurchaseOptionsCount(tool.purchaseOptions, filters.purchaseOptions)}
+                                          </span>
+                                        )}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex justify-end">
+                                  <button
+                                    className="text-primary text-sm font-medium flex items-center gap-1 whitespace-nowrap"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      expandAndScrollToTool(currentToolId)
+                                    }}
+                                  >
+                                    See More <ChevronDown className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </Card>

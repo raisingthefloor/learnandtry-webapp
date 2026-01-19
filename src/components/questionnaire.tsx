@@ -4,6 +4,12 @@ import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Check } from "lucide-react"
 
+interface Tool {
+  name: string
+  functions: string[]
+  supportedPlatforms: string[]
+}
+
 interface QuestionnaireProps {
   onComplete: (answers: Record<number, string>, toolCount: number) => void
 }
@@ -15,6 +21,15 @@ export default function Questionnaire({ onComplete }: QuestionnaireProps) {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
   const [showResultsPage, setShowResultsPage] = useState(false)
   const [toolCount, setToolCount] = useState(0)
+  const [allTools, setAllTools] = useState<Tool[]>([])
+
+  // Fetch tools data on mount
+  useEffect(() => {
+    fetch("https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/dev/public/data/catalog.json")
+      .then((res) => res.json())
+      .then((data) => setAllTools(data))
+      .catch((err) => console.error("Failed to load tools:", err))
+  }, [])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" })
@@ -74,12 +89,75 @@ export default function Questionnaire({ onComplete }: QuestionnaireProps) {
   }
 
   const calculateToolCount = (finalAnswers: Record<number, string>) => {
-    // This is placeholder logic - in a real app, this would query the database
-    // For now, return a reasonable number based on selections
-    const troubles = finalAnswers[2]?.split(", ") || []
-    const baseCount = 206 // Total tools
-    const filteredCount = Math.max(10, Math.floor(baseCount / (troubles.length || 1)))
-    return filteredCount
+    if (allTools.length === 0) return 0
+
+    // Get selected functions from question 2
+    const selectedFunctions = finalAnswers[2]?.split(", ").filter(f => f) || []
+    
+    // Get selected computers from question 3
+    const selectedComputers = finalAnswers[3]?.split(", ").filter(c => c) || []
+    
+    // Get selected phone from question 4
+    const selectedPhone = finalAnswers[4] || ""
+
+    // Map questionnaire values to filter values (same as browse page)
+    const deviceMapping: Record<string, string[]> = {
+      "Mac (Apple)": ["mac", "macintosh", "macos", "osx"],
+      "Windows (Microsoft)": ["pc", "windows", "win"],
+      "Chromebook (Google)": ["chrome", "chromebook", "chromeos", "cros"],
+      "iPhone": ["iphone", "ios"],
+      "Android (Samsung, Google, Lenovo)": ["android"],
+    }
+
+    // Function mapping (normalize to lowercase for comparison)
+    const functionMapping: Record<string, string[]> = {
+      "Reading": ["reading"],
+      "Writing": ["writing"],
+      "Focus/Planning/Exec": ["execfocus", "execfunction", "focus", "planning", "executive"],
+      "Cognitive": ["cognitive"],
+      "Vision": ["vision"],
+      "Braille Tools": ["braille"],
+      "Hearing": ["hearing"],
+      "Physical": ["physical"],
+      "Speech/Communication": ["speech", "communication"],
+    }
+
+    let filteredTools = allTools
+
+    // Filter by functions (if any selected)
+    if (selectedFunctions.length > 0) {
+      filteredTools = filteredTools.filter(tool => {
+        if (!tool.functions || tool.functions.length === 0) return false
+        const toolFuncsLower = tool.functions.map(f => f.toLowerCase())
+        return selectedFunctions.some(selectedFunc => {
+          const mappedValues = functionMapping[selectedFunc] || [selectedFunc.toLowerCase()]
+          return mappedValues.some(mapped => 
+            toolFuncsLower.some(toolFunc => toolFunc.includes(mapped) || mapped.includes(toolFunc))
+          )
+        })
+      })
+    }
+
+    // Filter by devices (computers + phone)
+    const allSelectedDevices = [...selectedComputers]
+    if (selectedPhone && selectedPhone !== "None") {
+      allSelectedDevices.push(selectedPhone)
+    }
+
+    if (allSelectedDevices.length > 0 && !selectedComputers.includes("My Device Is Not Listed")) {
+      filteredTools = filteredTools.filter(tool => {
+        if (!tool.supportedPlatforms || tool.supportedPlatforms.length === 0) return false
+        const toolPlatformsLower = tool.supportedPlatforms.map(p => p.toLowerCase())
+        return allSelectedDevices.some(selectedDevice => {
+          const mappedValues = deviceMapping[selectedDevice] || [selectedDevice.toLowerCase()]
+          return mappedValues.some(mapped =>
+            toolPlatformsLower.some(platform => platform.includes(mapped) || mapped.includes(platform))
+          )
+        })
+      })
+    }
+
+    return filteredTools.length
   }
 
   const handleNext = () => {
