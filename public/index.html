@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Learn & Try Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #4a4a4a;
+      --border-color: #e5e5e5;
+      --blue: #2563eb;
+      --blue-hover: #1d4ed8;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 24px 32px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      border: 2px solid var(--text-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text .lowercase {
+      text-transform: lowercase;
+    }
+
+    .site-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 32px;
+      text-align: center;
+    }
+
+    .message {
+      max-width: 600px;
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.8;
+      margin-bottom: 48px;
+    }
+
+    .signup-btn {
+      display: inline-block;
+      padding: 16px 32px;
+      background-color: var(--blue);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      text-decoration: none;
+    }
+
+    .signup-btn:hover {
+      background-color: var(--blue-hover);
+      transform: translateY(-1px);
+    }
+
+    .signup-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .header {
+        padding: 16px 20px;
+        gap: 12px;
+      }
+
+      .logo {
+        width: 48px;
+        height: 48px;
+      }
+
+      .logo-text {
+        font-size: 16px;
+      }
+
+      .site-title {
+        font-size: 18px;
+      }
+
+      .main {
+        padding: 32px 20px;
+      }
+
+      .message {
+        font-size: 16px;
+      }
+
+      .signup-btn {
+        padding: 14px 24px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-text">L<span class="lowercase">n</span>T</span>
+    </div>
+    <h1 class="site-title">The Learn & Try Tool</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <p class="message">
+      The Learn and Try Tool is under user testing and will be here soon. If you would like to be an early tester of the tool and provide us feedback on its design and any suggestions for improvement in exchange for getting immediate access to the Tool, please click the sign-up button below. Thank you.
+    </p>
+
+    <a href="https://raisingthefloor.org/rd/lntpreviewsurvey" class="signup-btn">
+      I would like to sign up to be an early release tester
+    </a>
+  </main>
+</body>
+</html>
