@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Browse our complete directory of assistive technology tools. Filter by function, device, and more.">
+  <title>Browse Tools - Learn and Try</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="page--inner">
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="header__inner">
+      <a href="index.html" class="header__logo" aria-label="Learn and Try home">
+        <img src="images/logo-lt.png" alt="" class="header__logo-icon" aria-hidden="true">
+        <span class="header__logo-text">Learn and Try</span>
+      </a>
+
+      <nav class="header__nav" aria-label="Main navigation">
+        <ul class="header__nav-list">
+          <li><a href="index.html" class="header__nav-link">Home</a></li>
+          <li><a href="tool-finder.html" class="header__nav-link">AT Tool Finder</a></li>
+          <li><a href="browse-tools.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Tools Directly</a></li>
+          <li><a href="#" class="header__nav-link">About Us</a></li>
+        </ul>
+      </nav>
+
+      <button 
+        class="header__mobile-toggle" 
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        id="mobile-menu-toggle"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="12" y2="12"></line>
+          <line x1="4" x2="20" y1="6" y2="6"></line>
+          <line x1="4" x2="20" y1="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div id="mobile-menu" class="header__mobile-menu">
+      <nav aria-label="Mobile navigation">
+        <ul class="header__mobile-nav-list">
+          <li><a href="index.html" class="header__mobile-nav-link">Home</a></li>
+          <li><a href="tool-finder.html" class="header__mobile-nav-link">AT Tool Finder</a></li>
+          <li><a href="browse-tools.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Tools Directly</a></li>
+          <li><a href="#" class="header__mobile-nav-link">About Us</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="browse">
+    <div class="container">
+      
+
+      <div class="browse__layout">
+        <!-- Sidebar with Filters -->
+        <aside class="browse__sidebar">
+          <div class="filter-panel" aria-label="Filter tools">
+            <button 
+              class="filter-panel__toggle"
+              aria-expanded="true"
+              aria-controls="filter-content"
+              id="filter-toggle"
+            >
+              <div class="filter-panel__header">
+                <h2 class="filter-panel__title">Filters</h2>
+                <span class="filter-panel__count" id="active-filter-count" style="display: none;">(0 active)</span>
+              </div>
+              <svg class="filter-panel__toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="filter-toggle-icon">
+                <path d="m18 15-6-6-6 6"/>
+              </svg>
+            </button>
+
+            <div id="filter-content" class="filter-panel__content is-open">
+              <!-- Clear Filters Button -->
+              <div class="filter-panel__clear" id="clear-filters-container" style="display: none;">
+                <button class="filter-panel__clear-btn" id="clear-filters-btn" aria-label="Clear all active filters">
+                  Clear all filters
+                </button>
+              </div>
+
+              <div class="filter-panel__body">
+                <!-- Functions -->
+                <fieldset class="filter-panel__fieldset">
+                  <legend class="filter-panel__legend">
+                    Functions
+                    <button class="tooltip" aria-label="More information about Functions" data-tooltip="Select all functions where the person needs assistance.">
+                      <svg class="filter-panel__help-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                      </svg>
+                    </button>
+                  </legend>
+                  <p class="filter-panel__fieldset-desc">What does a person need help with?</p>
+                  <div class="filter-panel__options" id="functions-filters">
+                    <!-- Rendered by JavaScript -->
+                  </div>
+                </fieldset>
+
+                <!-- Devices -->
+                <fieldset class="filter-panel__fieldset">
+                  <legend class="filter-panel__legend">
+                    Devices
+                    <button class="tooltip" aria-label="More information about Devices" data-tooltip="Which devices they use at home or school/work.">
+                      <svg class="filter-panel__help-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                      </svg>
+                    </button>
+                  </legend>
+                  <p class="filter-panel__fieldset-desc">What device(s) should the tool run on?</p>
+                  <div class="filter-panel__options" id="devices-filters">
+                    <!-- Rendered by JavaScript -->
+                  </div>
+                </fieldset>
+
+                <!-- Install Types -->
+                <fieldset class="filter-panel__fieldset">
+                  <legend class="filter-panel__legend">
+                    Need to Install?
+                    <button class="tooltip" aria-label="More information about Install Types" data-tooltip="You can choose to see only solutions that do not require you to install anything, or solutions that need to be installed.">
+                      <svg class="filter-panel__help-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                      </svg>
+                    </button>
+                  </legend>
+                  <p class="filter-panel__fieldset-desc">Tools that don't need to be installed can be used even if person has no permission to install things.</p>
+                  <div class="filter-panel__options" id="install-filters">
+                    <!-- Rendered by JavaScript -->
+                  </div>
+                </fieldset>
+
+                <!-- Purchase Options -->
+                <fieldset class="filter-panel__fieldset">
+                  <legend class="filter-panel__legend">
+                    Purchase Option
+                    <button class="tooltip" aria-label="More information about Purchase Options" data-tooltip="You can choose to only see solutions that meet your cost constraints.">
+                      <svg class="filter-panel__help-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                      </svg>
+                    </button>
+                  </legend>
+                  <p class="filter-panel__fieldset-desc">How much can it cost?</p>
+                  <div class="filter-panel__options" id="purchase-filters">
+                    <!-- Rendered by JavaScript -->
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="browse__main">
+          <!-- Page Title and Description -->
+          <div class="browse__intro" id="browse-intro">
+            <h1 class="browse__title" id="page-title">Browse Tools</h1>
+            <p class="browse__description" id="browse-description">Explore our complete directory of assistive technology tools. You can search using the search field above or use the filters to narrow your search.</p>
+            <p class="browse__description" id="browse-description-hint">To learn more about a product - just click on it to expand the description.</p>
+          </div>
+
+          <!-- Search -->
+          <div class="browse__search-wrapper">
+            <div class="browse__search">
+              <svg class="browse__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+              <input 
+                type="search" 
+                class="browse__search-input" 
+                id="search-input"
+                placeholder="Search tools by name, company, or description..."
+                aria-label="Search tools"
+              >
+            </div>
+          </div>
+
+          <!-- Active Filter Badges -->
+          <div class="browse__active-filters" id="active-filters-container" style="display: none;">
+            <p class="browse__filter-summary" id="filter-summary">We found <strong id="filter-count">0</strong> tools that match your selections.</p>
+            <div class="browse__filter-badges" id="filter-badges">
+              <!-- Rendered by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Results Count & Pagination Controls -->
+          <div class="browse__controls">
+            <span class="browse__results-count">
+              Showing <strong id="showing-start">0</strong> to <strong id="showing-end">0</strong> of <strong id="total-results">0</strong> tools found.
+            </span>
+            <div class="browse__controls-right">
+              <div class="browse__per-page">
+                <label class="browse__per-page-label" for="per-page-select">Show:</label>
+                <select class="browse__per-page-select" id="per-page-select">
+                  <option value="20" selected>20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="0">All at once</option>
+                </select>
+              </div>
+              <div class="browse__sort">
+                <label class="browse__sort-label" for="sort-select">Sort:</label>
+                <select class="browse__sort-select" id="sort-select">
+                  <option value="name">Name</option>
+                  <option value="company">Company</option>
+                  <option value="newest">Newest</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loading State -->
+          <div class="loading" id="loading-state">
+            <div class="loading__spinner"></div>
+          </div>
+
+          <!-- Tools Grid -->
+          <div class="tools-grid" id="tools-grid">
+            <!-- Tool cards rendered by JavaScript -->
+          </div>
+
+          <!-- Empty State -->
+          <div class="empty-state" id="empty-state" style="display: none;">
+            <h3 class="empty-state__title">No tools found</h3>
+            <p class="empty-state__text">Try adjusting your filters or search query.</p>
+          </div>
+
+          <!-- Pagination -->
+          <nav class="pagination" id="pagination" aria-label="Pagination">
+            <!-- Rendered by JavaScript -->
+          </nav>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <nav class="footer__grid" aria-label="Footer navigation">
+        <div>
+          <h3 class="footer__column-title">Learn & Try</h3>
+          <ul class="footer__links">
+            <li><a href="index.html" class="footer__link">Home</a></li>
+            <li><a href="browse-tools.html" class="footer__link">Browse Directory</a></li>
+            <li><a href="tool-finder.html" class="footer__link">AT Tool Finder</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer__column-title">Organization</h3>
+          <ul class="footer__links">
+            <li><a href="#" class="footer__link">About Us</a></li>
+            <li><a href="#" class="footer__link">Contact Us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="footer__column-title">Raising the Floor</h3>
+          <p class="footer__description">
+            Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
+          </p>
+          <p class="footer__copyright">© 2026 Raising the Floor. All rights reserved.</p>
+        </div>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/browse-tools.js"></script>
+</body>
+</html>
