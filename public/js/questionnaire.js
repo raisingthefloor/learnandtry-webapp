@@ -92,7 +92,7 @@
   // =============================================
   
   function fetchTools() {
-    fetch('https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/dev/public/data/catalog.json')
+    fetch('https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/data/public/data/catalog.json')
       .then(function(response) {
         return response.json();
       })

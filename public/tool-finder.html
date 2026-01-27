@@ -24,7 +24,7 @@
           <li><a href="index.html" class="header__nav-link">Home</a></li>
           <li><a href="tool-finder.html" class="header__nav-link header__nav-link--active" aria-current="page">AT Tool Finder</a></li>
           <li><a href="browse-tools.html" class="header__nav-link">Browse Tools Directly</a></li>
-          <li><a href="#" class="header__nav-link">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
         </ul>
       </nav>
 
@@ -49,7 +49,7 @@
           <li><a href="index.html" class="header__mobile-nav-link">Home</a></li>
           <li><a href="tool-finder.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">AT Tool Finder</a></li>
           <li><a href="browse-tools.html" class="header__mobile-nav-link">Browse Tools Directly</a></li>
-          <li><a href="#" class="header__mobile-nav-link">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
         </ul>
       </nav>
     </div>
@@ -170,30 +170,33 @@ by limiting the list by cost or availability.
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
     <div class="footer__inner">
-      <nav class="footer__grid" aria-label="Footer navigation">
-        <div>
-          <h3 class="footer__column-title">Learn & Try</h3>
-          <ul class="footer__links">
-            <li><a href="index.html" class="footer__link">Home</a></li>
-            <li><a href="browse-tools.html" class="footer__link">Browse Directory</a></li>
-            <li><a href="tool-finder.html" class="footer__link">AT Tool Finder</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer__column-title">Organization</h3>
-          <ul class="footer__links">
-            <li><a href="#" class="footer__link">About Us</a></li>
-            <li><a href="#" class="footer__link">Contact Us</a></li>
-          </ul>
-        </div>
+      <nav class="footer__grid footer__grid--three-cols" aria-label="Footer navigation">
+        <!-- Raising the Floor Column -->
         <div>
           <h3 class="footer__column-title">Raising the Floor</h3>
           <p class="footer__description">
             Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
           </p>
-          <p class="footer__copyright">© 2026 Raising the Floor. All rights reserved.</p>
+        </div>
+        
+        <!-- Organization Column -->
+        <div>
+          <h3 class="footer__column-title">Organization</h3>
+          <ul class="footer__links">
+            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+          </ul>
+        </div>
+        
+        <!-- Other Free Tools Column -->
+        <div class="footer__column--wide">
+          <h3 class="footer__column-title">See other Free Tools from RTF</h3>
+          <ul class="footer__links">
+            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic</a></li>
+          </ul>
         </div>
       </nav>
+      <p class="footer__copyright">© 2026 Raising the Floor. All rights reserved.</p>
     </div>
   </footer>
 

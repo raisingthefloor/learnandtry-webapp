@@ -65,7 +65,7 @@
     'Speech/Communication': 'Tools for those with unclear or no speech.',
     'PC (Windows)': 'See each product description for Windows version compatibility.',
     'Macintosh': 'See each product description for macOS version compatibility.',
-    'Chromebook': 'Products work with Chromebooks with the latest ChromeOS.',
+    'Chromebook': 'Most Chromebook products work with all Chromebooks though some may only work with the latest ChromeOS updates.',
     'iPad': 'Products work with iPads supporting the latest iOS.',
     'iPhone': 'Products work with iPhones supporting the latest iOS.',
     'Android': 'See each product description for Android version compatibility.',
@@ -859,150 +859,136 @@
         html += '<svg class="see-also-group__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
           (isGroupExpanded ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>') + '</svg>';
         html += '</button>';
-        
         if (isGroupExpanded) {
           html += '<div class="see-also-group__content">';
-          html += '<p class="see-also-group__intro">These ' + item.group.func + ' items are shown because they may be of interest for the following reason(s):</p>';
-          html += '<ul class="see-also-group__reasons">';
-          item.group.reasons.forEach(function(reason) { html += '<li>' + reason + '</li>'; });
-          html += '</ul>';
           html += '<div class="see-also-group__tools">';
         }
         
       } else if (item.type === 'tool') {
-        var toolId;
-        if (item.isSeeAlso) {
-          toolId = 'see-also-' + item.tool.id;
-        } else if (item.isRepeat) {
-          toolId = item.tool.id + '-repeat-' + item.groupIndex;
-        } else {
-          toolId = item.tool.id;
-        }
+        var tool = item.tool;
+        var toolId = tool.id;
         var isExpanded = expandedToolIds.has(toolId);
-        var seeAlsoFunc = item.isSeeAlso ? item.seeAlsoGroupKey : null;
+        var isRepeat = item.isRepeat;
+        var firstShownIn = item.firstShownIn;
+        var isSeeAlso = item.isSeeAlso;
+        var seeAlsoFunc = item.seeAlsoFunc;
         
-        html += createToolCardHTML(item.tool, toolId, isExpanded, item.isRepeat, item.firstShownIn, item.isSeeAlso, seeAlsoFunc);
+        if (isRepeat) {
+          toolId = tool.id + '-repeat-' + item.groupIndex;
+        } else if (isSeeAlso) {
+          toolId = 'see-also-' + tool.id;
+        }
+        
+        var cardClass = 'tool-card';
+        if (isExpanded) cardClass += ' tool-card--expanded';
+        if (isRepeat) cardClass += ' tool-card--repeat';
+        if (isSeeAlso) cardClass += ' tool-card--see-also';
+        
+        var baseToolId = getBaseToolId(toolId);
+        var isMarked = markedToolIds.has(baseToolId);
+        if (isMarked) cardClass += ' tool-card--marked';
+        
+        var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
+        var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '</button>';
+
+        var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem">';
+
+        if (isExpanded) {
+          // EXPANDED VIEW
+          html_card += '<div class="tool-card__expanded">';
+          html_card += '<div class="tool-card__expanded-header tool-card__collapse-trigger">';
+          html_card += '<div class="tool-card__expanded-header-left">';
+          html_card += '<h3 class="tool-card__expanded-title">' + escapeHtml(tool.name) + '</h3>';
+          html_card += '<p class="tool-card__expanded-company">' + escapeHtml(tool.company) + '</p>';
+          if (isRepeat) html_card += '<p class="tool-card__expanded-note">Already shown in ' + firstShownIn + '</p>';
+          html_card += '</div>';
+          html_card += '<div class="tool-card__header-right">';
+          html_card += '<button class="tool-card__see-less">See Less <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></button>';
+          html_card += checkboxHTML;
+          html_card += '</div>';
+          html_card += '</div>';
+          html_card += '<hr class="tool-card__divider">';
+          html_card += '<h4 class="tool-card__section-title">Description</h4>';
+          html_card += '<p class="tool-card__description">' + escapeHtml(tool.description || 'No description available.') + '</p>';
+          html_card += '<hr class="tool-card__divider">';
+
+          // Videos
+          if (tool.youTubeVideos && tool.youTubeVideos.length > 0) {
+            html_card += '<h4 class="tool-card__section-title">Videos</h4>';
+            html_card += '<div class="tool-card__videos">';
+            tool.youTubeVideos.forEach(function(video, idx) {
+              var videoClass = idx === 0 ? 'tool-card__video tool-card__video--main' : 'tool-card__video tool-card__video--thumb';
+              html_card += '<div class="' + videoClass + '"><iframe src="' + video.embedUrl + '" title="' + escapeHtml(video.title || 'Demo video') + '" allowfullscreen></iframe></div>';
+            });
+            html_card += '</div><hr class="tool-card__divider">';
+          }
+
+          // Badges
+          html_card += '<div class="tool-card__badges-expanded">';
+          html_card += createBadgeColumnHTML('HELPS WITH:', tool.functions, 'function');
+          html_card += createBadgeColumnHTML('DEVICES:', tool.supportedPlatforms, 'device');
+          html_card += createBadgeColumnHTML('INSTALL?:', tool.installTypes, 'install');
+          html_card += createBadgeColumnHTML('PRICING:', tool.purchaseOptions, 'purchase');
+          html_card += '</div><hr class="tool-card__divider">';
+
+          // Visit button
+          html_card += '<div class="tool-card__actions">';
+          html_card += '<a href="' + escapeHtml(tool.vendorProductPageUrl || '#') + '" target="_blank" rel="noopener noreferrer" class="tool-card__visit-btn">';
+          html_card += 'Visit Product Website <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+          html_card += '</a></div></div>';
+        } else if (isRepeat) {
+          // REPEAT VIEW (single line that wraps naturally)
+          html_card += '<div class="tool-card__repeat">';
+          html_card += '<span class="tool-card__repeat-text">';
+          html_card += '<span class="tool-card__repeat-name">' + escapeHtml(tool.name) + '</span>';
+          html_card += '<span class="tool-card__repeat-company"> · ' + escapeHtml(tool.company) + '</span> ';
+          html_card += '<span class="tool-card__repeat-note">(already shown in <span class="tool-card__repeat-note-func">' + firstShownIn + '</span>)</span> ';
+          html_card += '<span class="tool-card__repeat-badges">' + createCollapsedFunctionBadges(tool, isSeeAlso, seeAlsoFunc) + '</span>';
+          html_card += '</span>';
+          html_card += '<button class="tool-card__see-more tool-card__see-more--repeat">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
+          html_card += '</div>';
+        } else {
+          // COLLAPSED VIEW - only show badges matching selected filters
+          html_card += '<div class="tool-card__collapsed">';
+          html_card += checkboxHTML;
+          html_card += '<div class="tool-card__name-line">';
+          html_card += '<h3 class="tool-card__name">' + escapeHtml(tool.name) + '<span class="tool-card__company"> · ' + escapeHtml(tool.company) + '</span></h3>';
+          html_card += '</div>';
+          html_card += '<p class="tool-card__desc-preview">' + escapeHtml(tool.description || '') + '</p>';
+          html_card += '<div class="tool-card__spacer"></div>';
+          html_card += '<div class="tool-card__badges-grid">';
+          html_card += createCollapsedBadgeColumnHTML('Helps With:', tool, 'function', isSeeAlso, seeAlsoFunc);
+          html_card += createCollapsedBadgeColumnHTML('Devices:', tool, 'device', isSeeAlso, seeAlsoFunc);
+          html_card += createCollapsedBadgeColumnHTML('Install?:', tool, 'install', isSeeAlso, seeAlsoFunc);
+          html_card += createCollapsedBadgeColumnHTML('Pricing:', tool, 'purchase', isSeeAlso, seeAlsoFunc);
+          html_card += '</div>';
+          html_card += '<div class="tool-card__see-more-row">';
+          html_card += '<button class="tool-card__see-more">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
+          html_card += '</div></div>';
+        }
+
+        html_card += '</article>';
+        html += html_card;
       }
     });
     
-    // Close any open groups
+    // Close any remaining open groups
     if (currentFunctionGroup !== null) {
-      html += '</div></div>'; // close tools and function-group
-    }
-    // Close any open see-also group
-    if (currentSeeAlsoGroup !== null) {
-      if (seeAlsoGroupExpanded) {
-        html += '</div></div>'; // close tools and content
-      }
-      html += '</div>'; // close see-also-group
-    }
-    if (inSeeAlsoSection) {
-      html += '</div>'; // close see-also-section
-    }
-    
-    container.innerHTML = html;
-  }
-
-  function renderUngroupedTools(container, pageTools) {
-    var html = '';
-    pageTools.forEach(function(tool) {
-      var isExpanded = expandedToolIds.has(tool.id);
-      html += createToolCardHTML(tool, tool.id, isExpanded, false, '', false, null);
-    });
-    container.innerHTML = html;
-  }
-
-  function createToolCardHTML(tool, toolId, isExpanded, isRepeat, firstShownIn, isSeeAlso, seeAlsoFunc) {
-    var cardClass = 'tool-card';
-    if (isExpanded) cardClass += ' tool-card--expanded';
-    if (isRepeat) cardClass += ' tool-card--repeat';
-    if (isSeeAlso) cardClass += ' tool-card--see-also';
-    
-    var baseToolId = getBaseToolId(toolId);
-    var isMarked = markedToolIds.has(baseToolId);
-    if (isMarked) cardClass += ' tool-card--marked';
-    
-    var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-    var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product">' +
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
-      '</button>';
-
-    var html = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem">';
-
-    if (isExpanded) {
-      // EXPANDED VIEW - clicking header area collapses
-      html += '<div class="tool-card__expanded">';
-      html += '<div class="tool-card__expanded-header tool-card__collapse-trigger">';
-      html += '<div class="tool-card__expanded-header-left">';
-      html += '<h3 class="tool-card__expanded-title">' + escapeHtml(tool.name) + '</h3>';
-      html += '<p class="tool-card__expanded-company">' + escapeHtml(tool.company) + '</p>';
-      if (isRepeat) html += '<p class="tool-card__expanded-note">Already shown in ' + firstShownIn + '</p>';
-      html += '</div>';
-      html += '<button class="tool-card__see-less">See Less <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></button>';
-      html += '</div>';
-      html += '<div class="tool-card__mark-row">' + checkboxHTML + '</div>';
-      html += '<hr class="tool-card__divider">';
-      html += '<h4 class="tool-card__section-title">Description</h4>';
-      html += '<p class="tool-card__description">' + escapeHtml(tool.description || 'No description available.') + '</p>';
-      html += '<hr class="tool-card__divider">';
-
-      // Videos
-      if (tool.youTubeVideos && tool.youTubeVideos.length > 0) {
-        html += '<h4 class="tool-card__section-title">Videos</h4>';
-        html += '<div class="tool-card__videos">';
-        tool.youTubeVideos.forEach(function(video, idx) {
-          var videoClass = idx === 0 ? 'tool-card__video tool-card__video--main' : 'tool-card__video tool-card__video--thumb';
-          html += '<div class="' + videoClass + '"><iframe src="' + video.embedUrl + '" title="' + escapeHtml(video.title || 'Demo video') + '" allowfullscreen></iframe></div>';
-        });
-        html += '</div><hr class="tool-card__divider">';
-      }
-
-      // Badges - show ALL badges in expanded view
-      html += '<div class="tool-card__badges-expanded">';
-      html += createBadgeColumnHTML('HELPS WITH:', tool.functions, 'function');
-      html += createBadgeColumnHTML('DEVICES:', tool.supportedPlatforms, 'device');
-      html += createBadgeColumnHTML('INSTALL?:', tool.installTypes, 'install');
-      html += createBadgeColumnHTML('PRICING:', tool.purchaseOptions, 'purchase');
-      html += '</div><hr class="tool-card__divider">';
-
-      // Visit button
-      html += '<div class="tool-card__actions">';
-      html += '<a href="' + escapeHtml(tool.vendorProductPageUrl || '#') + '" target="_blank" rel="noopener noreferrer" class="tool-card__visit-btn">';
-      html += 'Visit Product Website <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
-      html += '</a></div></div>';
-    } else if (isRepeat) {
-      // REPEAT VIEW (single line that wraps naturally)
-      html += '<div class="tool-card__repeat">';
-      html += '<span class="tool-card__repeat-text">';
-      html += '<span class="tool-card__repeat-name">' + escapeHtml(tool.name) + '</span>';
-      html += '<span class="tool-card__repeat-company"> · ' + escapeHtml(tool.company) + '</span> ';
-      html += '<span class="tool-card__repeat-note">(already shown in <span class="tool-card__repeat-note-func">' + firstShownIn + '</span>)</span> ';
-      html += '<span class="tool-card__repeat-badges">' + createCollapsedFunctionBadges(tool, isSeeAlso, seeAlsoFunc) + '</span>';
-      html += '</span>';
-      html += '<button class="tool-card__see-more tool-card__see-more--repeat">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
-      html += '</div>';
-    } else {
-      // COLLAPSED VIEW - only show badges matching selected filters
-      html += '<div class="tool-card__collapsed">';
-      html += checkboxHTML;
-      html += '<div class="tool-card__name-line">';
-      html += '<h3 class="tool-card__name">' + escapeHtml(tool.name) + '<span class="tool-card__company"> · ' + escapeHtml(tool.company) + '</span></h3>';
-      html += '</div>';
-      html += '<p class="tool-card__desc-preview">' + escapeHtml(tool.description || '') + '</p>';
-      html += '<div class="tool-card__spacer"></div>';
-      html += '<div class="tool-card__badges-grid">';
-      html += createCollapsedBadgeColumnHTML('Helps With:', tool, 'function', isSeeAlso, seeAlsoFunc);
-      html += createCollapsedBadgeColumnHTML('Devices:', tool, 'device', isSeeAlso, seeAlsoFunc);
-      html += createCollapsedBadgeColumnHTML('Install?:', tool, 'install', isSeeAlso, seeAlsoFunc);
-      html += createCollapsedBadgeColumnHTML('Pricing:', tool, 'purchase', isSeeAlso, seeAlsoFunc);
-      html += '</div>';
-      html += '<div class="tool-card__see-more-row">';
-      html += '<button class="tool-card__see-more">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
       html += '</div></div>';
     }
-
-    html += '</article>';
-    return html;
+    if (currentSeeAlsoGroup !== null) {
+      if (seeAlsoGroupExpanded) {
+        html += '</div></div>';
+      }
+      html += '</div>';
+    }
+    if (inSeeAlsoSection) {
+      html += '</div>';
+    }
+    
+    container.innerHTML = html;
   }
   
   // Get all active See Also function names
@@ -1431,11 +1417,11 @@
           return;
         }
         
-  if (e.target.closest('.tool-card__see-less') || e.target.closest('.tool-card__collapse-trigger')) {
-  expandedToolIds.delete(toolId);
-  render();
-  return;
-  }
+        if (e.target.closest('.tool-card__see-less') || e.target.closest('.tool-card__collapse-trigger')) {
+          expandedToolIds.delete(toolId);
+          render();
+          return;
+        }
 
         if (!toolCard.classList.contains('tool-card--expanded')) {
           expandedToolIds.add(toolId);
@@ -1462,44 +1448,44 @@
         render();
       }
 
-  // See Also group toggle
-  var seeAlsoGroup = e.target.closest('.see-also-group');
-  if (seeAlsoGroup && e.target.closest('.see-also-group__toggle')) {
-  var groupKey = seeAlsoGroup.getAttribute('data-group-key');
-  if (expandedSeeAlsoGroupIds.has(groupKey)) {
-  expandedSeeAlsoGroupIds.delete(groupKey);
-  } else {
-  expandedSeeAlsoGroupIds.add(groupKey);
-  }
-  // Invalidate cache since display list changes when groups expand/collapse
-  invalidateDisplayListCache();
-  render();
-  }
+      // See Also group toggle
+      var seeAlsoGroup = e.target.closest('.see-also-group');
+      if (seeAlsoGroup && e.target.closest('.see-also-group__toggle')) {
+        var groupKey = seeAlsoGroup.getAttribute('data-group-key');
+        if (expandedSeeAlsoGroupIds.has(groupKey)) {
+          expandedSeeAlsoGroupIds.delete(groupKey);
+        } else {
+          expandedSeeAlsoGroupIds.add(groupKey);
+        }
+        // Invalidate cache since display list changes when groups expand/collapse
+        invalidateDisplayListCache();
+        render();
+      }
     });
 
     // Pagination
     document.addEventListener('click', function(e) {
       var btn = e.target.closest('.pagination__btn, .pagination__page');
       if (btn && !btn.disabled) {
-// Check if "Show All" button
-  if (btn.getAttribute('data-action') === 'show-all') {
-  itemsPerPage = 0; // 0 means show all
-  currentPage = 1;
-  // Update the dropdown to show "All at once"
-  var perPageSelect = document.getElementById('per-page-select');
-  if (perPageSelect) {
-    perPageSelect.value = '0';
-  }
-  render();
-  // Don't scroll when clicking Show All
-  } else {
-  currentPage = parseInt(btn.getAttribute('data-page'), 10);
-  render();
-  // Use setTimeout to ensure scroll happens after render completes
-  setTimeout(function() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, 10);
-  }
+        // Check if "Show All" button
+        if (btn.getAttribute('data-action') === 'show-all') {
+          itemsPerPage = 0; // 0 means show all
+          currentPage = 1;
+          // Update the dropdown to show "All at once"
+          var perPageSelect = document.getElementById('per-page-select');
+          if (perPageSelect) {
+            perPageSelect.value = '0';
+          }
+          render();
+          // Don't scroll when clicking Show All
+        } else {
+          currentPage = parseInt(btn.getAttribute('data-page'), 10);
+          render();
+          // Use setTimeout to ensure scroll happens after render completes
+          setTimeout(function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }, 10);
+        }
       }
     });
 
@@ -1517,7 +1503,27 @@
       }
     });
 
-// Tooltips - hover shows, click pins open
+    // Show/Hide Mark Feature Section
+    var showMarkFeatureBtn = document.getElementById('show-mark-feature-btn');
+    var hideMarkFeatureBtn = document.getElementById('hide-mark-feature-btn');
+    var markFeatureSection = document.getElementById('mark-feature-section');
+    var markIntro = document.getElementById('browse-mark-intro');
+    
+    if (showMarkFeatureBtn) {
+      showMarkFeatureBtn.addEventListener('click', function() {
+        markIntro.style.display = 'none';
+        markFeatureSection.style.display = 'block';
+      });
+    }
+    
+    if (hideMarkFeatureBtn) {
+      hideMarkFeatureBtn.addEventListener('click', function() {
+        markFeatureSection.style.display = 'none';
+        markIntro.style.display = 'block';
+      });
+    }
+
+    // Tooltips - hover shows, click pins open
   var tooltipPinned = false;
   var currentTooltipTrigger = null;
   
@@ -1722,7 +1728,7 @@
     }, 50);
   }
 
-var tooltipEl = null;
+  var tooltipEl = null;
   function showTooltip(trigger, withCloseButton) {
     var text = trigger.getAttribute('data-tooltip');
     if (!text) return;
@@ -1786,7 +1792,7 @@ var tooltipEl = null;
   // ============================================
 
   function loadTools() {
-    fetch('https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/dev/public/data/catalog.json')
+    fetch('https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/data/public/data/catalog.json')
       .then(function(response) {
         if (!response.ok) throw new Error('Failed to load');
         return response.json();
@@ -1804,11 +1810,11 @@ var tooltipEl = null;
       });
   }
 
-function init() {
-  setupEventListeners();
-  loadTools();
-  setupVideoModal();
-  checkMarkedUrlParams();
+  function init() {
+    setupEventListeners();
+    loadTools();
+    setupVideoModal();
+    checkMarkedUrlParams();
   }
   
   function checkMarkedUrlParams() {

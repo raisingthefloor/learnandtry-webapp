@@ -24,7 +24,7 @@
           <li><a href="index.html" class="header__nav-link">Home</a></li>
           <li><a href="tool-finder.html" class="header__nav-link">AT Tool Finder</a></li>
           <li><a href="browse-tools.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Tools Directly</a></li>
-          <li><a href="#" class="header__nav-link">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
         </ul>
       </nav>
 
@@ -49,7 +49,7 @@
           <li><a href="index.html" class="header__mobile-nav-link">Home</a></li>
           <li><a href="tool-finder.html" class="header__mobile-nav-link">AT Tool Finder</a></li>
           <li><a href="browse-tools.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Tools Directly</a></li>
-          <li><a href="#" class="header__mobile-nav-link">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
         </ul>
       </nav>
     </div>
@@ -170,16 +170,34 @@
             <h1 class="browse__title" id="page-title">Browse Tools</h1>
             <p class="browse__description browse__description--small" id="browse-description"><strong>Explore our complete directory of built-in accessibility features and assistive technology tools.</strong></p>
             <ul class="browse__description-list">
-              <li>To reduce the number of products in the list you can use the search field below or use the filters to narrow your search.</li>
-              <li>To learn more about a product - just click on it to expand the description.</li>
+              <li><strong>To reduce the number of products in the list</strong> you can use the search field below or use the filters to narrow your search.</li>
+              <li><strong>To learn more about a product -</strong> just click on it to expand the description.</li>
             </ul>
-            <p class="browse__description browse__description--small" id="browse-description-marking"><strong>Marking Product Cards</strong> - To make it easier to remember, save, and share products you find, we have added the ability to MARK products of interest. Once marked you can SHOW ONLY the Marked products or COPY/SHARE them as a link. Anyone clicking that shared link will see this tool open with those cards pre-marked.<br><strong>To mark a card,</strong> just click on the checkbox on the upper corner of the product card.</p>
+            <!-- Collapsed Mark Feature Intro -->
+            <p class="browse__description browse__description--small" id="browse-mark-intro">
+              <strong>Once you find products of interest</strong> - we have features to help you gather, save, or share those products with others.
+              <button class="btn btn--show-mark-feature" id="show-mark-feature-btn">Show the "Mark, Gather, and Share" features</button>
+            </p>
             
-            <!-- Marking Buttons -->
-            <div class="browse__marking-buttons" id="marking-buttons">
-              <button class="btn btn--marking" id="show-marked-only-btn">SHOW ONLY Marked Products</button>
-              <button class="btn btn--marking" id="copy-marked-link-btn">COPY Marked Products Link</button>
-              <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE Marked Products Link</button>
+            <!-- Expanded Mark Feature Section -->
+            <div class="browse__mark-feature" id="mark-feature-section" style="display: none;">
+              <div class="browse__mark-feature-content">
+                <div class="browse__mark-feature-text">
+                  <p><strong>Mark, Gather, and Share Features</strong></p>
+                  <p>To make it easier to compare, save, and share the products that you find, we have added the following features:</p>
+                  <ul>
+                    <li><strong>Marking products of interest</strong> - You can mark any product that interests you by just clicking on the checkbox in the top-right corner of the product card.</li>
+                    <li><strong>Showing only Marked products</strong> - You can have all the marked cards gathered up and shown to you together, so you can explore and compare them more easily.</li>
+                    <li><strong>Copy (or Share with others) Link to Marked products</strong> - You can copy (or share with others) a link to the products that you marked.<br>(If you or others later click on that link, it will launch the Learn & Try tools website and show just the products you marked.)</li>
+                  </ul>
+                </div>
+                <div class="browse__mark-feature-buttons">
+                  <button class="btn btn--marking" id="show-marked-only-btn">SHOW ONLY Marked Products</button>
+                  <button class="btn btn--marking" id="copy-marked-link-btn">COPY Marked Products Link</button>
+                  <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE Marked Products Link</button>
+                </div>
+              </div>
+              <button class="btn btn--hide-mark-feature" id="hide-mark-feature-btn">Hide the <strong>Mark-Gather-Share</strong> features</button>
             </div>
             
             <!-- Show Only Marked Mode Banner -->
@@ -274,30 +292,33 @@
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
     <div class="footer__inner">
-      <nav class="footer__grid" aria-label="Footer navigation">
-        <div>
-          <h3 class="footer__column-title">Learn & Try</h3>
-          <ul class="footer__links">
-            <li><a href="index.html" class="footer__link">Home</a></li>
-            <li><a href="browse-tools.html" class="footer__link">Browse Directory</a></li>
-            <li><a href="tool-finder.html" class="footer__link">AT Tool Finder</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="footer__column-title">Organization</h3>
-          <ul class="footer__links">
-            <li><a href="#" class="footer__link">About Us</a></li>
-            <li><a href="#" class="footer__link">Contact Us</a></li>
-          </ul>
-        </div>
+      <nav class="footer__grid footer__grid--three-cols" aria-label="Footer navigation">
+        <!-- Raising the Floor Column -->
         <div>
           <h3 class="footer__column-title">Raising the Floor</h3>
           <p class="footer__description">
             Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
           </p>
-          <p class="footer__copyright">© 2026 Raising the Floor. All rights reserved.</p>
+        </div>
+        
+        <!-- Organization Column -->
+        <div>
+          <h3 class="footer__column-title">Organization</h3>
+          <ul class="footer__links">
+            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+          </ul>
+        </div>
+        
+        <!-- Other Free Tools Column -->
+        <div class="footer__column--wide">
+          <h3 class="footer__column-title">See other Free Tools from RTF</h3>
+          <ul class="footer__links">
+            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic</a></li>
+          </ul>
         </div>
       </nav>
+      <p class="footer__copyright">© 2026 Raising the Floor. All rights reserved.</p>
     </div>
   </footer>
 
