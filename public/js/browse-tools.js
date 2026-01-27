@@ -20,6 +20,10 @@
   var expandedFunctionInfoIds = new Set();
   var expandedSeeAlsoGroupIds = new Set();
   var seeAlsoInfoExpanded = true;
+  var markedToolIds = new Set();
+  var showMarkedOnly = false;
+  var savedFiltersBeforeMarkedMode = null;
+  var savedSearchBeforeMarkedMode = '';
   
   var filters = {
     functions: [],
@@ -209,6 +213,15 @@
     return div.innerHTML;
   }
 
+  function getBaseToolId(toolId) {
+    if (!toolId) return toolId;
+    // Remove 'see-also-' prefix if present
+    var id = toolId.replace(/^see-also-/, '');
+    // Remove '-repeat-N' suffix if present
+    id = id.replace(/-repeat-\d+$/, '');
+    return id;
+  }
+
   // ============================================
   // MATCHING FUNCTIONS
   // ============================================
@@ -293,13 +306,49 @@
   // Invalidate display list cache when filters change
   invalidateDisplayListCache();
   
+  // If showMarkedOnly mode, only show marked tools
+  if (showMarkedOnly) {
+    filteredTools = allTools.filter(function(tool) {
+      return markedToolIds.has(tool.id);
+    });
+    filteredTools.sort(function(a, b) {
+      return a.name.localeCompare(b.name);
+    });
+    currentPage = 1;
+    render();
+    return;
+  }
+  
   filteredTools = allTools.filter(function(tool) {
       if (searchQuery) {
-        var query = searchQuery.toLowerCase();
-        var matches = tool.name.toLowerCase().includes(query) ||
-          tool.company.toLowerCase().includes(query) ||
-          (tool.description && tool.description.toLowerCase().includes(query));
-        if (!matches) return false;
+        var searchText = (tool.name + ' ' + tool.company + ' ' + (tool.description || '')).toLowerCase();
+        
+        // Parse search terms: quoted phrases stay together, other words are split
+        var terms = [];
+        var remaining = searchQuery.trim();
+        var quoteRegex = /"([^"]+)"/g;
+        var match;
+        
+        // Extract quoted phrases first
+        while ((match = quoteRegex.exec(remaining)) !== null) {
+          terms.push(match[1].toLowerCase());
+        }
+        
+        // Remove quoted phrases from remaining and split rest into words
+        var withoutQuotes = remaining.replace(/"[^"]+"/g, '').trim();
+        if (withoutQuotes) {
+          var words = withoutQuotes.split(/\s+/).filter(function(w) { return w.length > 0; });
+          words.forEach(function(w) {
+            terms.push(w.toLowerCase());
+          });
+        }
+        
+        // AND search: all terms must be found
+        var allTermsFound = terms.every(function(term) {
+          return searchText.includes(term);
+        });
+        
+        if (!allTermsFound) return false;
       }
       if (filters.functions.length > 0) {
         if (!filters.functions.some(function(f) { return toolMatchesFunction(tool, f); })) return false;
@@ -357,9 +406,9 @@
           '<input type="checkbox" class="filter-panel__checkbox" ' + checked + 
           ' data-category="' + category + '" data-value="' + opt + '">' +
           '<span class="filter-panel__option-label">' + opt + '</span>' +
-          '<button class="tooltip" data-tooltip="' + escapeHtml(desc) + '" aria-label="More info">' +
-          '<svg class="filter-panel__help-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>' +
-          '</button></label>';
+'<span class="tooltip" data-tooltip="' + escapeHtml(desc) + '" role="button" tabindex="0">' +
+  '<svg class="filter-panel__help-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>' +
+  '</span></label>';
       }).join('');
     });
 
@@ -380,7 +429,8 @@
     var countEl = document.getElementById('filter-count');
 
     var hasAnyFilter = filters.functions.length > 0 || filters.devices.length > 0 || 
-      filters.installTypes.length > 0 || filters.purchaseOptions.length > 0;
+      filters.installTypes.length > 0 || filters.purchaseOptions.length > 0 || 
+      (searchQuery && searchQuery.trim() !== '');
 
     if (!hasAnyFilter) {
       if (container) container.style.display = 'none';
@@ -392,6 +442,19 @@
     
     if (badgesContainer) {
       var html = '';
+      
+      // Search query group
+      if (searchQuery && searchQuery.trim() !== '') {
+        html += '<div class="filter-badges-group">';
+        html += '<span class="filter-badges-group__label">Contains the words:</span>';
+        html += '<div class="filter-badges-group__badges">';
+        html += '<span class="filter-badge filter-badge--search" data-category="search" data-value="' + escapeHtml(searchQuery) + '">' +
+          escapeHtml(searchQuery) +
+          '<button class="filter-badge__remove" aria-label="Clear search">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>' +
+          '</button></span>';
+        html += '</div></div>';
+      }
       
       // Functions group
       if (filters.functions.length > 0) {
@@ -491,6 +554,21 @@
   function buildDisplayList() {
     var displayItems = [];
     var shownToolIds = new Set();
+    
+    // In showMarkedOnly mode, just show marked tools in a simple list
+    if (showMarkedOnly) {
+      filteredTools.forEach(function(tool) {
+        displayItems.push({
+          type: 'tool',
+          tool: tool,
+          isRepeat: false,
+          firstShownIn: '',
+          groupIndex: 0,
+          isSeeAlso: false
+        });
+      });
+      return displayItems;
+    }
     
     if (filters.functions.length > 0) {
       // Grouped by functions
@@ -839,6 +917,15 @@
     if (isExpanded) cardClass += ' tool-card--expanded';
     if (isRepeat) cardClass += ' tool-card--repeat';
     if (isSeeAlso) cardClass += ' tool-card--see-also';
+    
+    var baseToolId = getBaseToolId(toolId);
+    var isMarked = markedToolIds.has(baseToolId);
+    if (isMarked) cardClass += ' tool-card--marked';
+    
+    var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
+    var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
+      '</button>';
 
     var html = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem">';
 
@@ -853,6 +940,7 @@
       html += '</div>';
       html += '<button class="tool-card__see-less">See Less <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></button>';
       html += '</div>';
+      html += '<div class="tool-card__mark-row">' + checkboxHTML + '</div>';
       html += '<hr class="tool-card__divider">';
       html += '<h4 class="tool-card__section-title">Description</h4>';
       html += '<p class="tool-card__description">' + escapeHtml(tool.description || 'No description available.') + '</p>';
@@ -896,6 +984,7 @@
     } else {
       // COLLAPSED VIEW - only show badges matching selected filters
       html += '<div class="tool-card__collapsed">';
+      html += checkboxHTML;
       html += '<div class="tool-card__name-line">';
       html += '<h3 class="tool-card__name">' + escapeHtml(tool.name) + '<span class="tool-card__company"> · ' + escapeHtml(tool.company) + '</span></h3>';
       html += '</div>';
@@ -981,6 +1070,19 @@
           shownCount++;
         }
       });
+    } else {
+      // No function filters selected - show ALL function badges
+      if (tool.functions) {
+        tool.functions.forEach(function(func) {
+          if (func && func.trim() !== '') {
+            var mapped = mapFunctionToLabel(func);
+            if (mapped) {
+              html += '<span class="badge badge--function">' + escapeHtml(mapped) + '</span>';
+              shownCount++;
+            }
+          }
+        });
+      }
     }
     
     var remaining = totalCount - shownCount;
@@ -1226,6 +1328,18 @@
         var badge = e.target.closest('.filter-badge');
         var category = badge.getAttribute('data-category');
         var value = badge.getAttribute('data-value');
+        
+        // Handle search badge removal
+        if (category === 'search') {
+          searchQuery = '';
+          var searchInput = document.getElementById('search-input');
+          if (searchInput) searchInput.value = '';
+          var searchClear = document.getElementById('search-clear');
+          if (searchClear) searchClear.classList.remove('visible');
+          applyFilters();
+          return;
+        }
+        
         filters[category] = filters[category].filter(function(v) { return v !== value; });
         applyFilters();
       }
@@ -1233,14 +1347,37 @@
 
     // Search
     var searchInput = document.getElementById('search-input');
+    var searchClear = document.getElementById('search-clear');
+    
+    function updateSearchClearVisibility() {
+      if (searchClear) {
+        if (searchInput.value.length > 0) {
+          searchClear.classList.add('visible');
+        } else {
+          searchClear.classList.remove('visible');
+        }
+      }
+    }
+    
     if (searchInput) {
       var timeout;
       searchInput.addEventListener('input', function() {
         clearTimeout(timeout);
+        updateSearchClearVisibility();
         timeout = setTimeout(function() {
           searchQuery = searchInput.value;
           applyFilters();
         }, 300);
+      });
+    }
+    
+    if (searchClear) {
+      searchClear.addEventListener('click', function() {
+        searchInput.value = '';
+        searchQuery = '';
+        updateSearchClearVisibility();
+        applyFilters();
+        searchInput.focus();
       });
     }
 
@@ -1263,10 +1400,28 @@
       });
     }
 
+    // Mark checkbox handler
+    document.addEventListener('click', function(e) {
+      var markBtn = e.target.closest('[data-mark-tool]');
+      if (markBtn) {
+        e.stopPropagation();
+        var toolId = markBtn.getAttribute('data-mark-tool');
+        // Extract base tool ID (remove -repeat- and see-also- prefixes/suffixes)
+        var baseToolId = getBaseToolId(toolId);
+        if (markedToolIds.has(baseToolId)) {
+          markedToolIds.delete(baseToolId);
+        } else {
+          markedToolIds.add(baseToolId);
+        }
+        render();
+        return;
+      }
+    });
+    
     // Tool card interactions
     document.addEventListener('click', function(e) {
       var toolCard = e.target.closest('.tool-card');
-      if (toolCard && !e.target.closest('a') && !e.target.closest('.tool-card__visit-btn')) {
+      if (toolCard && !e.target.closest('a') && !e.target.closest('.tool-card__visit-btn') && !e.target.closest('[data-mark-tool]')) {
         var toolId = toolCard.getAttribute('data-tool-id');
         
         if (e.target.closest('.tool-card__see-more')) {
@@ -1362,13 +1517,199 @@
       }
     });
 
-    // Tooltips
-    document.addEventListener('mouseenter', function(e) {
-      if (e.target.matches('.tooltip')) showTooltip(e.target);
-    }, true);
-    document.addEventListener('mouseleave', function(e) {
-      if (e.target.matches('.tooltip')) hideTooltip();
-    }, true);
+// Tooltips - hover shows, click pins open
+  var tooltipPinned = false;
+  var currentTooltipTrigger = null;
+  
+  document.addEventListener('mouseenter', function(e) {
+    if (e.target.matches('.tooltip') && !tooltipPinned) {
+      showTooltip(e.target);
+      currentTooltipTrigger = e.target;
+    }
+  }, true);
+  
+  document.addEventListener('mouseleave', function(e) {
+    if (e.target.matches('.tooltip') && !tooltipPinned) {
+      hideTooltip();
+      currentTooltipTrigger = null;
+    }
+  }, true);
+  
+  document.addEventListener('click', function(e) {
+    // Close button click
+    if (e.target.closest('.tooltip-popup__close')) {
+      hideTooltip();
+      tooltipPinned = false;
+      currentTooltipTrigger = null;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    
+    // Tooltip trigger click - pin it open
+    if (e.target.closest('.tooltip')) {
+      var trigger = e.target.closest('.tooltip');
+      e.preventDefault();
+      e.stopPropagation();
+      if (tooltipPinned && currentTooltipTrigger === trigger) {
+        // Clicking same tooltip again - close it
+        hideTooltip();
+        tooltipPinned = false;
+        currentTooltipTrigger = null;
+      } else {
+        showTooltip(trigger, true);
+        tooltipPinned = true;
+        currentTooltipTrigger = trigger;
+      }
+      return;
+    }
+    
+    // Click elsewhere closes pinned tooltip
+    if (tooltipPinned && !e.target.closest('.tooltip-popup')) {
+      hideTooltip();
+      tooltipPinned = false;
+      currentTooltipTrigger = null;
+    }
+  });
+    
+    // Marking buttons
+    setupMarkingButtons();
+  }
+  
+  function setupMarkingButtons() {
+    // Check if Share API is supported
+    var shareBtn = document.getElementById('share-marked-link-btn');
+    if (shareBtn && navigator.canShare) {
+      shareBtn.style.display = '';
+    }
+    
+    // Show Only Marked button
+    var showMarkedBtn = document.getElementById('show-marked-only-btn');
+    if (showMarkedBtn) {
+      showMarkedBtn.addEventListener('click', function() {
+        showMarkedOnly = !showMarkedOnly;
+        updateMarkedMode();
+      });
+    }
+    
+    // Turn off marked mode button
+    var turnOffBtn = document.getElementById('turn-off-marked-mode-btn');
+    if (turnOffBtn) {
+      turnOffBtn.addEventListener('click', function() {
+        showMarkedOnly = false;
+        updateMarkedMode();
+      });
+    }
+    
+    // Copy Marked Link button
+    var copyBtn = document.getElementById('copy-marked-link-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        var link = createMarkedProductsLink();
+        navigator.clipboard.writeText(link).then(function() {
+          var originalText = copyBtn.textContent;
+          copyBtn.textContent = 'Link Copied!';
+          setTimeout(function() {
+            copyBtn.textContent = originalText;
+          }, 2000);
+        });
+      });
+    }
+    
+    // Share Marked Link button
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function() {
+        var link = createMarkedProductsLink();
+        if (navigator.share) {
+          navigator.share({
+            title: 'Learn and Try - Marked Products',
+            text: 'Check out these assistive technology tools I found:',
+            url: link
+          });
+        }
+      });
+    }
+  }
+  
+  function createMarkedProductsLink() {
+    var baseUrl = window.location.origin + window.location.pathname;
+    var markedIds = Array.from(markedToolIds).join(',');
+    if (markedIds) {
+      return baseUrl + '?marked=' + encodeURIComponent(markedIds);
+    }
+    return baseUrl;
+  }
+  
+  function updateMarkedMode() {
+    var showMarkedBtn = document.getElementById('show-marked-only-btn');
+    var banner = document.getElementById('marked-mode-banner');
+    var bannerCount = document.getElementById('marked-mode-count');
+    var sidebar = document.querySelector('.browse__sidebar');
+    var activeFiltersContainer = document.getElementById('active-filters-container');
+    var searchContainer = document.querySelector('.browse__search');
+    var resultsInfo = document.querySelector('.browse__results-info');
+    var searchInput = document.getElementById('search-input');
+    
+    if (showMarkedOnly) {
+      // Save current filters and search before clearing
+      savedFiltersBeforeMarkedMode = {
+        functions: filters.functions.slice(),
+        devices: filters.devices.slice(),
+        installTypes: filters.installTypes.slice(),
+        purchaseOptions: filters.purchaseOptions.slice()
+      };
+      savedSearchBeforeMarkedMode = searchQuery;
+      
+      // Clear filters and search
+      filters.functions = [];
+      filters.devices = [];
+      filters.installTypes = [];
+      filters.purchaseOptions = [];
+      searchQuery = '';
+      if (searchInput) searchInput.value = '';
+      
+      // Update UI checkboxes
+      document.querySelectorAll('.browse__filter-checkbox').forEach(function(cb) {
+        cb.checked = false;
+      });
+      
+      if (showMarkedBtn) showMarkedBtn.classList.add('is-active');
+      if (banner) banner.style.display = '';
+      if (bannerCount) bannerCount.textContent = markedToolIds.size;
+      if (sidebar) sidebar.style.display = 'none';
+      if (activeFiltersContainer) activeFiltersContainer.style.display = 'none';
+      if (searchContainer) searchContainer.style.display = 'none';
+      if (resultsInfo) resultsInfo.style.display = 'none';
+    } else {
+      // Restore saved filters and search
+      if (savedFiltersBeforeMarkedMode) {
+        filters.functions = savedFiltersBeforeMarkedMode.functions;
+        filters.devices = savedFiltersBeforeMarkedMode.devices;
+        filters.installTypes = savedFiltersBeforeMarkedMode.installTypes;
+        filters.purchaseOptions = savedFiltersBeforeMarkedMode.purchaseOptions;
+        
+        // Restore UI checkboxes
+        document.querySelectorAll('.browse__filter-checkbox').forEach(function(cb) {
+          var category = cb.getAttribute('data-category');
+          var value = cb.value;
+          cb.checked = filters[category] && filters[category].includes(value);
+        });
+      }
+      if (savedSearchBeforeMarkedMode) {
+        searchQuery = savedSearchBeforeMarkedMode;
+        if (searchInput) searchInput.value = savedSearchBeforeMarkedMode;
+      }
+      savedFiltersBeforeMarkedMode = null;
+      savedSearchBeforeMarkedMode = '';
+      
+      if (showMarkedBtn) showMarkedBtn.classList.remove('is-active');
+      if (banner) banner.style.display = 'none';
+      if (sidebar) sidebar.style.display = '';
+      if (searchContainer) searchContainer.style.display = '';
+      if (resultsInfo) resultsInfo.style.display = '';
+    }
+    
+    applyFilters();
   }
 
   function scrollToTool(toolId) {
@@ -1381,8 +1722,8 @@
     }, 50);
   }
 
-  var tooltipEl = null;
-  function showTooltip(trigger) {
+var tooltipEl = null;
+  function showTooltip(trigger, withCloseButton) {
     var text = trigger.getAttribute('data-tooltip');
     if (!text) return;
     if (!tooltipEl) {
@@ -1390,13 +1731,19 @@
       tooltipEl.className = 'tooltip-popup';
       document.body.appendChild(tooltipEl);
     }
-    tooltipEl.textContent = text;
+    
+    if (withCloseButton) {
+      tooltipEl.innerHTML = '<button class="tooltip-popup__close" aria-label="Close"><strong>X</strong></button>' + escapeHtml(text);
+    } else {
+      tooltipEl.textContent = text;
+    }
+    
     tooltipEl.style.display = 'block';
     var rect = trigger.getBoundingClientRect();
     tooltipEl.style.left = (rect.left + rect.width / 2) + 'px';
     tooltipEl.style.top = (rect.top - 8) + 'px';
   }
-
+  
   function hideTooltip() {
     if (tooltipEl) tooltipEl.style.display = 'none';
   }
@@ -1428,7 +1775,7 @@
 
     var phoneParam = params.get('phone');
     if (phoneParam && phoneParam !== 'None') {
-      var phoneDeviceMapping = { 'iPhone': 'iPhone', 'Android (Samsung, Google, Lenovo)': 'Android' };
+      var phoneDeviceMapping = { 'iPhone': 'iPhone', 'Android (Samsung, Google)': 'Android' };
       var mapped = phoneDeviceMapping[phoneParam];
       if (mapped && !filters.devices.includes(mapped)) filters.devices.push(mapped);
     }
@@ -1457,9 +1804,85 @@
       });
   }
 
-  function init() {
-    setupEventListeners();
-    loadTools();
+function init() {
+  setupEventListeners();
+  loadTools();
+  setupVideoModal();
+  checkMarkedUrlParams();
+  }
+  
+  function checkMarkedUrlParams() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var markedParam = urlParams.get('marked');
+    if (markedParam) {
+      var ids = markedParam.split(',').filter(function(id) { return id.trim() !== ''; });
+      ids.forEach(function(id) {
+        markedToolIds.add(id.trim());
+      });
+      if (ids.length > 0) {
+        showMarkedOnly = true;
+        // Wait for tools to load, then update mode
+        var checkInterval = setInterval(function() {
+          if (allTools.length > 0) {
+            clearInterval(checkInterval);
+            updateMarkedMode();
+          }
+        }, 100);
+      }
+    }
+  }
+  
+  // Video modal functionality
+  function setupVideoModal() {
+    var modal = document.getElementById('video-modal');
+    var modalIframe = document.getElementById('video-modal-iframe');
+    var closeBtn = document.getElementById('video-modal-close');
+    
+    if (!modal || !modalIframe) return;
+    
+    // Delegate click events for video containers
+    document.addEventListener('click', function(e) {
+      var videoContainer = e.target.closest('.tool-card__video');
+      if (videoContainer) {
+        var iframe = videoContainer.querySelector('iframe');
+        if (iframe) {
+          var src = iframe.getAttribute('src');
+          // Add autoplay parameter
+          if (src.indexOf('?') === -1) {
+            src += '?autoplay=1';
+          } else {
+            src += '&autoplay=1';
+          }
+          modalIframe.setAttribute('src', src);
+          modal.classList.add('is-open');
+          document.body.style.overflow = 'hidden';
+        }
+      }
+    });
+    
+    function closeModal() {
+      modal.classList.remove('is-open');
+      modalIframe.setAttribute('src', '');
+      document.body.style.overflow = '';
+    }
+    
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeModal);
+    }
+    
+    // Close on backdrop click
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+        closeModal();
+      }
+    });
   }
 
   if (document.readyState === 'loading') {

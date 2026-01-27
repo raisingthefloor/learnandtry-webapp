@@ -60,7 +60,7 @@
         {
           id: 4,
           question: 'What type of phone ' + doVerb + ' ' + subject + ' primarily use?',
-          options: ['iPhone', 'Android (Samsung, Google, Lenovo)', 'None'],
+          options: ['iPhone', 'Android (Samsung, Google)', 'None'],
           multiSelect: false
         }
       ]
@@ -271,7 +271,7 @@
       'Windows (Microsoft)': ['pc', 'windows', 'win'],
       'Chromebook (Google)': ['chrome', 'chromebook', 'chromeos', 'cros'],
       'iPhone': ['iphone', 'ios'],
-      'Android (Samsung, Google, Lenovo)': ['android']
+      'Android (Samsung, Google)': ['android']
     };
 
     // Function mapping

@@ -16,7 +16,7 @@
     <div class="header__inner">
       <a href="index.html" class="header__logo" aria-label="Learn and Try home">
         <img src="images/logo-lt.png" alt="" class="header__logo-icon" aria-hidden="true">
-        <span class="header__logo-text">Learn and Try</span>
+        <span class="header__logo-text">Learn and Try Tool</span>
       </a>
 
       <nav class="header__nav" aria-label="Main navigation">
@@ -168,8 +168,25 @@
           <!-- Page Title and Description -->
           <div class="browse__intro" id="browse-intro">
             <h1 class="browse__title" id="page-title">Browse Tools</h1>
-            <p class="browse__description" id="browse-description">Explore our complete directory of assistive technology tools. You can search using the search field above or use the filters to narrow your search.</p>
-            <p class="browse__description" id="browse-description-hint">To learn more about a product - just click on it to expand the description.</p>
+            <p class="browse__description browse__description--small" id="browse-description"><strong>Explore our complete directory of built-in accessibility features and assistive technology tools.</strong></p>
+            <ul class="browse__description-list">
+              <li>To reduce the number of products in the list you can use the search field below or use the filters to narrow your search.</li>
+              <li>To learn more about a product - just click on it to expand the description.</li>
+            </ul>
+            <p class="browse__description browse__description--small" id="browse-description-marking"><strong>Marking Product Cards</strong> - To make it easier to remember, save, and share products you find, we have added the ability to MARK products of interest. Once marked you can SHOW ONLY the Marked products or COPY/SHARE them as a link. Anyone clicking that shared link will see this tool open with those cards pre-marked.<br><strong>To mark a card,</strong> just click on the checkbox on the upper corner of the product card.</p>
+            
+            <!-- Marking Buttons -->
+            <div class="browse__marking-buttons" id="marking-buttons">
+              <button class="btn btn--marking" id="show-marked-only-btn">SHOW ONLY Marked Products</button>
+              <button class="btn btn--marking" id="copy-marked-link-btn">COPY Marked Products Link</button>
+              <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE Marked Products Link</button>
+            </div>
+            
+            <!-- Show Only Marked Mode Banner -->
+            <div class="browse__marked-mode-banner" id="marked-mode-banner" style="display: none;">
+              <span class="browse__marked-mode-text">Showing only the <strong id="marked-mode-count">0</strong> Marked products</span>
+              <button class="btn btn--turn-off" id="turn-off-marked-mode-btn">Turn off "Show only Marked Products" mode</button>
+            </div>
           </div>
 
           <!-- Search -->
@@ -180,12 +197,18 @@
                 <path d="m21 21-4.3-4.3"></path>
               </svg>
               <input 
-                type="search" 
+                type="text" 
                 class="browse__search-input" 
                 id="search-input"
                 placeholder="Search tools by name, company, or description..."
                 aria-label="Search tools"
               >
+              <button class="browse__search-clear" id="search-clear" aria-label="Clear search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -277,6 +300,20 @@
       </nav>
     </div>
   </footer>
+
+  <!-- Video Modal -->
+  <div class="video-modal" id="video-modal">
+    <div class="video-modal__content">
+      <button class="video-modal__close" id="video-modal-close">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+        Close
+      </button>
+      <iframe id="video-modal-iframe" src="" title="Video" allowfullscreen></iframe>
+    </div>
+  </div>
 
   <script src="js/main.js"></script>
   <script src="js/browse-tools.js"></script>

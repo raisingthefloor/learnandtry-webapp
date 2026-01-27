@@ -14,7 +14,7 @@
   --color-foreground: #1a1a1a;
   
   --color-muted: #f5f5f7;
-  --color-muted-foreground: #666666;
+  --color-muted-foreground: #333333;
   
   --color-border: #e5e5e5;
   --color-border-light: rgba(0, 0, 0, 0.1);
@@ -178,14 +178,17 @@ main {
 }
 
 .header__logo-icon {
-  width: 5rem;
-  height: 5rem;
+  width: 7.5rem;
+  height: 7.5rem;
   object-fit: contain;
+  position: relative;
+  top: 2px;
 }
 
 .header__logo-text {
   font-weight: 600;
-  color: var(--color-foreground);
+  font-size: 2rem;
+  color: #2563eb;
 }
 
 .header__nav {
@@ -537,7 +540,7 @@ main {
   }
   
   .features__grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1.1fr 1.2fr;
     gap: 3rem;
   }
 }
@@ -609,6 +612,54 @@ main {
     font-size: 1.875rem;
     margin-bottom: 3rem;
   }
+}
+
+/* Home Video Modal */
+.home-video-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.9);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.home-video-modal.is-open {
+  display: flex;
+}
+
+.home-video-modal__content {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  aspect-ratio: 16 / 9;
+}
+
+.home-video-modal__content iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.home-video-modal__close {
+  position: absolute;
+  top: -3rem;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.home-video-modal__close:hover {
+  color: #ccc;
 }
 
 /* =============================================
@@ -985,6 +1036,151 @@ main {
   margin-bottom: 0.75rem;
 }
 
+.browse__description--small {
+  font-size: 0.875rem;
+}
+
+.browse__description-list {
+  font-size: 0.875rem;
+  color: var(--color-muted-foreground);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  margin-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.browse__description-list li {
+  margin-bottom: 0.25rem;
+}
+
+/* Marking Buttons */
+.browse__marking-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.btn--marking {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 2px solid #6b7280;
+  background-color: white;
+  color: #374151;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn--marking:hover {
+  background-color: #f3f4f6;
+}
+
+.btn--marking.is-active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Marked Mode Banner */
+.browse__marked-mode-banner {
+  background-color: #fef2f2;
+  border: 2px solid #dc2626;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.browse__marked-mode-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.btn--turn-off {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 2px solid #dc2626;
+  background-color: white;
+  color: #dc2626;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn--turn-off:hover {
+  background-color: #fef2f2;
+}
+
+/* Tool Card Mark Checkbox */
+.tool-card__mark-checkbox {
+  position: absolute;
+  top: 4px;
+  right: 2px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.tool-card__mark-checkbox:hover {
+  border-color: #22c55e;
+}
+
+.tool-card__mark-checkbox.is-marked {
+  background-color: #22c55e;
+  border-color: #22c55e;
+}
+
+.tool-card__mark-checkbox.is-marked svg {
+  display: block;
+}
+
+.tool-card__mark-checkbox svg {
+  display: none;
+  width: 16px;
+  height: 16px;
+  color: white;
+}
+
+/* Expanded card mark row - below See Less, right aligned */
+.tool-card__mark-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tool-card__mark-row .tool-card__mark-checkbox {
+  position: static;
+}
+
+/* Marked card visual indicator */
+.tool-card--marked {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.tool-card__mark-label {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+}
+
 @media (min-width: 768px) {
   .browse__title {
     font-size: 2rem;
@@ -992,6 +1188,10 @@ main {
   
   .browse__description {
     font-size: 1.125rem;
+  }
+  
+  .browse__description--small {
+    font-size: 0.9375rem;
   }
 }
 
@@ -1029,6 +1229,28 @@ main {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+.browse__search-clear {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  color: var(--color-muted-foreground);
+  display: none;
+}
+
+.browse__search-clear:hover {
+  color: var(--color-foreground);
+}
+
+.browse__search-input:not(:placeholder-shown) + .browse__search-clear,
+.browse__search-clear.visible {
+  display: flex;
 }
 
 /* Active Filters Section */
@@ -1100,7 +1322,7 @@ main {
 
 .browse__results-count {
   font-size: 0.875rem;
-  color: #4b5563;
+  color: #374151;
   white-space: nowrap;
 }
 
@@ -1114,7 +1336,7 @@ main {
 .browse__per-page-label,
 .browse__sort-label {
   font-size: 0.875rem;
-  color: #4b5563;
+  color: #374151;
   white-space: nowrap;
 }
 
@@ -1275,11 +1497,17 @@ main {
   color: var(--color-muted-foreground);
   opacity: 0.7;
   flex-shrink: 0;
-  cursor: help;
-}
-
-.filter-panel__help-icon:hover {
+  cursor: pointer;
+  }
+  
+  .filter-panel__help-icon:hover {
   color: var(--color-primary);
+  }
+
+/* Hide help icon when tooltip popup is shown */
+.tooltip:hover .filter-panel__help-icon,
+.tooltip:focus .filter-panel__help-icon {
+  visibility: hidden;
 }
 
 /* Tooltip */
@@ -1287,6 +1515,20 @@ main {
   position: relative;
   display: inline-flex;
   align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.tooltip:focus {
+  outline: none;
+}
+
+.tooltip:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .tooltip__content {
@@ -1464,7 +1706,8 @@ main {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-}
+  padding-right: 2rem;
+  }
 
 .tool-card__description-preview {
   font-size: 0.875rem;
@@ -1564,7 +1807,7 @@ main {
 
 .badge--more {
   background-color: #e5e7eb;
-  color: #6b7280;
+  color: #4b5563;
   font-style: italic;
 }
 
@@ -2004,7 +2247,7 @@ main {
 
 .function-header__subtitle {
   font-size: 0.875rem;
-  color: #4b5563;
+  color: #374151;
 }
 
 .function-header__icon {
@@ -2165,7 +2408,7 @@ main {
 
 .see-also-group__subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #4b5563;
 }
 
 .see-also-group__icon {
@@ -2208,6 +2451,7 @@ main {
 /* Tool Card - Collapsed View */
 .tool-card__collapsed {
   cursor: pointer;
+  position: relative;
 }
 
 .tool-card__name {
@@ -2223,7 +2467,7 @@ main {
 
 .tool-card__desc-preview {
   font-size: 0.875rem;
-  color: #4b5563;
+  color: #374151;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2317,7 +2561,7 @@ main {
 
 .tool-card__expanded-note {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #6b7280;
   font-style: italic;
   margin-top: 0.25rem;
 }
@@ -2393,6 +2637,67 @@ main {
   border: 0;
 }
 
+.tool-card__video {
+  cursor: pointer;
+  position: relative;
+}
+
+.tool-card__video::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Video Modal */
+.video-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.9);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.video-modal.is-open {
+  display: flex;
+}
+
+.video-modal__content {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  aspect-ratio: 16 / 9;
+}
+
+.video-modal__content iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-modal__close {
+  position: absolute;
+  top: -3rem;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.video-modal__close:hover {
+  color: #ccc;
+}
+
 /* Tool Card - Actions */
 .tool-card__actions {
   display: flex;
@@ -2453,21 +2758,45 @@ main {
   transform: translate(-50%, -100%);
   max-width: 280px;
   padding: 0.5rem 0.75rem;
+  padding-right: 1.25rem;
   font-size: 0.8125rem;
   background-color: #1f2937;
   color: white;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   z-index: 99999;
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.tooltip-popup__close {
+  position: absolute;
+  top: 0.25rem;
+  right: 0;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.tooltip-popup__close:hover {
+  color: #ccc;
+}
+
+/* Hide default tooltip icon circle on hover */
+.tooltip:hover svg,
+.tooltip:focus svg {
+  opacity: 1;
 }
 
 /* Filter Badges Container Groups */
 .browse__filter-badges {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
+  gap: 0.125rem;
+  margin-top: 0.25rem;
 }
 
 .filter-badges-group {
@@ -2522,6 +2851,11 @@ main {
 .filter-badge--purchase {
   background-color: #dcfce7;
   color: #166534;
+}
+
+.filter-badge--search {
+  background-color: #e0f2fe;
+  color: #0369a1;
 }
 
 .filter-badge__remove {

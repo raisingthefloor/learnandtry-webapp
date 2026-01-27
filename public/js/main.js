@@ -85,10 +85,77 @@ function setActiveNavLink() {
 }
 
 // =============================================
+// Home Page Video Modal
+// =============================================
+
+function initHomeVideoModal() {
+  var playBtn = document.getElementById('play-walkthrough-btn');
+  var modal = document.getElementById('home-video-modal');
+  var closeBtn = document.getElementById('home-video-modal-close');
+  var iframe = document.getElementById('home-video-iframe');
+  
+  // Fetch video ID from JSON file on GitHub
+  var videoIdJsonUrl = 'https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/dev/public/data/lnt_video_youtube_id.json';
+  var fallbackUrl = 'https://raisingthefloor.org/lnt-walkthrough';
+  
+  if (!playBtn || !modal || !iframe) return;
+  
+  function openModal() {
+    fetch(videoIdJsonUrl)
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        var videoId = data.videoId || data.video_id || data.id;
+        
+        if (videoId) {
+          iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoId + '?autoplay=1');
+          modal.classList.add('is-open');
+          document.body.style.overflow = 'hidden';
+        } else {
+          // Fallback: open in new tab
+          window.open(fallbackUrl, '_blank');
+        }
+      })
+      .catch(function() {
+        // Fallback: open in new tab
+        window.open(fallbackUrl, '_blank');
+      });
+  }
+  
+  function closeModal() {
+    modal.classList.remove('is-open');
+    iframe.setAttribute('src', '');
+    document.body.style.overflow = '';
+  }
+  
+  playBtn.addEventListener('click', openModal);
+  
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
+  }
+  
+  // Close on backdrop click
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+  
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+}
+
+// =============================================
 // Initialize on DOM Ready
 // =============================================
 
 document.addEventListener('DOMContentLoaded', function() {
   initMobileMenu();
   setActiveNavLink();
+  initHomeVideoModal();
 });
