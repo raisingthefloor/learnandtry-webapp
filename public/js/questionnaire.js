@@ -54,7 +54,7 @@
         {
           id: 3,
           question: 'What type of computer ' + doVerb + ' ' + subject + ' use at home or school\n(check all that apply)?',
-          options: ['Mac (Apple)', 'Windows (Microsoft)', 'Chromebook (Google)', 'My Device Is Not Listed'],
+          options: ['Windows (Microsoft)', 'Mac (Apple)', 'Chromebook (Google)', 'My Device Is Not Listed'],
           multiSelect: true
         },
         {

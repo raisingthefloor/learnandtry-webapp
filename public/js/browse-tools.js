@@ -46,7 +46,7 @@
   ];
   
   var INSTALL_OPTIONS = [
-    'Built-in (no install)', 'Web-Based (no install)', 'Must Install'
+    'Built-in (no install)', 'Web-Based (no install)', 'Need to install'
   ];
   
   var PURCHASE_OPTIONS = [
@@ -71,7 +71,7 @@
     'Android': 'See each product description for Android version compatibility.',
     'Built-in (no install)': 'Solutions already part of the computer or browser.',
     'Web-Based (no install)': 'Solutions that work without installing software.',
-    'Must Install': 'Solutions that need to be installed.',
+    'Need to install': 'Solutions that need to be installed.',
     'Free': 'Products that are completely free.',
     'Free Trial': 'Products that have a free trial before you buy.',
     'Lifetime License': 'Products you pay for once.',
@@ -175,7 +175,7 @@
 
   function mapInstallToLabel(install) {
     var map = { 'builtin': 'Built-in', 'built-in': 'Built-in', 'webbased': 'Web-based',
-      'web-based': 'Web-based', 'web': 'Web-based', 'online': 'Web-based', 'browser': 'Web-based', 'install': 'Must Install', 'download': 'Must Install' };
+      'web-based': 'Web-based', 'web': 'Web-based', 'online': 'Web-based', 'browser': 'Web-based', 'install': 'Need to install', 'download': 'Need to install' };
     var lower = install.toLowerCase();
     if (map[lower]) return map[lower];
     for (var key in map) { if (lower.includes(key)) return map[key]; }
@@ -184,7 +184,7 @@
   
   function mapInstallToExpandedLabel(install) {
     var map = { 'builtin': 'Built-in (no install)', 'built-in': 'Built-in (no install)', 'webbased': 'Web-Based (no install)',
-      'web-based': 'Web-Based (no install)', 'web': 'Web-Based (no install)', 'online': 'Web-Based (no install)', 'browser': 'Web-Based (no install)', 'install': 'Must Install', 'download': 'Must Install' };
+      'web-based': 'Web-Based (no install)', 'web': 'Web-Based (no install)', 'online': 'Web-Based (no install)', 'browser': 'Web-Based (no install)', 'install': 'Need to install', 'download': 'Need to install' };
     var lower = install.toLowerCase();
     if (map[lower]) return map[lower];
     for (var key in map) { if (lower.includes(key)) return map[key]; }
@@ -274,7 +274,7 @@
 var installMap = {
     'built-in (no install)': ['builtin', 'built-in', 'built', 'native'],
     'web-based (no install)': ['webbased', 'web-based', 'web', 'browser', 'online'],
-    'must install': ['installable', 'install', 'download', 'app']
+    'need to install': ['installable', 'install', 'download', 'app']
   };
     var normalizedFilter = filterInstall.toLowerCase().trim();
     var matchingValues = installMap[normalizedFilter] || [normalizedFilter];

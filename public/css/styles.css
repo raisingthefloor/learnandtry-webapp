@@ -6,15 +6,15 @@
 :root {
   /* Colors */
   --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
+  --color-primary-hover: #1e40af;
   --color-primary-light: rgba(37, 99, 235, 0.1);
   --color-primary-border: rgba(37, 99, 235, 0.4);
   
   --color-background: #ffffff;
-  --color-foreground: #1a1a1a;
+  --color-foreground: #000000;
   
   --color-muted: #f5f5f7;
-  --color-muted-foreground: #333333;
+  --color-muted-foreground: #000000;
   
   --color-border: #e5e5e5;
   --color-border-light: rgba(0, 0, 0, 0.1);
@@ -166,7 +166,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
+  padding: 0.21rem 2rem;
   max-width: var(--container-max);
   margin: 0 auto;
 }
@@ -178,16 +178,16 @@ main {
 }
 
 .header__logo-icon {
-  width: 7.5rem;
-  height: 7.5rem;
+  width: 4rem;
+  height: 4rem;
   object-fit: contain;
   position: relative;
-  top: 2px;
+  top: 1px;
 }
 
 .header__logo-text {
   font-weight: 600;
-  font-size: 2rem;
+  font-size: 1.6rem;
   color: #2563eb;
 }
 
@@ -398,7 +398,7 @@ main {
 }
 
 .btn--outline:hover {
-  background-color: #f5f5f5;
+  background-color: #d1d5db;
 }
 
 .btn--lg {
@@ -418,6 +418,7 @@ main {
 
 .hero {
   background-color: var(--color-muted);
+  border-bottom: 1px solid var(--color-border);
   padding: 4rem 0;
   text-align: center;
 }
@@ -438,18 +439,20 @@ main {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--color-foreground);
-  margin-bottom: 1rem;
+  margin-bottom: calc(1rem + 3px);
   line-height: 1.4;
 }
 
 .hero__description {
   font-size: 1rem;
   color: var(--color-muted-foreground);
-  margin-bottom: 2.5rem;
+  margin-bottom: calc(2.5rem - 4px);
   max-width: 52rem;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
+  position: relative;
+  top: 4px;
 }
 
 .hero__actions {
@@ -462,7 +465,7 @@ main {
 .hero__privacy {
   font-size: 0.875rem;
   color: var(--color-muted-foreground);
-  font-style: italic;
+  font-style: normal;
   margin-top: 2rem;
 }
 
@@ -506,21 +509,21 @@ main {
    ============================================= */
 
 .features {
-  padding: 4rem 0;
+  padding: 2rem 0;
   text-align: center;
 }
 
 .features__title {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
 .features__grid {
   display: grid;
   gap: 2.5rem;
   max-width: 56rem;
-  margin: 0 auto;
+  margin: -1px auto -1px auto;
 }
 
 .feature {
@@ -560,12 +563,12 @@ main {
 
 @media (min-width: 768px) {
   .features {
-    padding: 4rem 0 2.5rem;
+  padding: 1.5rem 0 1rem;
   }
   
   .features__title {
-    font-size: 1.875rem;
-    margin-bottom: 4rem;
+  font-size: 1.875rem;
+  margin-bottom: 1.5rem;
   }
   
   .features__grid {
@@ -579,7 +582,9 @@ main {
    ============================================= */
 
 .video-section {
-  background-color: rgba(245, 245, 247, 0.5);
+  background-color: var(--color-muted);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   padding: 4rem 0;
   text-align: center;
 }
@@ -786,6 +791,10 @@ main {
   margin-bottom: 3rem;
 }
 
+.tool-finder__text--no-margin {
+  margin-bottom: 3rem;
+}
+
 @media (min-width: 768px) {
   .tool-finder {
     padding: 4rem 0 2.5rem;
@@ -815,7 +824,7 @@ main {
 .stepper {
   display: flex;
   justify-content: center;
-  padding: 0.625rem 0;
+  padding: 1.75rem 0 0.625rem 0;
 }
 
 .stepper__list {
@@ -829,14 +838,14 @@ main {
 }
 
 .stepper__step {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .stepper__step--completed,
@@ -851,9 +860,9 @@ main {
 }
 
 .stepper__connector {
-  width: 1.25rem;
-  height: 2px;
-  margin: 0 0.25rem;
+  width: 1.75rem;
+  height: 3px;
+  margin: 0 0.5rem;
 }
 
 .stepper__connector--completed {
@@ -895,25 +904,27 @@ main {
 
 .questionnaire__hint {
   text-align: center;
-  color: #31343a;
-  margin-bottom: 1.5rem;
+  color: #000000;
+  margin-bottom: 2rem;
+  font-size: 1.125rem;
 }
 
 .questionnaire__options {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
   border: none;
   padding: 0;
 }
 
 .questionnaire__option {
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 2rem;
   border: 2px solid rgb(98, 105, 117);
   border-radius: var(--radius-xl);
   font-weight: 500;
+  font-size: 1.125rem;
   background-color: #FFFFFF;
   transition: all var(--transition-fast);
 }
@@ -958,7 +969,7 @@ main {
   align-items: center;
   justify-content: center;
   padding: 0 1.5rem;
-  margin-top: 1.5rem;
+  margin-top: 0.75rem;
 }
 
 .results__content {
@@ -1029,9 +1040,17 @@ main {
   padding: 0.5rem 0.25rem;
 }
 
+.browse__sidebar .filter-panel__content {
+  display: none;
+}
+
 @media (min-width: 640px) {
   .browse__sidebar {
     padding: 1rem;
+  }
+  
+  .browse__sidebar .filter-panel__content {
+    display: block;
   }
 }
 
@@ -1123,7 +1142,7 @@ main {
 }
 
 .btn--marking:hover {
-  background-color: #f3f4f6;
+  background-color: #d1d5db;
 }
 
 .btn--marking.is-active {
@@ -1147,7 +1166,7 @@ main {
 }
 
 .btn--show-mark-feature:hover {
-  background-color: #f3f4f6;
+  background-color: #d1d5db;
 }
 
 /* Mark Feature Section */
@@ -1253,7 +1272,7 @@ main {
 }
 
 .btn--hide-mark-feature:hover {
-  background-color: #f3f4f6;
+  background-color: #d1d5db;
   border-color: #6b7280;
 }
 
@@ -1307,8 +1326,8 @@ main {
 /* Tool Card Mark Checkbox */
 .tool-card__mark-checkbox {
   position: absolute;
-  top: 1px;
-  right: -5px;
+  top: 2px;
+  right: -6px;
   width: 24px;
   height: 24px;
   border: 2px solid #ccc;
@@ -1563,7 +1582,7 @@ main {
 }
 
 .filter-panel__toggle:hover {
-  background-color: rgba(245, 245, 247, 0.5);
+  background-color: #d1d5db;
 }
 
 .filter-panel__header {
@@ -1774,11 +1793,11 @@ main {
 }
 
 .function-header__toggle:hover {
-  background-color: #dbeafe;
+  background-color: #93c5fd;
 }
 
 .function-header--see-also .function-header__toggle:hover {
-  background-color: #ffedd5;
+  background-color: #fed7aa;
 }
 
 .function-header__left {
@@ -1891,7 +1910,9 @@ main {
   align-items: baseline;
   gap: 0.5rem;
   padding-right: 2rem;
-  }
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
 
 .tool-card__description-preview {
   font-size: 0.875rem;
@@ -1912,7 +1933,7 @@ main {
 
 @media (min-width: 768px) {
   .tool-card__badges-grid {
-    grid-template-columns: 1fr 1fr 0.55fr 0.95fr auto;
+    grid-template-columns: 1fr 1fr 0.61fr 0.89fr auto;
   }
 }
 
@@ -2128,7 +2149,7 @@ main {
 }
 
 .tool-card__expanded-header:hover {
-  background-color: rgba(0, 0, 0, 0.03);
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .tool-card__expanded-header-left {
@@ -2273,7 +2294,7 @@ main {
 }
 
 .pagination__btn:hover:not(:disabled) {
-  background-color: #f5f5f5;
+  background-color: #d1d5db;
 }
 
 .pagination__btn--active {
@@ -2299,7 +2320,7 @@ main {
 }
 
 .pagination__btn--show-all:hover:not(:disabled) {
-  background-color: #f5f5f5;
+  background-color: #d1d5db;
 }
 
 /* See Also Section */
@@ -2539,7 +2560,7 @@ main {
 }
 
 .see-also-info__toggle:hover {
-  background-color: #f3e8ff;
+  background-color: #d8b4fe;
 }
 
 .see-also-info__title {
@@ -2589,7 +2610,7 @@ main {
 }
 
 .see-also-group__toggle:hover {
-  background-color: #f3e8ff;
+  background-color: #d8b4fe;
 }
 
 .see-also-group__left {
@@ -2970,7 +2991,7 @@ main {
 }
 
 .pagination__page:hover:not(:disabled) {
-  background-color: #f5f5f5;
+  background-color: #d1d5db;
 }
 
 .pagination__page--active {
