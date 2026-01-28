@@ -46,7 +46,7 @@
   ];
   
   var INSTALL_OPTIONS = [
-    'Built-in (no install)', 'Web-Based (no install)', 'Needs to be installed'
+    'Built-in (no install)', 'Web-Based (no install)', 'Must Install'
   ];
   
   var PURCHASE_OPTIONS = [
@@ -71,7 +71,7 @@
     'Android': 'See each product description for Android version compatibility.',
     'Built-in (no install)': 'Solutions already part of the computer or browser.',
     'Web-Based (no install)': 'Solutions that work without installing software.',
-    'Needs to be installed': 'Solutions that need to be installed.',
+    'Must Install': 'Solutions that need to be installed.',
     'Free': 'Products that are completely free.',
     'Free Trial': 'Products that have a free trial before you buy.',
     'Lifetime License': 'Products you pay for once.',
@@ -175,7 +175,16 @@
 
   function mapInstallToLabel(install) {
     var map = { 'builtin': 'Built-in', 'built-in': 'Built-in', 'webbased': 'Web-based',
-      'web-based': 'Web-based', 'web': 'Web-based', 'install': 'Needs Install', 'download': 'Needs Install' };
+      'web-based': 'Web-based', 'web': 'Web-based', 'online': 'Web-based', 'browser': 'Web-based', 'install': 'Must Install', 'download': 'Must Install' };
+    var lower = install.toLowerCase();
+    if (map[lower]) return map[lower];
+    for (var key in map) { if (lower.includes(key)) return map[key]; }
+    return install;
+  }
+  
+  function mapInstallToExpandedLabel(install) {
+    var map = { 'builtin': 'Built-in (no install)', 'built-in': 'Built-in (no install)', 'webbased': 'Web-Based (no install)',
+      'web-based': 'Web-Based (no install)', 'web': 'Web-Based (no install)', 'online': 'Web-Based (no install)', 'browser': 'Web-Based (no install)', 'install': 'Must Install', 'download': 'Must Install' };
     var lower = install.toLowerCase();
     if (map[lower]) return map[lower];
     for (var key in map) { if (lower.includes(key)) return map[key]; }
@@ -262,11 +271,11 @@
   }
 
   function toolMatchesInstall(tool, filterInstall) {
-    var installMap = {
-      'built-in (no install)': ['builtin', 'built-in', 'built', 'native'],
-      'web-based (no install)': ['webbased', 'web-based', 'web', 'browser', 'online'],
-      'needs to be installed': ['installable', 'install', 'download', 'app']
-    };
+var installMap = {
+    'built-in (no install)': ['builtin', 'built-in', 'built', 'native'],
+    'web-based (no install)': ['webbased', 'web-based', 'web', 'browser', 'online'],
+    'must install': ['installable', 'install', 'download', 'app']
+  };
     var normalizedFilter = filterInstall.toLowerCase().trim();
     var matchingValues = installMap[normalizedFilter] || [normalizedFilter];
     return tool.installTypes && tool.installTypes.some(function(install) {
@@ -861,13 +870,21 @@
         html += '</button>';
         if (isGroupExpanded) {
           html += '<div class="see-also-group__content">';
+          // Add explanation text with reasons
+          html += '<div class="see-also-group__reasons">';
+          html += '<p class="see-also-group__reasons-intro">These ' + item.group.func.toUpperCase() + ' items are shown because they may be of interest for the following reason(s):</p>';
+          html += '<ul class="see-also-group__reasons-list">';
+          item.group.reasons.forEach(function(reason) {
+            html += '<li>' + escapeHtml(reason) + '</li>';
+          });
+          html += '</ul>';
+          html += '</div>';
           html += '<div class="see-also-group__tools">';
         }
         
       } else if (item.type === 'tool') {
         var tool = item.tool;
         var toolId = tool.id;
-        var isExpanded = expandedToolIds.has(toolId);
         var isRepeat = item.isRepeat;
         var firstShownIn = item.firstShownIn;
         var isSeeAlso = item.isSeeAlso;
@@ -878,6 +895,8 @@
         } else if (isSeeAlso) {
           toolId = 'see-also-' + tool.id;
         }
+        
+        var isExpanded = expandedToolIds.has(toolId);
         
         var cardClass = 'tool-card';
         if (isExpanded) cardClass += ' tool-card--expanded';
@@ -963,10 +982,10 @@
           html_card += createCollapsedBadgeColumnHTML('Devices:', tool, 'device', isSeeAlso, seeAlsoFunc);
           html_card += createCollapsedBadgeColumnHTML('Install?:', tool, 'install', isSeeAlso, seeAlsoFunc);
           html_card += createCollapsedBadgeColumnHTML('Pricing:', tool, 'purchase', isSeeAlso, seeAlsoFunc);
+          html_card += '<div class="tool-card__see-more-col"><button class="tool-card__see-more">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button></div>';
           html_card += '</div>';
-          html_card += '<div class="tool-card__see-more-row">';
-          html_card += '<button class="tool-card__see-more">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
-          html_card += '</div></div>';
+          html_card += '<div class="tool-card__see-more-row"><button class="tool-card__see-more">See More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button></div>';
+          html_card += '</div>';
         }
 
         html_card += '</article>';
@@ -1145,7 +1164,7 @@
   function createBadgeColumnHTML(label, items, type) {
     var mapFn = type === 'function' ? mapFunctionToLabel :
       type === 'device' ? mapDeviceToLabel :
-      type === 'install' ? mapInstallToLabel : mapPurchaseToLabel;
+      type === 'install' ? mapInstallToExpandedLabel : mapPurchaseToLabel;
     
     var html = '<div class="tool-card__badge-col">';
     html += '<span class="tool-card__badge-label">' + label + '</span>';
@@ -1585,8 +1604,11 @@
   function setupMarkingButtons() {
     // Check if Share API is supported
     var shareBtn = document.getElementById('share-marked-link-btn');
+    var shareUnsupportedMsg = document.getElementById('share-unsupported-msg');
     if (shareBtn && navigator.canShare) {
       shareBtn.style.display = '';
+    } else if (shareUnsupportedMsg) {
+      shareUnsupportedMsg.style.display = '';
     }
     
     // Show Only Marked button
@@ -1644,6 +1666,19 @@
       return baseUrl + '?marked=' + encodeURIComponent(markedIds);
     }
     return baseUrl;
+  }
+  
+  function clearAllMarks() {
+    markedToolIds.clear();
+    showMarkedOnly = false;
+    updateMarkedMode();
+    render();
+  }
+  
+  // Set up Clear all Marked Products button
+  var clearMarkedBtn = document.getElementById('clear-marked-btn');
+  if (clearMarkedBtn) {
+    clearMarkedBtn.addEventListener('click', clearAllMarks);
   }
   
   function updateMarkedMode() {

@@ -175,7 +175,7 @@
             </ul>
             <!-- Collapsed Mark Feature Intro -->
             <p class="browse__description browse__description--small" id="browse-mark-intro">
-              <strong>Once you find products of interest</strong> - we have features to help you gather, save, or share those products with others.
+              <strong class="browse__mark-intro-highlight">Once you find products of interest</strong> - we have features to help you gather, save, or share those products with others.
               <button class="btn btn--show-mark-feature" id="show-mark-feature-btn">Show the "Mark, Gather, and Share" features</button>
             </p>
             
@@ -188,13 +188,16 @@
                   <ul>
                     <li><strong>Marking products of interest</strong> - You can mark any product that interests you by just clicking on the checkbox in the top-right corner of the product card.</li>
                     <li><strong>Showing only Marked products</strong> - You can have all the marked cards gathered up and shown to you together, so you can explore and compare them more easily.</li>
-                    <li><strong>Copy (or Share with others) Link to Marked products</strong> - You can copy (or share with others) a link to the products that you marked.<br>(If you or others later click on that link, it will launch the Learn & Try tools website and show just the products you marked.)</li>
+                    <li><strong>Copy (or Share with others) Link to Marked products</strong> - You can copy (or share with others) a link to the products that you marked.<br>(If you or others later click on that link, it will launch the Learn & Try website and show just the products you marked.)</li>
                   </ul>
                 </div>
                 <div class="browse__mark-feature-buttons">
                   <button class="btn btn--marking" id="show-marked-only-btn">SHOW ONLY Marked Products</button>
                   <button class="btn btn--marking" id="copy-marked-link-btn">COPY Marked Products Link</button>
                   <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE Marked Products Link</button>
+                  <div class="browse__share-unsupported" id="share-unsupported-msg" style="display: none;">SHARE function is not supported by this browser.</div>
+                  <div class="browse__mark-spacer" aria-hidden="true"></div>
+                  <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">Clear all Marked Products</button>
                 </div>
               </div>
               <button class="btn btn--hide-mark-feature" id="hide-mark-feature-btn">Hide the <strong>Mark-Gather-Share</strong> features</button>

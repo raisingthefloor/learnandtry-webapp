@@ -446,7 +446,7 @@ main {
   font-size: 1rem;
   color: var(--color-muted-foreground);
   margin-bottom: 2.5rem;
-  max-width: 42rem;
+  max-width: 52rem;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.6;
@@ -1193,11 +1193,51 @@ main {
   margin-bottom: 0.375rem;
 }
 
+/* Blue highlight for intro text */
+.browse__mark-intro-highlight {
+  color: var(--color-primary);
+  font-size: 1.125rem;
+}
+
 .browse__mark-feature-buttons {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   flex-shrink: 0;
+  align-items: flex-start;
+}
+
+.browse__mark-feature-buttons .btn--marking {
+  width: 15rem;
+  white-space: nowrap;
+}
+
+/* Share unsupported message */
+.browse__share-unsupported {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--color-foreground);
+  background-color: white;
+  border: 2px solid var(--color-primary);
+  border-radius: 0;
+  text-align: center;
+  width: 15rem;
+  min-height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Invisible spacer before clear button */
+.browse__mark-spacer {
+  height: 2.375rem;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Clear marks button */
+.btn--clear-marks {
 }
 
 .btn--hide-mark-feature {
@@ -1362,7 +1402,7 @@ main {
 .browse__search-input {
   width: 100%;
   padding: 0.75rem 0.75rem 0.75rem 2.5rem;
-  border: 1px solid #9ca3af;
+  border: 1px solid #000000;
   border-radius: var(--radius-md);
   font-size: 1rem;
   background-color: var(--color-background);
@@ -1867,11 +1907,12 @@ main {
   grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem 1rem;
   margin: 0.125rem 0 0.0625rem 0;
+  align-items: start;
 }
 
 @media (min-width: 768px) {
   .tool-card__badges-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 1fr 0.55fr 0.95fr auto;
   }
 }
 
@@ -1895,6 +1936,24 @@ main {
   gap: 0.25rem;
 }
 
+.tool-card__see-more-col {
+  display: none;
+  align-items: flex-end;
+  justify-content: flex-end;
+  align-self: end;
+  padding-bottom: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .tool-card__see-more-col {
+    display: flex;
+  }
+  
+  .tool-card__see-more-row {
+    display: none;
+  }
+}
+
 .tool-card__see-more {
   display: flex;
   align-items: center;
@@ -1903,7 +1962,8 @@ main {
   color: var(--color-primary);
   font-size: 0.875rem;
   font-weight: 500;
-  margin-top: 0.167rem;
+  margin-top: 0;
+  white-space: nowrap;
 }
 
 .tool-card__see-more svg {
@@ -2575,6 +2635,30 @@ main {
 }
 
 .see-also-group__reasons {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e9d5ff;
+}
+
+.see-also-group__reasons-intro {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #581c87;
+  margin-bottom: 0.5rem;
+}
+
+.see-also-group__reasons-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  color: #6b21a8;
+}
+
+.see-also-group__reasons-list li {
+  margin-bottom: 0.25rem;
+}
+
+.see-also-group__reasons {
   list-style-type: disc;
   padding-left: 1.5rem;
   margin-bottom: 1rem;
@@ -2625,7 +2709,13 @@ main {
 .tool-card__see-more-row {
   display: flex;
   justify-content: flex-end;
-  margin-top: 0;
+  margin-top: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  .tool-card__see-more-row {
+    display: none;
+  }
 }
 
 /* Tool Card - Repeat View (collapsed) */
