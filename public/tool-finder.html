@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Answer a few questions to get personalized tool recommendations for assistive technology.">
+  <title>Tool Finder - Learn and Try</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="page--inner">
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="header__inner">
+      <a href="index.html" class="header__logo" aria-label="Learn and Try home">
+        <img src="images/logo-lt.png" alt="" class="header__logo-icon" aria-hidden="true">
+        <span class="header__logo-text">Learn and Try Tool</span>
+      </a>
+
+      <nav class="header__nav" aria-label="Main navigation">
+        <ul class="header__nav-list">
+          <li><a href="index.html" class="header__nav-link">Home</a></li>
+          <li><a href="tool-finder.html" class="header__nav-link header__nav-link--active" aria-current="page">AT Tool Finder</a></li>
+          <li><a href="browse-tools.html" class="header__nav-link">Browse Tools Directly</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+        </ul>
+      </nav>
+
+      <button 
+        class="header__mobile-toggle" 
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        id="mobile-menu-toggle"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="12" y2="12"></line>
+          <line x1="4" x2="20" y1="6" y2="6"></line>
+          <line x1="4" x2="20" y1="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div id="mobile-menu" class="header__mobile-menu">
+      <nav aria-label="Mobile navigation">
+        <ul class="header__mobile-nav-list">
+          <li><a href="index.html" class="header__mobile-nav-link">Home</a></li>
+          <li><a href="tool-finder.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">AT Tool Finder</a></li>
+          <li><a href="browse-tools.html" class="header__mobile-nav-link">Browse Tools Directly</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Welcome Screen (shown initially) -->
+    <section id="welcome-screen" class="tool-finder" role="main">
+      <div class="tool-finder__content">
+        <h1 class="tool-finder__title">
+          Welcome to the <span class="tool-finder__title-highlight">Tool Finder</span>
+        </h1>
+        <p class="tool-finder__text">
+          Answer a few questions and a list<br>
+          of possible solutions to fit will be provided.
+        </p>
+        <p class="tool-finder__text tool-finder__text--no-margin"><span class="tool-finder__text--emphasis">We don't store any information —</span><br>your answers are only used to make tool suggestions.</p>
+        <button 
+          id="start-questionnaire" 
+          class="btn btn--primary btn--lg"
+          aria-label="Start the Tool Finder questionnaire"
+        >
+          Start
+        </button>
+      </div>
+    </section>
+
+    <!-- Questionnaire (hidden initially) -->
+    <section id="questionnaire-screen" class="questionnaire" style="display: none;" role="form" aria-label="Tool Finder Questionnaire">
+      <!-- Stepper -->
+      <nav class="stepper" aria-label="Questionnaire progress">
+        <ol class="stepper__list" id="stepper-list">
+          <!-- Steps will be rendered by JavaScript -->
+        </ol>
+      </nav>
+
+      <!-- Question Content -->
+      <div class="questionnaire__content">
+        <div class="questionnaire__inner">
+          <h2 id="question-text" class="questionnaire__question"></h2>
+          <p id="question-hint" class="questionnaire__hint" style="display: none;">Select one or more options, then click Next</p>
+          
+          <fieldset class="questionnaire__options" id="options-container">
+            <legend class="sr-only" id="options-legend"></legend>
+            <!-- Options will be rendered by JavaScript -->
+          </fieldset>
+
+          <div class="questionnaire__actions">
+            <button 
+              id="back-btn" 
+              class="btn btn--outline btn--lg"
+              aria-label="Go back to previous question"
+              disabled
+            >
+              ← Back
+            </button>
+            <button 
+              id="next-btn" 
+              class="btn btn--primary btn--lg"
+              aria-label="Go to next question"
+              disabled
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Screen (hidden initially) -->
+    <section id="results-screen" class="questionnaire" style="display: none;" role="region" aria-label="Tool search results">
+      <!-- Stepper - all completed -->
+      <nav class="stepper" aria-label="Questionnaire progress">
+        <ol class="stepper__list" id="results-stepper-list">
+          <!-- All completed steps will be rendered by JavaScript -->
+        </ol>
+      </nav>
+
+      <!-- Results Content -->
+      <div class="results">
+        <div class="results__content">
+          <p class="results__text">
+            We found <strong class="results__count" id="tool-count">0</strong> tools that meet those choices.
+          </p>
+          <p class="results__text">
+            We will now show you them in a list.<br>
+            - Click any item in the list to see more information about that tool.
+          </p>
+          <p class="results__hint">
+            You can also use the checkboxes on the left of the next screen
+to increase or decrease the number of items listed
+by limiting the list by cost or availability.
+          </p>
+          <div class="results__actions">
+            <button 
+              id="results-back-btn" 
+              class="btn btn--outline btn--lg"
+              aria-label="Go back to previous question"
+            >
+              ← Back
+            </button>
+            <button 
+              id="show-tools-btn" 
+              class="btn btn--primary btn--lg"
+              aria-label="View recommended tools"
+            >
+              Show me the Tools →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <nav class="footer__grid footer__grid--three-cols" aria-label="Footer navigation">
+        <!-- Raising the Floor Column -->
+        <div>
+          <h3 class="footer__column-title">Raising the Floor</h3>
+          <p class="footer__description">
+            Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
+          </p>
+        </div>
+        
+        <!-- Organization Column -->
+        <div>
+          <h3 class="footer__column-title">Organization</h3>
+          <ul class="footer__links">
+            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+          </ul>
+        </div>
+        
+        <!-- Other Free Tools Column -->
+        <div class="footer__column--wide">
+          <h3 class="footer__column-title">See other Free Tools from RTF</h3>
+          <ul class="footer__links">
+            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic</a></li>
+          </ul>
+        </div>
+      </nav>
+      <p class="footer__copyright">© 2026 Raising the Floor. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/questionnaire.js"></script>
+</body>
+</html>
