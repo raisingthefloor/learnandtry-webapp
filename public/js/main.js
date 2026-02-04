@@ -95,7 +95,7 @@ function initHomeVideoModal() {
   var iframe = document.getElementById('home-video-iframe');
   
   // Fetch video ID from JSON file on GitHub
-  var videoIdJsonUrl = 'https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/data/public/data/lnt_video_youtube_id.json';
+  var videoIdJsonUrl = 'https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/refs/heads/data/public/data/lnt_video_youtube_id.json';
   var fallbackUrl = 'https://raisingthefloor.org/lnt-walkthrough';
   
   if (!playBtn || !modal || !iframe) return;
