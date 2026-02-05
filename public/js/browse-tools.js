@@ -433,21 +433,32 @@ var installMap = {
   }
 
   function renderActiveFilters() {
-    var container = document.getElementById('active-filters-container');
-    var badgesContainer = document.getElementById('filter-badges');
-    var countEl = document.getElementById('filter-count');
+    var container = document.getElementById('active-filters-container-top');
+    var badgesContainer = document.getElementById('filter-badges-top');
+    var countEl = document.getElementById('filter-count-top');
+    var summaryEl = document.getElementById('filter-summary-top');
 
     var hasAnyFilter = filters.functions.length > 0 || filters.devices.length > 0 || 
       filters.installTypes.length > 0 || filters.purchaseOptions.length > 0 || 
       (searchQuery && searchQuery.trim() !== '');
 
-    if (!hasAnyFilter) {
-      if (container) container.style.display = 'none';
-      return;
-    }
-
+    // Always show the container
     if (container) container.style.display = '';
     if (countEl) countEl.textContent = filteredTools.length;
+    
+    // Update the summary text based on whether filters are active
+    if (summaryEl) {
+      if (hasAnyFilter) {
+        summaryEl.innerHTML = 'We found <strong class="browse__filter-count--large" id="filter-count-top">' + filteredTools.length + '</strong> tools that match your selections.';
+      } else {
+        summaryEl.innerHTML = 'There are <strong class="browse__filter-count--large" id="filter-count-top">' + filteredTools.length + '</strong> total items currently shown.';
+      }
+    }
+    
+    if (!hasAnyFilter) {
+      if (badgesContainer) badgesContainer.innerHTML = '';
+      return;
+    }
     
     if (badgesContainer) {
       var html = '';
@@ -525,7 +536,7 @@ var installMap = {
         html += '</div></div>';
       }
       
-      badgesContainer.innerHTML = html;
+badgesContainer.innerHTML = html;
     }
   }
 
@@ -806,7 +817,7 @@ var installMap = {
         html += '<button class="function-header__toggle">';
         html += '<div class="function-header__left">';
         html += '<span class="function-header__title">' + (funcInfo ? funcInfo.name : toTitleCase(item.funcFilter).toUpperCase()) + '</span>';
-        html += '<span class="function-header__subtitle">' + (isInfoExpanded ? 'Click to collapse' : 'Expand this for more information on ' + toTitleCase(item.funcFilter) + ' tools') + '</span>';
+        html += '<span class="function-header__subtitle">' + (isInfoExpanded ? 'Click to collapse' : '<strong>Click Here</strong> for a summary of key features to look for') + '</span>';
         html += '</div>';
         html += '<svg class="function-header__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
           (isInfoExpanded ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>') + '</svg>';
@@ -1526,19 +1537,20 @@ var installMap = {
     var showMarkFeatureBtn = document.getElementById('show-mark-feature-btn');
     var hideMarkFeatureBtn = document.getElementById('hide-mark-feature-btn');
     var markFeatureSection = document.getElementById('mark-feature-section');
-    var markIntro = document.getElementById('browse-mark-intro');
     
     if (showMarkFeatureBtn) {
       showMarkFeatureBtn.addEventListener('click', function() {
-        markIntro.style.display = 'none';
-        markFeatureSection.style.display = 'block';
+        if (markFeatureSection.style.display === 'block') {
+          markFeatureSection.style.display = 'none';
+        } else {
+          markFeatureSection.style.display = 'block';
+        }
       });
     }
     
     if (hideMarkFeatureBtn) {
       hideMarkFeatureBtn.addEventListener('click', function() {
         markFeatureSection.style.display = 'none';
-        markIntro.style.display = 'block';
       });
     }
 
@@ -1850,6 +1862,36 @@ var installMap = {
     loadTools();
     setupVideoModal();
     checkMarkedUrlParams();
+    handleMobileSidebarPosition();
+  }
+  
+  // Move sidebar to just above browse__controls on mobile
+  function handleMobileSidebarPosition() {
+    var sidebar = document.querySelector('.browse__sidebar');
+    var controls = document.querySelector('.browse__controls');
+    var originalParent = sidebar ? sidebar.parentNode : null;
+    var originalNextSibling = sidebar ? sidebar.nextSibling : null;
+    
+    function repositionSidebar() {
+      if (!sidebar || !controls) return;
+      
+      var isMobile = window.innerWidth < 640;
+      
+      if (isMobile) {
+        // Move sidebar to just before controls
+        controls.parentNode.insertBefore(sidebar, controls);
+      } else if (originalParent) {
+        // Move sidebar back to original position
+        if (originalNextSibling) {
+          originalParent.insertBefore(sidebar, originalNextSibling);
+        } else {
+          originalParent.appendChild(sidebar);
+        }
+      }
+    }
+    
+    repositionSidebar();
+    window.addEventListener('resize', repositionSidebar);
   }
   
   function checkMarkedUrlParams() {

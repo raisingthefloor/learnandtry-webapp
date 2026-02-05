@@ -984,9 +984,16 @@ main {
   line-height: 1.6;
 }
 
+.results__text--found {
+  margin-top: 36px;
+  margin-bottom: 26px;
+  font-weight: 700;
+}
+
 .results__count {
   color: var(--color-primary);
   font-weight: 700;
+  font-size: 1.125em;
 }
 
 .results__hint {
@@ -1039,10 +1046,12 @@ main {
 .browse__sidebar {
   padding: 0.5rem 0.25rem;
 }
-
+  
 .browse__sidebar .filter-panel__content {
-  display: none;
-}
+  display: block;
+  max-height: 2000px;
+  opacity: 1;
+  }
 
 @media (min-width: 640px) {
   .browse__sidebar {
@@ -1117,6 +1126,61 @@ main {
 
 .browse__description-list li {
   margin-bottom: 0.25rem;
+}
+
+/* Help Tips Section */
+.browse__help-tips {
+  margin-top: 15px;
+  margin-bottom: 0.5rem;
+}
+
+.browse__help-tip {
+  margin-bottom: 0.5rem;
+}
+
+.browse__help-tip-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-foreground);
+  margin-bottom: 0;
+  line-height: 1.2;
+}
+
+.browse__help-tip-text {
+  font-size: 0.9375rem;
+  color: var(--color-muted-foreground);
+  line-height: 1.5;
+  padding-left: 2em;
+}
+
+.browse__help-tip-text .btn--show-mark-feature {
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* Filter Summary Large (at top) */
+.browse__filter-summary.browse__filter-summary--large {
+  font-size: 1.6em;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--color-foreground);
+}
+
+.browse__filter-count--large {
+  font-size: 1.28em;
+  color: var(--color-primary);
+}
+
+.browse__active-filters.browse__active-filters--top {
+  margin-top: -1px;
+  margin-bottom: -8px;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.browse__search-wrapper.browse__search-wrapper--top {
+  margin-top: -4px;
+  margin-bottom: 0.4rem;
 }
 
 /* Marking Buttons */
@@ -1420,7 +1484,7 @@ main {
 
 .browse__search-input {
   width: 100%;
-  padding: 0.75rem 0.75rem 0.75rem 2.5rem;
+  padding: 0.427rem 0.427rem 0.427rem 2.5rem;
   border: 1px solid #000000;
   border-radius: var(--radius-md);
   font-size: 1rem;
@@ -1802,8 +1866,17 @@ main {
 
 .function-header__left {
   display: flex;
-  align-items: baseline;
-  gap: 1.25rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  }
+  
+@media (min-width: 640px) {
+  .function-header__left {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 1.25rem;
+  }
 }
 
 .function-header__title {

@@ -167,18 +167,62 @@
         <div class="browse__main">
           <!-- Page Title and Description -->
           <div class="browse__intro" id="browse-intro">
-            <h1 class="browse__title" id="page-title">Browse Tools</h1>
-            <p class="browse__description browse__description--small" id="browse-description"><strong>Explore our complete directory of built-in accessibility features and assistive technology tools.</strong></p>
-            <ul class="browse__description-list">
-              <li><strong>To reduce the number of products in the list</strong> you can use the search field below or use the filters to narrow your search.</li>
-              <li><strong>To learn more about a product -</strong> just click on it to expand the description.</li>
-            </ul>
-            <!-- Collapsed Mark Feature Intro -->
-            <p class="browse__description browse__description--small" id="browse-mark-intro">
-              <strong class="browse__mark-intro-highlight">Once you find products of interest</strong> - we have features to help you gather, save, or share those products with others.
-              <button class="btn btn--show-mark-feature" id="show-mark-feature-btn">Show the "Mark, Gather, and Share" features</button>
-            </p>
+            <h1 class="browse__title" id="page-title">Browse Listing</h1>
             
+            <!-- Search (moved to top) -->
+            <div class="browse__search-wrapper browse__search-wrapper--top">
+              <div class="browse__search">
+                <svg class="browse__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input 
+                  type="text" 
+                  class="browse__search-input" 
+                  id="search-input"
+                  placeholder="Search tools by name, company, or description..."
+                  aria-label="Search tools"
+                >
+                <button class="browse__search-clear" id="search-clear" aria-label="Clear search">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Active Filter Badges (moved to top) -->
+            <div class="browse__active-filters browse__active-filters--top" id="active-filters-container-top">
+              <p class="browse__filter-summary browse__filter-summary--large" id="filter-summary-top">We found <strong class="browse__filter-count--large" id="filter-count-top">0</strong> tools that match your selections.</p>
+              <div class="browse__filter-badges" id="filter-badges-top">
+                <!-- Rendered by JavaScript -->
+              </div>
+            </div>
+            
+            <!-- Help Tips Section -->
+            <div class="browse__help-tips" id="browse-help-tips">
+              <div class="browse__help-tip">
+                <p class="browse__help-tip-title">Too many items in list?</p>
+                <p class="browse__help-tip-text">You can change the number using the "Need to Install?", "Purchase Options" or other filter checkboxes.</p>
+              </div>
+              
+              <div class="browse__help-tip">
+                <p class="browse__help-tip-title">Not sure what features to look for in product descriptions?</p>
+                <p class="browse__help-tip-text">Click on the blue headers above each list to see different features to look for.</p>
+              </div>
+              
+              <div class="browse__help-tip">
+                <p class="browse__help-tip-title">Want more information on a product?</p>
+                <p class="browse__help-tip-text">Click on any product to see more, including description, and short video.</p>
+              </div>
+              
+              <div class="browse__help-tip">
+                <p class="browse__help-tip-title">Want to save (for yourself) or share the products you find with others?</p>
+                <p class="browse__help-tip-text">Click on this button to see the <button class="btn btn--show-mark-feature" id="show-mark-feature-btn">Mark, Gather and Share features</button></p>
+              </div>
+            </div>
+
             <!-- Expanded Mark Feature Section -->
             <div class="browse__mark-feature" id="mark-feature-section" style="display: none;">
               <div class="browse__mark-feature-content">
@@ -210,38 +254,7 @@
             </div>
           </div>
 
-          <!-- Search -->
-          <div class="browse__search-wrapper">
-            <div class="browse__search">
-              <svg class="browse__search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
-              </svg>
-              <input 
-                type="text" 
-                class="browse__search-input" 
-                id="search-input"
-                placeholder="Search tools by name, company, or description..."
-                aria-label="Search tools"
-              >
-              <button class="browse__search-clear" id="search-clear" aria-label="Clear search">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 6 6 18"></path>
-                  <path d="m6 6 12 12"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Active Filter Badges -->
-          <div class="browse__active-filters" id="active-filters-container" style="display: none;">
-            <p class="browse__filter-summary" id="filter-summary">We found <strong id="filter-count">0</strong> tools that match your selections.</p>
-            <div class="browse__filter-badges" id="filter-badges">
-              <!-- Rendered by JavaScript -->
-            </div>
-          </div>
-
-          <!-- Results Count & Pagination Controls -->
+<!-- Results Count & Pagination Controls -->
           <div class="browse__controls">
             <span class="browse__results-count">
               Showing <strong id="showing-start">0</strong> to <strong id="showing-end">0</strong> of <strong id="total-results">0</strong> tools found.
@@ -261,7 +274,7 @@
                 <select class="browse__sort-select" id="sort-select">
                   <option value="name">Name</option>
                   <option value="company">Company</option>
-                  <option value="newest">Newest</option>
+                  <option value="newest">Newest Added</option>
                 </select>
               </div>
             </div>
