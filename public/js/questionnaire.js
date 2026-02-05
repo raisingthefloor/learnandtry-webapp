@@ -396,7 +396,7 @@
     if (answers[4]) params.set('phone', answers[4]);
     
     // Redirect to browse tools
-    window.location.href = 'browse-tools.html?' + params.toString();
+    window.location.href = '/browse/index.html?' + params.toString();
   }
 
   // =============================================
