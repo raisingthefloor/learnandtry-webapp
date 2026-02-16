@@ -416,7 +416,7 @@ var installMap = {
           ' data-category="' + category + '" data-value="' + opt + '">' +
           '<span class="filter-panel__option-label">' + opt + '</span>' +
 '<span class="tooltip" data-tooltip="' + escapeHtml(desc) + '" role="button" tabindex="0">' +
-  '<svg class="filter-panel__help-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>' +
+  '<svg class="filter-panel__help-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>' +
   '</span></label>';
       }).join('');
     });
@@ -919,11 +919,11 @@ badgesContainer.innerHTML = html;
         if (isMarked) cardClass += ' tool-card--marked';
         
         var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-        var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product">' +
+        var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product" aria-pressed="' + isMarked + '">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
           '</button>';
 
-        var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem">';
+        var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem" aria-expanded="' + isExpanded + '" aria-label="' + escapeHtml(tool.name) + ' by ' + escapeHtml(tool.company) + '">';
 
         if (isExpanded) {
           // EXPANDED VIEW
@@ -966,7 +966,7 @@ badgesContainer.innerHTML = html;
           // Visit button
           html_card += '<div class="tool-card__actions">';
           html_card += '<a href="' + escapeHtml(tool.vendorProductPageUrl || '#') + '" target="_blank" rel="noopener noreferrer" class="tool-card__visit-btn">';
-          html_card += 'Visit Product Website <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+          html_card += 'Visit Product Website <span class="sr-only">(opens in new tab)</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
           html_card += '</a></div></div>';
         } else if (isRepeat) {
           // REPEAT VIEW (single line that wraps naturally)
@@ -1920,8 +1920,14 @@ badgesContainer.innerHTML = html;
     var modal = document.getElementById('video-modal');
     var modalIframe = document.getElementById('video-modal-iframe');
     var closeBtn = document.getElementById('video-modal-close');
+    var lastFocusedElement = null;
     
     if (!modal || !modalIframe) return;
+
+    // Add dialog role for screen readers
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Tool video');
     
     // Delegate click events for video containers
     document.addEventListener('click', function(e) {
@@ -1929,6 +1935,7 @@ badgesContainer.innerHTML = html;
       if (videoContainer) {
         var iframe = videoContainer.querySelector('iframe');
         if (iframe) {
+          lastFocusedElement = document.activeElement;
           var src = iframe.getAttribute('src');
           // Add autoplay parameter
           if (src.indexOf('?') === -1) {
@@ -1939,6 +1946,8 @@ badgesContainer.innerHTML = html;
           modalIframe.setAttribute('src', src);
           modal.classList.add('is-open');
           document.body.style.overflow = 'hidden';
+          // Move focus to close button
+          if (closeBtn) closeBtn.focus();
         }
       }
     });
@@ -1947,6 +1956,8 @@ badgesContainer.innerHTML = html;
       modal.classList.remove('is-open');
       modalIframe.setAttribute('src', '');
       document.body.style.overflow = '';
+      // Return focus to element that opened the modal
+      if (lastFocusedElement) lastFocusedElement.focus();
     }
     
     if (closeBtn) {
@@ -1960,10 +1971,33 @@ badgesContainer.innerHTML = html;
       }
     });
     
-    // Close on Escape key
+    // Close on Escape key & trap focus inside modal
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+      if (!modal.classList.contains('is-open')) return;
+      
+      if (e.key === 'Escape') {
         closeModal();
+        return;
+      }
+      
+      // Focus trap
+      if (e.key === 'Tab') {
+        var focusable = modal.querySelectorAll('button, iframe, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     });
   }

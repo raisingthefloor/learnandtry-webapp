@@ -11,11 +11,12 @@
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body class="page--inner">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <!-- Header -->
   <header class="header" role="banner">
     <div class="header__inner">
       <a href="/index.html" class="header__logo" aria-label="Learn and Try home">
-        <img src="../images/logo-lt.png" alt="" class="header__logo-icon" aria-hidden="true">
+        <img src="../images/logo-lt.png" alt="The Learn &amp; Try tool logo - L&amp;T with a circle around them" class="header__logo-icon">
         <span class="header__logo-text">Learn and Try Tool</span>
       </a>
 
@@ -24,7 +25,7 @@
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__nav-link">AT Tool Finder</a></li>
           <li><a href="/browse/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Tools Directly</a></li>
-          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
 
@@ -49,13 +50,13 @@
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__mobile-nav-link">AT Tool Finder</a></li>
           <li><a href="/browse/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Tools Directly</a></li>
-          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main class="browse">
+  <main class="browse" id="main-content">
     <div class="container">
       
 
@@ -176,12 +177,13 @@
                   <circle cx="11" cy="11" r="8"></circle>
                   <path d="m21 21-4.3-4.3"></path>
                 </svg>
-                <input 
-                  type="text" 
-                  class="browse__search-input" 
-                  id="search-input"
-                  placeholder="Search tools by name, company, or description..."
-                  aria-label="Search tools"
+<input
+  type="search"
+  class="browse__search-input"
+  id="search-input"
+  placeholder="Search tools by name, company, or description..."
+  aria-label="Search tools"
+  autocomplete="off"
                 >
                 <button class="browse__search-clear" id="search-clear" aria-label="Clear search">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -194,7 +196,7 @@
             
             <!-- Active Filter Badges (moved to top) -->
             <div class="browse__active-filters browse__active-filters--top" id="active-filters-container-top">
-              <p class="browse__filter-summary browse__filter-summary--large" id="filter-summary-top">We found <strong class="browse__filter-count--large" id="filter-count-top">0</strong> tools that match your selections.</p>
+              <p class="browse__filter-summary browse__filter-summary--large" id="filter-summary-top" aria-live="polite" role="status">We found <strong class="browse__filter-count--large" id="filter-count-top">0</strong> tools that match your selections.</p>
               <div class="browse__filter-badges" id="filter-badges-top">
                 <!-- Rendered by JavaScript -->
               </div>
@@ -256,7 +258,7 @@
 
 <!-- Results Count & Pagination Controls -->
           <div class="browse__controls">
-            <span class="browse__results-count">
+            <span class="browse__results-count" aria-live="polite" role="status">
               Showing <strong id="showing-start">0</strong> to <strong id="showing-end">0</strong> of <strong id="total-results">0</strong> tools found.
             </span>
             <div class="browse__controls-right">
@@ -281,17 +283,18 @@
           </div>
 
           <!-- Loading State -->
-          <div class="loading" id="loading-state">
+          <div class="loading" id="loading-state" role="status" aria-label="Loading tools">
             <div class="loading__spinner"></div>
+            <span class="sr-only">Loading tools, please wait...</span>
           </div>
 
           <!-- Tools Grid -->
-          <div class="tools-grid" id="tools-grid">
+          <div class="tools-grid" id="tools-grid" role="list" aria-label="Assistive technology tools">
             <!-- Tool cards rendered by JavaScript -->
           </div>
 
           <!-- Empty State -->
-          <div class="empty-state" id="empty-state" style="display: none;">
+          <div class="empty-state" id="empty-state" style="display: none;" role="status" aria-live="polite">
             <h3 class="empty-state__title">No tools found</h3>
             <p class="empty-state__text">Try adjusting your filters or search query.</p>
           </div>
@@ -321,8 +324,8 @@
         <div>
           <h3 class="footer__column-title">Organization</h3>
           <ul class="footer__links">
-            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us</a></li>
-            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
+            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us <span class="sr-only">(opens in new tab)</span></a></li>
           </ul>
         </div>
         
@@ -330,7 +333,7 @@
         <div class="footer__column--wide">
           <h3 class="footer__column-title">See other Free Tools from RTF</h3>
           <ul class="footer__links">
-            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic</a></li>
+            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic <span class="sr-only">(opens in new tab)</span></a></li>
           </ul>
         </div>
       </nav>
@@ -341,7 +344,7 @@
   <!-- Video Modal -->
   <div class="video-modal" id="video-modal">
     <div class="video-modal__content">
-      <button class="video-modal__close" id="video-modal-close">
+      <button class="video-modal__close" id="video-modal-close" aria-label="Close video">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6 6 18"></path>
           <path d="m6 6 12 12"></path>

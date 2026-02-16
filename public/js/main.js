@@ -99,6 +99,11 @@ function initHomeVideoModal() {
   var fallbackUrl = 'https://raisingthefloor.org/lnt-walkthrough';
   
   if (!playBtn || !modal || !iframe) return;
+
+  // Add dialog role for screen readers
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', 'Website walkthrough video');
   
   function openModal() {
     fetch(videoIdJsonUrl)
@@ -112,6 +117,8 @@ function initHomeVideoModal() {
           iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoId + '?autoplay=1');
           modal.classList.add('is-open');
           document.body.style.overflow = 'hidden';
+          // Move focus to close button
+          if (closeBtn) closeBtn.focus();
         } else {
           // Fallback: open in new tab
           window.open(fallbackUrl, '_blank');
@@ -127,6 +134,8 @@ function initHomeVideoModal() {
     modal.classList.remove('is-open');
     iframe.setAttribute('src', '');
     document.body.style.overflow = '';
+    // Return focus to trigger button
+    playBtn.focus();
   }
   
   playBtn.addEventListener('click', openModal);
@@ -142,10 +151,33 @@ function initHomeVideoModal() {
     }
   });
   
-  // Close on Escape key
+  // Close on Escape key & trap focus inside modal
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+    if (!modal.classList.contains('is-open')) return;
+    
+    if (e.key === 'Escape') {
       closeModal();
+      return;
+    }
+    
+    // Focus trap
+    if (e.key === 'Tab') {
+      var focusable = modal.querySelectorAll('button, iframe, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
   });
 }

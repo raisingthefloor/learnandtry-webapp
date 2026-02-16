@@ -11,11 +11,12 @@
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body class="page--inner">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <!-- Header -->
   <header class="header" role="banner">
     <div class="header__inner">
       <a href="/index.html" class="header__logo" aria-label="Learn and Try home">
-        <img src="../images/logo-lt.png" alt="" class="header__logo-icon" aria-hidden="true">
+        <img src="../images/logo-lt.png" alt="The Learn &amp; Try tool logo - L&amp;T with a circle around them" class="header__logo-icon">
         <span class="header__logo-text">Learn and Try Tool</span>
       </a>
 
@@ -24,7 +25,7 @@
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__nav-link header__nav-link--active" aria-current="page">AT Tool Finder</a></li>
           <li><a href="/browse/index.html" class="header__nav-link">Browse Tools Directly</a></li>
-          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
 
@@ -49,15 +50,15 @@
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">AT Tool Finder</a></li>
           <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse Tools Directly</a></li>
-          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main-content">
     <!-- Welcome Screen (shown initially) -->
-    <section id="welcome-screen" class="tool-finder" role="main">
+    <section id="welcome-screen" class="tool-finder">
       <div class="tool-finder__content">
         <h1 class="tool-finder__title">
           Welcome to the <span class="tool-finder__title-highlight">Tool Finder</span>
@@ -176,8 +177,8 @@
         <div>
           <h3 class="footer__column-title">Organization</h3>
           <ul class="footer__links">
-            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us</a></li>
-            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
+            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us <span class="sr-only">(opens in new tab)</span></a></li>
           </ul>
         </div>
         
@@ -185,7 +186,7 @@
         <div class="footer__column--wide">
           <h3 class="footer__column-title">See other Free Tools from RTF</h3>
           <ul class="footer__links">
-            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic</a></li>
+            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic <span class="sr-only">(opens in new tab)</span></a></li>
           </ul>
         </div>
       </nav>
