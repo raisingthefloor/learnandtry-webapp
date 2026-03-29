@@ -817,7 +817,7 @@ badgesContainer.innerHTML = html;
         html += '<button class="function-header__toggle">';
         html += '<div class="function-header__left">';
         html += '<span class="function-header__title">' + (funcInfo ? funcInfo.name : toTitleCase(item.funcFilter).toUpperCase()) + '</span>';
-        html += '<span class="function-header__subtitle">' + (isInfoExpanded ? 'Click to collapse' : '<strong>Click Here</strong> for a summary of key features to look for') + '</span>';
+        html += '<span class="function-header__subtitle">' + (isInfoExpanded ? 'Click to collapse' : '<strong>OPEN THIS FIRST</strong> for a list of features to look for in this category') + '</span>';
         html += '</div>';
         html += '<svg class="function-header__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
           (isInfoExpanded ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>') + '</svg>';
@@ -919,9 +919,11 @@ badgesContainer.innerHTML = html;
         if (isMarked) cardClass += ' tool-card--marked';
         
         var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-        var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product" aria-pressed="' + isMarked + '">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
-          '</button>';
+        var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '" data-tooltip="See buttons at top of page for things you can do with bookmarks">' +
+          '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="BOOKMARK CHECKBOX">' +
+          '<span class="tool-card__bookmark-text">' + (isMarked ? '' : 'Bookmark this product') + '</span>' +
+          '<svg class="tool-card__bookmark-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '</label>';
 
         var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem" aria-expanded="' + isExpanded + '" aria-label="' + escapeHtml(tool.name) + ' by ' + escapeHtml(tool.company) + '">';
 
@@ -1417,27 +1419,28 @@ badgesContainer.innerHTML = html;
     }
 
     // Mark checkbox handler
-    document.addEventListener('click', function(e) {
-      var markBtn = e.target.closest('[data-mark-tool]');
-      if (markBtn) {
-        e.stopPropagation();
-        var toolId = markBtn.getAttribute('data-mark-tool');
-        // Extract base tool ID (remove -repeat- and see-also- prefixes/suffixes)
-        var baseToolId = getBaseToolId(toolId);
-        if (markedToolIds.has(baseToolId)) {
-          markedToolIds.delete(baseToolId);
-        } else {
-          markedToolIds.add(baseToolId);
+    document.addEventListener('change', function(e) {
+      if (e.target.matches('.tool-card__bookmark-input')) {
+        var markLabel = e.target.closest('[data-mark-tool]');
+        if (markLabel) {
+          e.stopPropagation();
+          var toolId = markLabel.getAttribute('data-mark-tool');
+          // Extract base tool ID (remove -repeat- and see-also- prefixes/suffixes)
+          var baseToolId = getBaseToolId(toolId);
+          if (markedToolIds.has(baseToolId)) {
+            markedToolIds.delete(baseToolId);
+          } else {
+            markedToolIds.add(baseToolId);
+          }
+          render();
         }
-        render();
-        return;
       }
     });
     
     // Tool card interactions
     document.addEventListener('click', function(e) {
       var toolCard = e.target.closest('.tool-card');
-      if (toolCard && !e.target.closest('a') && !e.target.closest('.tool-card__visit-btn') && !e.target.closest('[data-mark-tool]')) {
+      if (toolCard && !e.target.closest('a') && !e.target.closest('.tool-card__visit-btn') && !e.target.closest('[data-mark-tool]') && !e.target.closest('.tool-card__bookmark-input')) {
         var toolId = toolCard.getAttribute('data-tool-id');
         
         if (e.target.closest('.tool-card__see-more')) {
@@ -1532,27 +1535,6 @@ badgesContainer.innerHTML = html;
         render();
       }
     });
-
-    // Show/Hide Mark Feature Section
-    var showMarkFeatureBtn = document.getElementById('show-mark-feature-btn');
-    var hideMarkFeatureBtn = document.getElementById('hide-mark-feature-btn');
-    var markFeatureSection = document.getElementById('mark-feature-section');
-    
-    if (showMarkFeatureBtn) {
-      showMarkFeatureBtn.addEventListener('click', function() {
-        if (markFeatureSection.style.display === 'block') {
-          markFeatureSection.style.display = 'none';
-        } else {
-          markFeatureSection.style.display = 'block';
-        }
-      });
-    }
-    
-    if (hideMarkFeatureBtn) {
-      hideMarkFeatureBtn.addEventListener('click', function() {
-        markFeatureSection.style.display = 'none';
-      });
-    }
 
     // Tooltips - hover shows, click pins open
   var tooltipPinned = false;

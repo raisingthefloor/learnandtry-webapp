@@ -23,7 +23,7 @@
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="header__nav-list">
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
-          <li><a href="/finder/index.html" class="header__nav-link">AT Tool Finder</a></li>
+          <li><a href="/finder/index.html" class="header__nav-link">Easy Tool Finder</a></li>
           <li><a href="/browse/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Tools Directly</a></li>
           <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
@@ -48,7 +48,7 @@
       <nav aria-label="Mobile navigation">
         <ul class="header__mobile-nav-list">
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
-          <li><a href="/finder/index.html" class="header__mobile-nav-link">AT Tool Finder</a></li>
+          <li><a href="/finder/index.html" class="header__mobile-nav-link">Easy Tool Finder</a></li>
           <li><a href="/browse/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Tools Directly</a></li>
           <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
@@ -202,57 +202,41 @@
               </div>
             </div>
             
-            <!-- Help Tips Section -->
-            <div class="browse__help-tips" id="browse-help-tips">
-              <div class="browse__help-tip">
-                <p class="browse__help-tip-title">Too many items in list?</p>
-                <p class="browse__help-tip-text">You can change the number using the "Need to Install?", "Purchase Options" or other filter checkboxes.</p>
-              </div>
+            <!-- How To Use This Page Section -->
+            <div class="browse__how-to-use" id="browse-help-tips">
+              <p class="browse__how-to-title"><strong>HOW TO USE THIS PAGE</strong></p>
               
-              <div class="browse__help-tip">
-                <p class="browse__help-tip-title">Not sure what features to look for in product descriptions?</p>
-                <p class="browse__help-tip-text">Click on the blue headers above each list to see different features to look for.</p>
-              </div>
+              <p class="browse__how-to-item">1) <strong>Use the filter checkboxes to reduce the list to just those solutions you want.</strong></p>
+              <ul class="browse__how-to-list">
+                <li>You can limit list to only items that do not need to be installed to try out.</li>
+                <li>Or to only items that are free to use - or free to try.</li>
+              </ul>
               
-              <div class="browse__help-tip">
-                <p class="browse__help-tip-title">Want more information on a product?</p>
-                <p class="browse__help-tip-text">Click on any product to see more, including description, and short video.</p>
-              </div>
+              <p class="browse__how-to-item">2) <strong>Click on the light-blue header blocks</strong> in the product list <strong>to learn about the features to look for in products.</strong></p>
               
-              <div class="browse__help-tip">
-                <p class="browse__help-tip-title">Want to save (for yourself) or share the products you find with others?</p>
-                <p class="browse__help-tip-text">Click on this button to see the <button class="btn btn--show-mark-feature" id="show-mark-feature-btn">Mark, Gather and Share features</button></p>
-              </div>
-            </div>
-
-            <!-- Expanded Mark Feature Section -->
-            <div class="browse__mark-feature" id="mark-feature-section" style="display: none;">
-              <div class="browse__mark-feature-content">
-                <div class="browse__mark-feature-text">
-                  <p><strong>Mark, Gather, and Share Features</strong></p>
-                  <p>To make it easier to compare, save, and share the products that you find, we have added the following features:</p>
-                  <ul>
-                    <li><strong>Marking products of interest</strong> - You can mark any product that interests you by just clicking on the checkbox in the top-right corner of the product card.</li>
-                    <li><strong>Showing only Marked products</strong> - You can have all the marked cards gathered up and shown to you together, so you can explore and compare them more easily.</li>
-                    <li><strong>Copy (or Share with others) Link to Marked products</strong> - You can copy (or share with others) a link to the products that you marked.<br>(If you or others later click on that link, it will launch the Learn & Try website and show just the products you marked.)</li>
-                  </ul>
+              <p class="browse__how-to-item">3) <strong>To learn more about a particular product</strong> – click on the product name.</p>
+              
+              <p class="browse__how-to-item">4) <strong>When you find products you think will help – click the "Bookmark this One" button.</strong></p>
+              <p class="browse__how-to-text">You can then see, save, or share bookmarked items using one of these buttons</p>
+              
+              <div class="browse__bookmark-buttons">
+                <button class="btn btn--marking" id="show-marked-only-btn">Show only bookmarked items</button>
+                <div class="browse__button-row">
+                  <button class="btn btn--marking" id="copy-marked-link-btn">Copy link to bookmarked items</button>
+                  <p class="browse__button-hint">(Save link for yourself or send to others - to later show just bookmarked items)</p>
                 </div>
-                <div class="browse__mark-feature-buttons">
-                  <button class="btn btn--marking" id="show-marked-only-btn">SHOW ONLY Marked Products</button>
-                  <button class="btn btn--marking" id="copy-marked-link-btn">COPY Marked Products Link</button>
-                  <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE Marked Products Link</button>
-                  <div class="browse__share-unsupported" id="share-unsupported-msg" style="display: none;">SHARE function is not supported by this browser.</div>
-                  <div class="browse__mark-spacer" aria-hidden="true"></div>
-                  <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">Clear all Marked Products</button>
-                </div>
+                <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">Share link with others to bookmarked items</button>
+                <div class="browse__share-unsupported" id="share-unsupported-msg" style="display: none;">SHARE function is not supported by this browser.</div>
+                <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">Clear all bookmarks</button>
               </div>
-              <button class="btn btn--hide-mark-feature" id="hide-mark-feature-btn">Hide the <strong>Mark-Gather-Share</strong> features</button>
+              
+              <p class="browse__how-to-note"><strong>NOTE:</strong> Bookmarks are not saved between sessions. Save the bookmark link above instead.</p>
             </div>
             
-            <!-- Show Only Marked Mode Banner -->
+            <!-- Show Only Bookmarked Mode Banner -->
             <div class="browse__marked-mode-banner" id="marked-mode-banner" style="display: none;">
-              <span class="browse__marked-mode-text">Showing only the <strong id="marked-mode-count">0</strong> Marked products</span>
-              <button class="btn btn--turn-off" id="turn-off-marked-mode-btn">Turn off "Show only Marked Products" mode</button>
+              <span class="browse__marked-mode-text">Showing only the <strong id="marked-mode-count">0</strong> bookmarked products</span>
+              <button class="btn btn--turn-off" id="turn-off-marked-mode-btn">Turn off "Show only bookmarked items" mode</button>
             </div>
           </div>
 
