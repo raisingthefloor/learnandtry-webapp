@@ -13,7 +13,7 @@
 <body class="page--inner">
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <!-- Header -->
-  <header class="header" role="banner">
+  <header class="header">
     <div class="header__inner">
       <a href="/index.html" class="header__logo" aria-label="Learn and Try home">
         <img src="../images/logo-lt.png" alt="The Learn &amp; Try tool logo - L&amp;T with a circle around them" class="header__logo-icon">
@@ -24,7 +24,7 @@
         <ul class="header__nav-list">
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__nav-link">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Tools Directly</a></li>
+          <li><a href="/browse/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Listing Directly</a></li>
           <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -32,8 +32,8 @@
       <button 
         class="header__mobile-toggle" 
         aria-label="Open navigation menu"
+        title="Open navigation menu"
         aria-expanded="false"
-        aria-controls="mobile-menu"
         id="mobile-menu-toggle"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -49,7 +49,7 @@
         <ul class="header__mobile-nav-list">
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__mobile-nav-link">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Tools Directly</a></li>
+          <li><a href="/browse/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Listing Directly</a></li>
           <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -67,7 +67,6 @@
             <button 
               class="filter-panel__toggle"
               aria-expanded="true"
-              aria-controls="filter-content"
               id="filter-toggle"
             >
               <div class="filter-panel__header">
@@ -137,6 +136,7 @@
                     </button>
                   </legend>
                   <p class="filter-panel__fieldset-desc">Tools that don't need to be installed can be used even if person has no permission to install things.</p>
+                  <p class="filter-panel__fieldset-label">Show only:</p>
                   <div class="filter-panel__options" id="install-filters">
                     <!-- Rendered by JavaScript -->
                   </div>
@@ -145,7 +145,7 @@
                 <!-- Purchase Options -->
                 <fieldset class="filter-panel__fieldset">
                   <legend class="filter-panel__legend">
-                    Purchase Option
+                    Purchase Options
                     <button class="tooltip" aria-label="More information about Purchase Options" data-tooltip="You can choose to only see solutions that meet your cost constraints.">
                       <svg class="filter-panel__help-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -154,7 +154,7 @@
                       </svg>
                     </button>
                   </legend>
-                  <p class="filter-panel__fieldset-desc">How much can it cost?</p>
+                  <p class="filter-panel__fieldset-desc">Show only tools that are:</p>
                   <div class="filter-panel__options" id="purchase-filters">
                     <!-- Rendered by JavaScript -->
                   </div>
@@ -181,11 +181,11 @@
   type="search"
   class="browse__search-input"
   id="search-input"
-  placeholder="Search tools by name, company, or description..."
+  placeholder="Search tools by name, company, etc."
   aria-label="Search tools"
   autocomplete="off"
                 >
-                <button class="browse__search-clear" id="search-clear" aria-label="Clear search">
+                <button class="browse__search-clear" id="search-clear" aria-label="Clear search" title="Clear search">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 6 6 18"></path>
                     <path d="m6 6 12 12"></path>
@@ -204,33 +204,45 @@
             
             <!-- How To Use This Page Section -->
             <div class="browse__how-to-use" id="browse-help-tips">
-              <p class="browse__how-to-title"><strong>HOW TO USE THIS PAGE</strong></p>
+              <div class="browse__how-to-header">
+                <p class="browse__how-to-title"><strong>HOW TO USE THIS PAGE</strong></p>
+                <button class="browse__how-to-toggle" id="how-to-toggle-btn">Hide Instructions</button>
+              </div>
               
-              <p class="browse__how-to-item">1) <strong>Use the filter checkboxes to reduce the list to just those solutions you want.</strong></p>
-              <ul class="browse__how-to-list">
-                <li>You can limit list to only items that do not need to be installed to try out.</li>
-                <li>Or to only items that are free to use - or free to try.</li>
-              </ul>
-              
-              <p class="browse__how-to-item">2) <strong>Click on the light-blue header blocks</strong> in the product list <strong>to learn about the features to look for in products.</strong></p>
-              
-              <p class="browse__how-to-item">3) <strong>To learn more about a particular product</strong> – click on the product name.</p>
-              
-              <p class="browse__how-to-item">4) <strong>When you find products you think will help – click the "Bookmark this One" button.</strong></p>
-              <p class="browse__how-to-text">You can then see, save, or share bookmarked items using one of these buttons</p>
+              <div class="browse__how-to-content" id="how-to-content">
+              <ol class="browse__how-to-ol">
+                <li><strong>Use the filter checkboxes to reduce the list to just those solutions you want to explore.</strong>
+                  <ul class="browse__how-to-list">
+                    <li>You can limit the list below to only items that you can use without having to install them.</li>
+                    <li>You can also limit the list to only show items that are free to try - or completely free.</li>
+                  </ul>
+                </li>
+                <li><strong>Click on the light-blue header blocks</strong> in the product list <strong>to learn about the features to look for in products of that type.</strong></li>
+                <li><strong>To learn more about a particular product</strong> – click on the product name.</li>
+                <li><strong>When you find products you think will help – click the "Bookmark this product" button.</strong> You can then see, save, or share bookmarked items using one of these buttons:</li>
+              </ol>
               
               <div class="browse__bookmark-buttons">
                 <button class="btn btn--marking" id="show-marked-only-btn">Show only bookmarked items</button>
                 <div class="browse__button-row">
                   <button class="btn btn--marking" id="copy-marked-link-btn">Copy link to bookmarked items</button>
-                  <p class="browse__button-hint">(Save link for yourself or send to others - to later show just bookmarked items)</p>
+                  <p class="browse__button-hint">(Save link for yourself or send to others.)</p>
                 </div>
                 <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">Share link with others to bookmarked items</button>
-                <div class="browse__share-unsupported" id="share-unsupported-msg" style="display: none;">SHARE function is not supported by this browser.</div>
-                <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">Clear all bookmarks</button>
+                <p class="browse__share-unsupported" id="share-unsupported-msg" style="display: none;">(There is also a SHARE function but it is not supported by this browser. Try another browser to see it.)</p>
               </div>
               
-              <p class="browse__how-to-note"><strong>NOTE:</strong> Bookmarks are not saved between sessions. Save the bookmark link above instead.</p>
+              <div class="browse__clear-bookmark-wrapper">
+                <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">Remove all bookmarks in list below</button>
+              </div>
+              
+              <p class="browse__how-to-note"><strong>NOTE:</strong> Bookmarks are not saved between sessions. Use the "Copy link to bookmarked items" button above and save the link someplace to save your bookmarked items to see later (or to share with others).</p>
+              </div>
+            </div>
+            
+            <!-- Mobile First Bookmark Popup -->
+            <div class="mobile-first-bookmark-popup" id="mobile-first-bookmark-popup" style="display: none;">
+              <p>See buttons at top of page for things you can do with bookmarks</p>
             </div>
             
             <!-- Show Only Bookmarked Mode Banner -->
@@ -293,7 +305,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer" role="contentinfo">
+  <footer class="footer">
     <div class="footer__inner">
       <nav class="footer__grid footer__grid--three-cols" aria-label="Footer navigation">
         <!-- Raising the Floor Column -->
@@ -328,7 +340,7 @@
   <!-- Video Modal -->
   <div class="video-modal" id="video-modal">
     <div class="video-modal__content">
-      <button class="video-modal__close" id="video-modal-close" aria-label="Close video">
+      <button class="video-modal__close" id="video-modal-close" aria-label="Close video" title="Close video">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6 6 18"></path>
           <path d="m6 6 12 12"></path>

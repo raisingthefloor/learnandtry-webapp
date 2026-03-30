@@ -13,7 +13,7 @@
 <body class="page--inner">
   <a href="#main-content" class="skip-link">Skip to main content</a>
   <!-- Header -->
-  <header class="header" role="banner">
+  <header class="header">
     <div class="header__inner">
       <a href="/index.html" class="header__logo" aria-label="Learn and Try home">
         <img src="../images/logo-lt.png" alt="The Learn &amp; Try tool logo - L&amp;T with a circle around them" class="header__logo-icon">
@@ -24,7 +24,7 @@
         <ul class="header__nav-list">
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__nav-link">Browse Tools Directly</a></li>
+          <li><a href="/browse/index.html" class="header__nav-link">Browse Listing Directly</a></li>
           <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -32,8 +32,8 @@
       <button 
         class="header__mobile-toggle" 
         aria-label="Open navigation menu"
+        title="Open navigation menu"
         aria-expanded="false"
-        aria-controls="mobile-menu"
         id="mobile-menu-toggle"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -49,7 +49,7 @@
         <ul class="header__mobile-nav-list">
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
           <li><a href="/finder/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse Tools Directly</a></li>
+          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse Listing Directly</a></li>
           <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -67,7 +67,7 @@
           Answer a few questions and a list<br>
           of possible solutions to fit will be provided.
         </p>
-        <p class="tool-finder__text tool-finder__text--no-margin"><span class="tool-finder__text--emphasis">We don't store any information —</span><br>your answers are only used to make tool suggestions.</p>
+        <p class="tool-finder__text tool-finder__text--no-margin"><span class="tool-finder__text--emphasis">We don't store any information —</span> your answers are only used to help you find tools and then forgotten.</p>
         <button 
           id="start-questionnaire" 
           class="btn btn--primary btn--lg"
@@ -91,7 +91,7 @@
       <div class="questionnaire__content">
         <div class="questionnaire__inner">
           <h2 id="question-text" class="questionnaire__question"></h2>
-          <p id="question-hint" class="questionnaire__hint" style="display: none;">Select one or more options, then click Next</p>
+          <p id="question-hint" class="questionnaire__hint" style="display: none;">Select one or more, then click Next</p>
           
           <fieldset class="questionnaire__options" id="options-container">
             <legend class="sr-only" id="options-legend"></legend>
@@ -162,7 +162,7 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer" role="contentinfo">
+  <footer class="footer">
     <div class="footer__inner">
       <nav class="footer__grid footer__grid--three-cols" aria-label="Footer navigation">
         <!-- Raising the Floor Column -->

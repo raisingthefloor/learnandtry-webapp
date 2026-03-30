@@ -24,6 +24,8 @@
   var showMarkedOnly = false;
   var savedFiltersBeforeMarkedMode = null;
   var savedSearchBeforeMarkedMode = '';
+  var bookmarkTooltipVisible = false;
+  var showMobileFirstBookmarkPopup = false;
   
   var filters = {
     functions: [],
@@ -394,6 +396,12 @@ var installMap = {
     renderResultsCount();
     renderTools();
     renderPagination();
+    
+    // Show/hide clear bookmarks button based on whether items are bookmarked
+    var clearMarkedBtn = document.getElementById('clear-marked-btn');
+    if (clearMarkedBtn) {
+      clearMarkedBtn.style.display = markedToolIds.size > 0 ? '' : 'none';
+    }
   }
 
   function renderFilterPanel() {
@@ -919,10 +927,12 @@ badgesContainer.innerHTML = html;
         if (isMarked) cardClass += ' tool-card--marked';
         
         var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-        var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '" data-tooltip="See buttons at top of page for things you can do with bookmarks">' +
+        var tooltipAttr = markedToolIds.size > 0 ? '' : ' data-tooltip="See buttons at top of page for things you can do with bookmarks"';
+        var bookmarkIcon = '<svg class="tool-card__bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+        var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '"' + tooltipAttr + '>' +
           '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="BOOKMARK CHECKBOX">' +
-          '<span class="tool-card__bookmark-text">' + (isMarked ? '' : 'Bookmark this product') + '</span>' +
-          '<svg class="tool-card__bookmark-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '<span class="tool-card__bookmark-text">' + (isMarked ? 'Bookmarked' : 'Bookmark this product') + '</span>' +
+          bookmarkIcon +
           '</label>';
 
         var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem" aria-expanded="' + isExpanded + '" aria-label="' + escapeHtml(tool.name) + ' by ' + escapeHtml(tool.company) + '">';
@@ -1310,7 +1320,8 @@ badgesContainer.innerHTML = html;
     var filterToggleIcon = document.getElementById('filter-toggle-icon');
     
     if (filterToggle) {
-      filterToggle.addEventListener('click', function() {
+      filterToggle.addEventListener('click', function(e) {
+        e.preventDefault();
         var isOpen = filterContent.classList.toggle('is-open');
         filterToggle.setAttribute('aria-expanded', isOpen);
         filterToggleIcon.innerHTML = isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>';
@@ -1427,12 +1438,25 @@ badgesContainer.innerHTML = html;
           var toolId = markLabel.getAttribute('data-mark-tool');
           // Extract base tool ID (remove -repeat- and see-also- prefixes/suffixes)
           var baseToolId = getBaseToolId(toolId);
+          var wasFirstBookmark = markedToolIds.size === 0;
           if (markedToolIds.has(baseToolId)) {
             markedToolIds.delete(baseToolId);
           } else {
             markedToolIds.add(baseToolId);
+            // On mobile, show popup on first bookmark
+            if (wasFirstBookmark && window.innerWidth < 640) {
+              showMobileFirstBookmarkPopup = true;
+            }
           }
           render();
+          
+          // Show mobile first bookmark popup after render
+          if (showMobileFirstBookmarkPopup) {
+            var popup = document.getElementById('mobile-first-bookmark-popup');
+            if (popup) {
+              popup.style.display = 'block';
+            }
+          }
         }
       }
     });
@@ -1674,6 +1698,58 @@ badgesContainer.innerHTML = html;
   if (clearMarkedBtn) {
     clearMarkedBtn.addEventListener('click', clearAllMarks);
   }
+  
+  // Set up How-to Instructions toggle
+  var howToToggleBtn = document.getElementById('how-to-toggle-btn');
+  var howToContent = document.getElementById('how-to-content');
+  if (howToToggleBtn && howToContent) {
+    howToToggleBtn.addEventListener('click', function() {
+      var isHidden = howToContent.classList.toggle('is-hidden');
+      howToToggleBtn.textContent = isHidden ? 'Show Instructions for page' : 'Hide Instructions';
+    });
+  }
+  
+  // Bookmark tooltip - stay open until click elsewhere
+  document.addEventListener('mouseenter', function(e) {
+    var bookmark = e.target.closest('.tool-card__mark-checkbox[data-tooltip]');
+    if (bookmark && !bookmarkTooltipVisible) {
+      bookmark.classList.add('tooltip-active');
+    }
+  }, true);
+  
+  document.addEventListener('mouseleave', function(e) {
+    var bookmark = e.target.closest('.tool-card__mark-checkbox[data-tooltip]');
+    if (bookmark && !bookmarkTooltipVisible) {
+      bookmark.classList.remove('tooltip-active');
+    }
+  }, true);
+  
+  // Close tooltip and mobile popup on any click (but don't block the click)
+  document.addEventListener('click', function(e) {
+    // Close mobile first bookmark popup
+    if (showMobileFirstBookmarkPopup) {
+      var popup = document.getElementById('mobile-first-bookmark-popup');
+      if (popup && !e.target.closest('.tool-card__mark-checkbox')) {
+        popup.style.display = 'none';
+        showMobileFirstBookmarkPopup = false;
+      }
+    }
+    
+    if (bookmarkTooltipVisible) {
+      document.querySelectorAll('.tool-card__mark-checkbox.tooltip-active').forEach(function(el) {
+        el.classList.remove('tooltip-active');
+      });
+      bookmarkTooltipVisible = false;
+    }
+    // If clicking on a bookmark with tooltip, pin it open after the click processes
+    var bookmark = e.target.closest('.tool-card__mark-checkbox[data-tooltip]');
+    if (bookmark) {
+      setTimeout(function() {
+        bookmark.classList.add('tooltip-active');
+        bookmarkTooltipVisible = true;
+      }, 50);
+    }
+  });
   
   function updateMarkedMode() {
     var showMarkedBtn = document.getElementById('show-marked-only-btn');
