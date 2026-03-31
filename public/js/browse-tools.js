@@ -26,6 +26,8 @@
   var savedSearchBeforeMarkedMode = '';
   var bookmarkTooltipVisible = false;
   var showMobileFirstBookmarkPopup = false;
+  var myListHidden = false;
+  var myListExpandedIds = new Set();
   
   var filters = {
     functions: [],
@@ -396,11 +398,115 @@ var installMap = {
     renderResultsCount();
     renderTools();
     renderPagination();
+    renderMyList();
+  }
+  
+  function renderMyList() {
+    var myListItems = document.getElementById('my-list-items');
+    var myListActions = document.getElementById('my-list-actions');
+    var myListEnd = document.getElementById('my-list-end');
+    var shareBtn = document.getElementById('share-marked-link-btn');
+    var shareUnsupportedMsg = document.getElementById('share-unsupported-msg');
     
-    // Show/hide clear bookmarks button based on whether items are bookmarked
-    var clearMarkedBtn = document.getElementById('clear-marked-btn');
-    if (clearMarkedBtn) {
-      clearMarkedBtn.style.display = markedToolIds.size > 0 ? '' : 'none';
+    if (!myListItems) return;
+    
+    if (markedToolIds.size === 0) {
+      myListItems.innerHTML = '';
+      if (myListActions) myListActions.style.display = 'none';
+      if (myListEnd) myListEnd.style.display = 'none';
+      return;
+    }
+    
+    // Show actions and end when items exist
+    if (myListActions) myListActions.style.display = '';
+    if (myListEnd && !myListHidden) myListEnd.style.display = '';
+    
+    // Show/hide share button based on browser support
+    if (navigator.share) {
+      if (shareBtn) shareBtn.style.display = '';
+      if (shareUnsupportedMsg) shareUnsupportedMsg.style.display = 'none';
+    } else {
+      if (shareBtn) shareBtn.style.display = 'none';
+      if (shareUnsupportedMsg) shareUnsupportedMsg.style.display = '';
+    }
+    
+    // Render items in My List (compact or expanded)
+    var html = '';
+    markedToolIds.forEach(function(toolId) {
+      var tool = allTools.find(function(t) { return t.id === toolId; });
+      if (tool) {
+        var isExpanded = myListExpandedIds.has(toolId);
+        
+        if (isExpanded) {
+          // EXPANDED VIEW in MY LIST
+          var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>';
+          var checkboxHTML = '<label class="tool-card__mark-checkbox is-marked" data-mark-tool="' + toolId + '">' +
+            '<input type="checkbox" class="tool-card__bookmark-input" checked aria-label="Remove from my list">' +
+            '<span class="tool-card__bookmark-text">In My List</span>' +
+            addIcon +
+            '</label>';
+          
+          html += '<article class="tool-card tool-card--expanded tool-card--marked my-list-tool-card" data-tool-id="' + toolId + '">';
+          html += '<div class="tool-card__expanded">';
+          html += '<div class="tool-card__expanded-header my-list-collapse-trigger" data-collapse-mylist-header="' + toolId + '">';
+          html += '<div class="tool-card__expanded-header-left">';
+          html += '<h3 class="tool-card__expanded-name">' + escapeHtml(tool.name) + '</h3>';
+          html += '<span class="tool-card__expanded-company">' + escapeHtml(tool.company) + '</span>';
+          html += '</div>';
+          html += '<div class="tool-card__expanded-header-right">';
+          html += '<button class="tool-card__collapse-btn" data-collapse-mylist="' + toolId + '">See Less <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></button>';
+          html += checkboxHTML;
+          html += '</div>';
+          html += '</div>';
+          html += '<hr class="tool-card__divider">';
+          html += '<h4 class="tool-card__section-title">Description</h4>';
+          html += '<p class="tool-card__description">' + escapeHtml(tool.description || 'No description available.') + '</p>';
+          html += '<hr class="tool-card__divider">';
+          
+          // Videos
+          if (tool.youTubeVideos && tool.youTubeVideos.length > 0) {
+            html += '<h4 class="tool-card__section-title">Videos</h4>';
+            html += '<div class="tool-card__videos">';
+            tool.youTubeVideos.forEach(function(video, idx) {
+              var videoClass = idx === 0 ? 'tool-card__video tool-card__video--main' : 'tool-card__video tool-card__video--thumb';
+              html += '<div class="' + videoClass + '"><iframe src="' + video.embedUrl + '" title="' + escapeHtml(video.title || 'Demo video') + '" allowfullscreen></iframe></div>';
+            });
+            html += '</div><hr class="tool-card__divider">';
+          }
+          
+          // Badges
+          html += '<div class="tool-card__badges-expanded">';
+          html += createBadgeColumnHTML('HELPS WITH:', tool.functions, 'function');
+          html += createBadgeColumnHTML('DEVICES:', tool.supportedPlatforms, 'device');
+          html += createBadgeColumnHTML('INSTALL?:', tool.installTypes, 'install');
+          html += createBadgeColumnHTML('PRICING:', tool.purchaseOptions, 'purchase');
+          html += '</div><hr class="tool-card__divider">';
+          
+          // Visit button
+          html += '<div class="tool-card__actions">';
+          html += '<a href="' + escapeHtml(tool.vendorProductPageUrl || '#') + '" target="_blank" rel="noopener noreferrer" class="tool-card__visit-btn">';
+          html += 'Visit Product Website <span class="sr-only">(opens in new tab)</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+          html += '</a></div></div>';
+          html += '</article>';
+        } else {
+          // COMPACT VIEW (single line)
+          html += '<div class="my-list-item-compact" data-tool-id="' + toolId + '">';
+          html += '<span class="my-list-item-compact__name">' + escapeHtml(tool.name) + '</span>';
+          html += '<span class="my-list-item-compact__company">· ' + escapeHtml(tool.company) + '</span>';
+          html += '<button class="my-list-item-compact__see-more" data-expand-mylist="' + toolId + '">See More <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
+          html += '</div>';
+        }
+      }
+    });
+    myListItems.innerHTML = html;
+    
+    // Show/hide based on myListHidden state
+    if (myListHidden) {
+      myListItems.style.display = 'none';
+      if (myListEnd) myListEnd.style.display = 'none';
+    } else {
+      myListItems.style.display = '';
+      if (myListEnd && markedToolIds.size > 0) myListEnd.style.display = '';
     }
   }
 
@@ -927,12 +1033,12 @@ badgesContainer.innerHTML = html;
         if (isMarked) cardClass += ' tool-card--marked';
         
         var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-        var tooltipAttr = markedToolIds.size > 0 ? '' : ' data-tooltip="See buttons at top of page for things you can do with bookmarks"';
-        var bookmarkIcon = '<svg class="tool-card__bookmark-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+        var tooltipAttr = markedToolIds.size > 0 ? '' : ' data-tooltip="Click this button to add a copy of this item to My List at top of page 1 of this listing"';
+        var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>';
         var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '"' + tooltipAttr + '>' +
-          '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="BOOKMARK CHECKBOX">' +
-          '<span class="tool-card__bookmark-text">' + (isMarked ? 'Bookmarked' : 'Bookmark this product') + '</span>' +
-          bookmarkIcon +
+          '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="Add to my list">' +
+          '<span class="tool-card__bookmark-text">' + (isMarked ? 'In My List' : 'Add to my list') + '</span>' +
+          addIcon +
           '</label>';
 
         var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem" aria-expanded="' + isExpanded + '" aria-label="' + escapeHtml(tool.name) + ' by ' + escapeHtml(tool.company) + '">';
@@ -1448,7 +1554,22 @@ badgesContainer.innerHTML = html;
               showMobileFirstBookmarkPopup = true;
             }
           }
+          
+          // Remember scroll position and My List height before render
+          var myListContainer = document.getElementById('my-list-items');
+          var oldMyListHeight = myListContainer ? myListContainer.offsetHeight : 0;
+          var scrollBefore = window.scrollY;
+          
           render();
+          
+          // Compensate scroll if on page 1 or show all, and adding item (not removing)
+          if ((currentPage === 1 || perPage === 0) && markedToolIds.has(baseToolId)) {
+            var newMyListHeight = myListContainer ? myListContainer.offsetHeight : 0;
+            var heightDiff = newMyListHeight - oldMyListHeight;
+            if (heightDiff > 0) {
+              window.scrollTo(0, scrollBefore + heightDiff);
+            }
+          }
           
           // Show mobile first bookmark popup after render
           if (showMobileFirstBookmarkPopup) {
@@ -1679,9 +1800,36 @@ badgesContainer.innerHTML = html;
   
   function createMarkedProductsLink() {
     var baseUrl = window.location.origin + window.location.pathname;
+    var params = [];
+    
+    // Add marked items
     var markedIds = Array.from(markedToolIds).join(',');
     if (markedIds) {
-      return baseUrl + '?marked=' + encodeURIComponent(markedIds);
+      params.push('marked=' + encodeURIComponent(markedIds));
+    }
+    
+    // Add current filter state - functions
+    if (filters.functions.length > 0) {
+      params.push('function=' + encodeURIComponent(filters.functions.join(', ')));
+    }
+    
+    // Add devices (save directly as they appear in filters)
+    if (filters.devices.length > 0) {
+      params.push('devices=' + encodeURIComponent(filters.devices.join(', ')));
+    }
+    
+    // Add install types
+    if (filters.installTypes.length > 0) {
+      params.push('install=' + encodeURIComponent(filters.installTypes.join(', ')));
+    }
+    
+    // Add purchase options
+    if (filters.purchaseOptions.length > 0) {
+      params.push('purchase=' + encodeURIComponent(filters.purchaseOptions.join(', ')));
+    }
+    
+    if (params.length > 0) {
+      return baseUrl + '?' + params.join('&');
     }
     return baseUrl;
   }
@@ -1705,9 +1853,47 @@ badgesContainer.innerHTML = html;
   if (howToToggleBtn && howToContent) {
     howToToggleBtn.addEventListener('click', function() {
       var isHidden = howToContent.classList.toggle('is-hidden');
-      howToToggleBtn.textContent = isHidden ? 'Show Instructions for page' : 'Hide Instructions';
+      howToToggleBtn.textContent = isHidden ? 'SHOW INSTRUCTIONS FOR THIS PAGE' : 'HIDE INSTRUCTIONS';
     });
   }
+  
+  // Set up My List toggle (Hide/Show)
+  document.addEventListener('click', function(e) {
+    var toggleBtn = e.target.closest('#my-list-toggle-btn');
+    if (toggleBtn) {
+      myListHidden = !myListHidden;
+      toggleBtn.textContent = myListHidden ? '(Show MY LIST)' : '(Hide MY LIST)';
+      var myListItems = document.getElementById('my-list-items');
+      var myListEnd = document.getElementById('my-list-end');
+      if (myListItems) myListItems.style.display = myListHidden ? 'none' : '';
+      if (myListEnd) myListEnd.style.display = (myListHidden || markedToolIds.size === 0) ? 'none' : '';
+    }
+  });
+  
+  // Set up My List item expand (clicking anywhere on compact row)
+  document.addEventListener('click', function(e) {
+    var compactItem = e.target.closest('.my-list-item-compact');
+    if (compactItem) {
+      var toolId = compactItem.getAttribute('data-tool-id');
+      myListExpandedIds.add(toolId);
+      renderMyList();
+    }
+    
+    var collapseBtn = e.target.closest('[data-collapse-mylist]');
+    if (collapseBtn) {
+      var toolId = collapseBtn.getAttribute('data-collapse-mylist');
+      myListExpandedIds.delete(toolId);
+      renderMyList();
+    }
+    
+    // Also collapse when clicking the header area
+    var collapseHeader = e.target.closest('[data-collapse-mylist-header]');
+    if (collapseHeader && !e.target.closest('[data-mark-tool]') && !e.target.closest('.tool-card__collapse-btn')) {
+      var toolId = collapseHeader.getAttribute('data-collapse-mylist-header');
+      myListExpandedIds.delete(toolId);
+      renderMyList();
+    }
+  });
   
   // Bookmark tooltip - stay open until click elsewhere
   document.addEventListener('mouseenter', function(e) {
@@ -1866,6 +2052,7 @@ badgesContainer.innerHTML = html;
   function parseUrlParams() {
     var params = new URLSearchParams(window.location.search);
     
+    // Parse function filters
     var funcParam = params.get('function');
     if (funcParam) {
       funcParam.split(', ').forEach(function(f) {
@@ -1875,6 +2062,17 @@ badgesContainer.innerHTML = html;
       });
     }
 
+    // Parse devices (new format - direct device names)
+    var devicesParam = params.get('devices');
+    if (devicesParam) {
+      devicesParam.split(', ').forEach(function(d) {
+        if (DEVICE_OPTIONS.includes(d) && !filters.devices.includes(d)) {
+          filters.devices.push(d);
+        }
+      });
+    }
+    
+    // Legacy support for computer/phone params
     var computerParam = params.get('computer');
     if (computerParam) {
       var deviceMapping = { 'Mac (Apple)': 'Macintosh', 'Windows (Microsoft)': 'PC (Windows)', 'Chromebook (Google)': 'Chromebook' };
@@ -1889,6 +2087,26 @@ badgesContainer.innerHTML = html;
       var phoneDeviceMapping = { 'iPhone': 'iPhone', 'Android (Samsung, Google)': 'Android' };
       var mapped = phoneDeviceMapping[phoneParam];
       if (mapped && !filters.devices.includes(mapped)) filters.devices.push(mapped);
+    }
+    
+    // Parse install types
+    var installParam = params.get('install');
+    if (installParam) {
+      installParam.split(', ').forEach(function(i) {
+        if (INSTALL_OPTIONS.includes(i) && !filters.installTypes.includes(i)) {
+          filters.installTypes.push(i);
+        }
+      });
+    }
+    
+    // Parse purchase options
+    var purchaseParam = params.get('purchase');
+    if (purchaseParam) {
+      purchaseParam.split(', ').forEach(function(p) {
+        if (PURCHASE_OPTIONS.includes(p) && !filters.purchaseOptions.includes(p)) {
+          filters.purchaseOptions.push(p);
+        }
+      });
     }
   }
 
@@ -1961,12 +2179,12 @@ badgesContainer.innerHTML = html;
         markedToolIds.add(id.trim());
       });
       if (ids.length > 0) {
-        showMarkedOnly = true;
-        // Wait for tools to load, then update mode
+        // Just populate MY LIST, don't filter to marked only
+        // Wait for tools to load, then render to show MY LIST items
         var checkInterval = setInterval(function() {
           if (allTools.length > 0) {
             clearInterval(checkInterval);
-            updateMarkedMode();
+            renderMyList();
           }
         }, 100);
       }

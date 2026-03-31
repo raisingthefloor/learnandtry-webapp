@@ -159,7 +159,7 @@
                     <!-- Rendered by JavaScript -->
                   </div>
                 </fieldset>
-              </div>
+</div>
             </div>
           </div>
         </aside>
@@ -168,7 +168,23 @@
         <div class="browse__main">
           <!-- Page Title and Description -->
           <div class="browse__intro" id="browse-intro">
-            <h1 class="browse__title" id="page-title">Browse Listing</h1>
+            <div class="browse__title-row">
+              <h1 class="browse__title" id="page-title">Browse Listing</h1>
+              <button class="browse__how-to-toggle" id="how-to-toggle-btn">SHOW INSTRUCTIONS FOR THIS PAGE</button>
+            </div>
+            
+            <div class="browse__how-to-content is-hidden" id="how-to-content">
+              <ol class="browse__how-to-ol">
+                <li><strong>Use the filter checkboxes to reduce the list to just those solutions you want to explore.</strong>
+                  <ul class="browse__how-to-list">
+                    <li>You can limit the list below to only items that you can use without having to install them.</li>
+                    <li>You can also limit the list to only show items that are free to try - or completely free.</li>
+                  </ul>
+                </li>
+                <li><strong>Click on the light-blue header blocks</strong> in the product list <strong>to learn about the features to look for in products of that type of product.</strong></li>
+                <li><strong>To learn more about a particular product</strong> – click on the product name.</li>
+              </ol>
+            </div>
             
             <!-- Search (moved to top) -->
             <div class="browse__search-wrapper browse__search-wrapper--top">
@@ -177,13 +193,13 @@
                   <circle cx="11" cy="11" r="8"></circle>
                   <path d="m21 21-4.3-4.3"></path>
                 </svg>
-<input
-  type="search"
-  class="browse__search-input"
-  id="search-input"
-  placeholder="Search tools by name, company, etc."
-  aria-label="Search tools"
-  autocomplete="off"
+                <input
+                  type="search"
+                  class="browse__search-input"
+                  id="search-input"
+                  placeholder="Search tools by name, company, etc."
+                  aria-label="Search tools"
+                  autocomplete="off"
                 >
                 <button class="browse__search-clear" id="search-clear" aria-label="Clear search" title="Clear search">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -202,57 +218,19 @@
               </div>
             </div>
             
-            <!-- How To Use This Page Section -->
-            <div class="browse__how-to-use" id="browse-help-tips">
-              <div class="browse__how-to-header">
-                <p class="browse__how-to-title"><strong>HOW TO USE THIS PAGE</strong></p>
-                <button class="browse__how-to-toggle" id="how-to-toggle-btn">Hide Instructions</button>
-              </div>
-              
-              <div class="browse__how-to-content" id="how-to-content">
-              <ol class="browse__how-to-ol">
-                <li><strong>Use the filter checkboxes to reduce the list to just those solutions you want to explore.</strong>
-                  <ul class="browse__how-to-list">
-                    <li>You can limit the list below to only items that you can use without having to install them.</li>
-                    <li>You can also limit the list to only show items that are free to try - or completely free.</li>
-                  </ul>
-                </li>
-                <li><strong>Click on the light-blue header blocks</strong> in the product list <strong>to learn about the features to look for in products of that type.</strong></li>
-                <li><strong>To learn more about a particular product</strong> – click on the product name.</li>
-                <li><strong>When you find products you think will help – click the "Bookmark this product" button.</strong> You can then see, save, or share bookmarked items using one of these buttons:</li>
-              </ol>
-              
-              <div class="browse__bookmark-buttons">
-                <button class="btn btn--marking" id="show-marked-only-btn">Show only bookmarked items</button>
-                <div class="browse__button-row">
-                  <button class="btn btn--marking" id="copy-marked-link-btn">Copy link to bookmarked items</button>
-                  <p class="browse__button-hint">(Save link for yourself or send to others.)</p>
-                </div>
-                <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">Share link with others to bookmarked items</button>
-                <p class="browse__share-unsupported" id="share-unsupported-msg" style="display: none;">(There is also a SHARE function but it is not supported by this browser. Try another browser to see it.)</p>
-              </div>
-              
-              <div class="browse__clear-bookmark-wrapper">
-                <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">Remove all bookmarks in list below</button>
-              </div>
-              
-              <p class="browse__how-to-note"><strong>NOTE:</strong> Bookmarks are not saved between sessions. Use the "Copy link to bookmarked items" button above and save the link someplace to save your bookmarked items to see later (or to share with others).</p>
-              </div>
-            </div>
-            
-            <!-- Mobile First Bookmark Popup -->
+            <!-- Mobile First Add to List Popup -->
             <div class="mobile-first-bookmark-popup" id="mobile-first-bookmark-popup" style="display: none;">
-              <p>See buttons at top of page for things you can do with bookmarks</p>
+              <p>Click this button to add a copy of this item to My List at top of page 1 of this listing</p>
             </div>
             
-            <!-- Show Only Bookmarked Mode Banner -->
+            <!-- Show Only My List Mode Banner -->
             <div class="browse__marked-mode-banner" id="marked-mode-banner" style="display: none;">
-              <span class="browse__marked-mode-text">Showing only the <strong id="marked-mode-count">0</strong> bookmarked products</span>
-              <button class="btn btn--turn-off" id="turn-off-marked-mode-btn">Turn off "Show only bookmarked items" mode</button>
+              <span class="browse__marked-mode-text">Showing only the <strong id="marked-mode-count">0</strong> items in My List</span>
+              <button class="btn btn--turn-off" id="turn-off-marked-mode-btn">Turn off "Show only My List items" mode</button>
             </div>
           </div>
 
-<!-- Results Count & Pagination Controls -->
+          <!-- Results Count & Pagination Controls -->
           <div class="browse__controls">
             <span class="browse__results-count" aria-live="polite" role="status">
               Showing <strong id="showing-start">0</strong> to <strong id="showing-end">0</strong> of <strong id="total-results">0</strong> tools found.
@@ -277,11 +255,35 @@
               </div>
             </div>
           </div>
-
-          <!-- Loading State -->
-          <div class="loading" id="loading-state" role="status" aria-label="Loading tools">
-            <div class="loading__spinner"></div>
-            <span class="sr-only">Loading tools, please wait...</span>
+          
+          <!-- MY LIST Box -->
+          <div class="my-list-box" id="my-list-box">
+            <div class="my-list-header">
+              <div class="my-list-header__top">
+                <span class="my-list-header__title">MY LIST</span>
+                <span class="my-list-header__description">As you find products you like below you can click on the <span class="my-list-header__button-text">"Add to my list"</span> button to add them here where you can later COMPARE, EXPLORE, or SHARE them with others.</span>
+              </div>
+              <div class="my-list-header__actions" id="my-list-actions" style="display: none;">
+                <div class="my-list-header__buttons">
+                  <button class="btn btn--marking" id="copy-marked-link-btn">COPY link to MY LIST item list</button>
+                  <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE link to MY LIST items</button>
+                  <button class="btn btn--marking btn--disabled" id="share-unsupported-msg" style="display: none;" disabled>SHARE not supported on this browser</button>
+                </div>
+                <p class="my-list-header__note"><strong>NOTE:</strong> MY LIST items are not remembered between sessions. Use the COPY or SHARE buttons above to save a link to the MY LIST items to view them again later yourself or to share them with others.</p>
+                <p class="my-list-header__click-hint"><strong>Click on any item in MY LIST to expand it to see full product information.</strong> <button class="my-list-toggle-btn" id="my-list-toggle-btn">(Hide MY LIST)</button></p>
+              </div>
+            </div>
+            
+            <!-- MY LIST Items Container -->
+            <div class="my-list-items-container" id="my-list-items">
+              <!-- Items added to My List will appear here -->
+            </div>
+            
+            <!-- End of MY LIST -->
+            <div class="my-list-end" id="my-list-end" style="display: none;">
+              <span class="my-list-end__text">End of MY LIST items</span>
+              <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">REMOVE all products from MY LIST</button>
+            </div>
           </div>
 
           <!-- Tools Grid -->
