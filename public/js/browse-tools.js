@@ -2065,9 +2065,27 @@ badgesContainer.innerHTML = html;
     // Parse devices (new format - direct device names)
     var devicesParam = params.get('devices');
     if (devicesParam) {
-      devicesParam.split(', ').forEach(function(d) {
-        if (DEVICE_OPTIONS.includes(d) && !filters.devices.includes(d)) {
-          filters.devices.push(d);
+      // Map questionnaire device names to browse-tools device names
+      var questionnaireToFilterMapping = {
+        'Windows (Microsoft)': 'PC (Windows)',
+        'Mac (Apple)': 'Macintosh',
+        'Chromebook (Google)': 'Chromebook',
+        'Android (Samsung/Google)': 'Android',
+        'Android (Samsung, Google)': 'Android',
+        'iPhone': 'iPhone',
+        'iPad': 'iPad',
+        // Also support direct names
+        'PC (Windows)': 'PC (Windows)',
+        'Macintosh': 'Macintosh',
+        'Chromebook': 'Chromebook',
+        'Android': 'Android'
+      };
+      
+      devicesParam.split(',').forEach(function(d) {
+        var trimmed = d.trim();
+        var mapped = questionnaireToFilterMapping[trimmed] || trimmed;
+        if (DEVICE_OPTIONS.includes(mapped) && !filters.devices.includes(mapped)) {
+          filters.devices.push(mapped);
         }
       });
     }

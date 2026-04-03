@@ -54,7 +54,7 @@
         {
           id: 3,
           question: 'What devices ' + doVerb + ' ' + subject + ' use at home or school\n(check all that apply)?',
-          options: ['Windows (Microsoft)', 'Mac (Apple)', 'Chromebook (Google)', 'iPhone', 'iPad', 'Android (Samsung, Google)', 'Show all'],
+          options: ['Windows (Microsoft)', 'Mac (Apple)', 'Chromebook (Google)', 'iPhone', 'iPad', 'Android (Samsung/Google)', 'Show all'],
           multiSelect: true
         }
       ]
@@ -225,7 +225,7 @@
       if (currentStep === 3) {
         if (option === 'Show all') {
           thirdRow.appendChild(label);
-        } else if (option === 'iPhone' || option === 'iPad' || option === 'Android (Samsung, Google)') {
+        } else if (option === 'iPhone' || option === 'iPad' || option === 'Android (Samsung/Google)') {
           secondRow.appendChild(label);
         } else {
           mainRow.appendChild(label);
@@ -338,7 +338,7 @@
       'Chromebook (Google)': ['chrome', 'chromebook', 'chromeos', 'cros'],
       'iPhone': ['iphone', 'ios'],
       'iPad': ['ipad', 'ios'],
-      'Android (Samsung, Google)': ['android']
+      'Android (Samsung/Google)': ['android']
     };
 
     // Function mapping

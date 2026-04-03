@@ -1648,7 +1648,7 @@ main {
   display: flex;
   align-items: center;
   background-color: white;
-  border: 1px solid #d1d5db;
+  border: 2px solid black;
   border-radius: var(--radius-md);
   padding: 2px 0.5rem;
   gap: 0.5rem;
@@ -1703,17 +1703,23 @@ main {
 
 .my-list-end__text {
   font-weight: 700;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.my-list-end {
-  position: relative;
+  flex: 1;
+  text-align: center;
 }
 
 .my-list-end .btn--clear-marks {
-  margin-left: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .my-list-end {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .my-list-end__text {
+    text-align: center;
+  }
 }
 
 .my-list-header__click-hint {
