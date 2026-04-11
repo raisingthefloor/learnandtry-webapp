@@ -406,7 +406,6 @@ var installMap = {
     var myListActions = document.getElementById('my-list-actions');
     var myListEnd = document.getElementById('my-list-end');
     var shareBtn = document.getElementById('share-marked-link-btn');
-    var shareUnsupportedMsg = document.getElementById('share-unsupported-msg');
     
     if (!myListItems) return;
     
@@ -421,13 +420,11 @@ var installMap = {
     if (myListActions) myListActions.style.display = '';
     if (myListEnd && !myListHidden) myListEnd.style.display = '';
     
-    // Show/hide share button based on browser support
+    // Show share button only if browser supports it, otherwise hide completely
     if (navigator.share) {
       if (shareBtn) shareBtn.style.display = '';
-      if (shareUnsupportedMsg) shareUnsupportedMsg.style.display = 'none';
     } else {
       if (shareBtn) shareBtn.style.display = 'none';
-      if (shareUnsupportedMsg) shareUnsupportedMsg.style.display = '';
     }
     
     // Render items in My List (compact or expanded)
@@ -439,11 +436,12 @@ var installMap = {
         
         if (isExpanded) {
           // EXPANDED VIEW in MY LIST
-          var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>';
+          var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14,10H3v2h11V10z M14,6H3v2h11V6z M18,14v-4h-2v4h-4v2h4v4h2v-4h4v-2H18z M3,16h7v-2H3V16z"/></svg>';
+          var checkIcon = '<svg class="tool-card__check-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="#15803d"/><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="white"/></svg>';
           var checkboxHTML = '<label class="tool-card__mark-checkbox is-marked" data-mark-tool="' + toolId + '">' +
-            '<input type="checkbox" class="tool-card__bookmark-input" checked aria-label="Remove from my list">' +
-            '<span class="tool-card__bookmark-text">In My List</span>' +
-            addIcon +
+            '<input type="checkbox" class="tool-card__bookmark-input" checked aria-label="Remove from Short List">' +
+            '<span class="tool-card__bookmark-text">In Short List</span>' +
+            addIcon + checkIcon +
             '</label>';
           
           html += '<article class="tool-card tool-card--expanded tool-card--marked my-list-tool-card" data-tool-id="' + toolId + '">';
@@ -1032,14 +1030,15 @@ badgesContainer.innerHTML = html;
         var isMarked = markedToolIds.has(baseToolId);
         if (isMarked) cardClass += ' tool-card--marked';
         
-        var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-        var tooltipAttr = markedToolIds.size > 0 ? '' : ' data-tooltip="Click this button to add a copy of this item to My List at top of page 1 of this listing"';
-        var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>';
-        var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '"' + tooltipAttr + '>' +
-          '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="Add to my list">' +
-          '<span class="tool-card__bookmark-text">' + (isMarked ? 'In My List' : 'Add to my list') + '</span>' +
-          addIcon +
-          '</label>';
+var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
+  var tooltipAttr = markedToolIds.size > 0 ? '' : ' data-tooltip="Click this button to add a copy of this item to your Short List at top of the page."';
+  var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14,10H3v2h11V10z M14,6H3v2h11V6z M18,14v-4h-2v4h-4v2h4v4h2v-4h4v-2H18z M3,16h7v-2H3V16z"/></svg>';
+  var checkIcon = '<svg class="tool-card__check-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="#15803d"/><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="white"/></svg>';
+  var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '"' + tooltipAttr + '>' +
+  '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="Add to Short List">' +
+  '<span class="tool-card__bookmark-text">' + (isMarked ? 'In Short List' : 'Add to Short List') + '</span>' +
+  addIcon + checkIcon +
+  '</label>';
 
         var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem" aria-expanded="' + isExpanded + '" aria-label="' + escapeHtml(tool.name) + ' by ' + escapeHtml(tool.company) + '">';
 
@@ -1741,14 +1740,11 @@ badgesContainer.innerHTML = html;
   }
   
   function setupMarkingButtons() {
-    // Check if Share API is supported
-    var shareBtn = document.getElementById('share-marked-link-btn');
-    var shareUnsupportedMsg = document.getElementById('share-unsupported-msg');
-    if (shareBtn && navigator.canShare) {
-      shareBtn.style.display = '';
-    } else if (shareUnsupportedMsg) {
-      shareUnsupportedMsg.style.display = '';
-    }
+// Check if Share API is supported - only show share button if supported
+  var shareBtn = document.getElementById('share-marked-link-btn');
+  if (shareBtn && navigator.canShare) {
+    shareBtn.style.display = '';
+  }
     
     // Show Only Marked button
     var showMarkedBtn = document.getElementById('show-marked-only-btn');
@@ -1862,7 +1858,7 @@ badgesContainer.innerHTML = html;
     var toggleBtn = e.target.closest('#my-list-toggle-btn');
     if (toggleBtn) {
       myListHidden = !myListHidden;
-      toggleBtn.textContent = myListHidden ? '(Show MY LIST)' : '(Hide MY LIST)';
+      toggleBtn.textContent = myListHidden ? '(Show SHORT LIST)' : '(Hide SHORT LIST)';
       var myListItems = document.getElementById('my-list-items');
       var myListEnd = document.getElementById('my-list-end');
       if (myListItems) myListItems.style.display = myListHidden ? 'none' : '';
