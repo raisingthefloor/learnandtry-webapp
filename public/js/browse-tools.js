@@ -24,6 +24,10 @@
   var showMarkedOnly = false;
   var savedFiltersBeforeMarkedMode = null;
   var savedSearchBeforeMarkedMode = '';
+  var bookmarkTooltipVisible = false;
+  var showMobileFirstBookmarkPopup = false;
+  var myListHidden = false;
+  var myListExpandedIds = new Set();
   
   var filters = {
     functions: [],
@@ -394,6 +398,126 @@ var installMap = {
     renderResultsCount();
     renderTools();
     renderPagination();
+    renderMyList();
+  }
+  
+  function renderMyList() {
+    var myListItems = document.getElementById('my-list-items');
+    var myListActions = document.getElementById('my-list-actions');
+    var myListEnd = document.getElementById('my-list-end');
+    var shareBtn = document.getElementById('share-marked-link-btn');
+    var toggleBtn = document.getElementById('my-list-toggle-btn');
+    var descriptionDesktop = document.querySelector('.my-list-header__description--desktop');
+    var descriptionMobile = document.querySelector('.my-list-header__description--mobile');
+    
+    if (!myListItems) return;
+    
+    if (markedToolIds.size === 0) {
+      myListItems.innerHTML = '';
+      if (myListActions) myListActions.style.display = 'none';
+      if (myListEnd) myListEnd.style.display = 'none';
+      if (toggleBtn) toggleBtn.style.display = 'none';
+      // Show instructions when no items
+      if (descriptionDesktop) descriptionDesktop.style.display = '';
+      if (descriptionMobile) descriptionMobile.style.display = '';
+      return;
+    }
+    
+    // Hide instructions when items exist
+    if (descriptionDesktop) descriptionDesktop.style.display = 'none';
+    if (descriptionMobile) descriptionMobile.style.display = 'none';
+    
+    // Show toggle button and actions when items exist
+    if (toggleBtn) toggleBtn.style.display = '';
+    if (myListActions) myListActions.style.display = '';
+    if (myListEnd && !myListHidden) myListEnd.style.display = '';
+    
+    // Show share button only if browser supports it, otherwise hide completely
+    if (navigator.share) {
+      if (shareBtn) shareBtn.style.display = '';
+    } else {
+      if (shareBtn) shareBtn.style.display = 'none';
+    }
+    
+    // Render items in My List (compact or expanded)
+    var html = '';
+    markedToolIds.forEach(function(toolId) {
+      var tool = allTools.find(function(t) { return t.id === toolId; });
+      if (tool) {
+        var isExpanded = myListExpandedIds.has(toolId);
+        
+        if (isExpanded) {
+          // EXPANDED VIEW in MY LIST
+          var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14,10H3v2h11V10z M14,6H3v2h11V6z M18,14v-4h-2v4h-4v2h4v4h2v-4h4v-2H18z M3,16h7v-2H3V16z"/></svg>';
+          var checkIcon = '<svg class="tool-card__check-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="#15803d"/><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="white"/></svg>';
+          var checkboxHTML = '<label class="tool-card__mark-checkbox is-marked" data-mark-tool="' + toolId + '">' +
+            '<input type="checkbox" class="tool-card__bookmark-input" checked aria-label="Remove from Short List">' +
+            '<span class="tool-card__bookmark-text">In Short List</span>' +
+            addIcon + checkIcon +
+            '</label>';
+          
+          html += '<article class="tool-card tool-card--expanded tool-card--marked my-list-tool-card" data-tool-id="' + toolId + '">';
+          html += '<div class="tool-card__expanded">';
+          html += '<div class="tool-card__expanded-header my-list-collapse-trigger" data-collapse-mylist-header="' + toolId + '">';
+          html += '<div class="tool-card__expanded-header-left">';
+          html += '<h3 class="tool-card__expanded-name">' + escapeHtml(tool.name) + '</h3>';
+          html += '<span class="tool-card__expanded-company">' + escapeHtml(tool.company) + '</span>';
+          html += '</div>';
+          html += '<div class="tool-card__expanded-header-right">';
+          html += '<button class="tool-card__collapse-btn" data-collapse-mylist="' + toolId + '">See Less <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 15-6-6-6 6"/></svg></button>';
+          html += checkboxHTML;
+          html += '</div>';
+          html += '</div>';
+          html += '<hr class="tool-card__divider">';
+          html += '<h4 class="tool-card__section-title">Description</h4>';
+          html += '<p class="tool-card__description">' + escapeHtml(tool.description || 'No description available.') + '</p>';
+          html += '<hr class="tool-card__divider">';
+          
+          // Videos
+          if (tool.youTubeVideos && tool.youTubeVideos.length > 0) {
+            html += '<h4 class="tool-card__section-title">Videos</h4>';
+            html += '<div class="tool-card__videos">';
+            tool.youTubeVideos.forEach(function(video, idx) {
+              var videoClass = idx === 0 ? 'tool-card__video tool-card__video--main' : 'tool-card__video tool-card__video--thumb';
+              html += '<div class="' + videoClass + '"><iframe src="' + video.embedUrl + '" title="' + escapeHtml(video.title || 'Demo video') + '" allowfullscreen></iframe></div>';
+            });
+            html += '</div><hr class="tool-card__divider">';
+          }
+          
+          // Badges
+          html += '<div class="tool-card__badges-expanded">';
+          html += createBadgeColumnHTML('HELPS WITH:', tool.functions, 'function');
+          html += createBadgeColumnHTML('DEVICES:', tool.supportedPlatforms, 'device');
+          html += createBadgeColumnHTML('INSTALL?:', tool.installTypes, 'install');
+          html += createBadgeColumnHTML('PRICING:', tool.purchaseOptions, 'purchase');
+          html += '</div><hr class="tool-card__divider">';
+          
+          // Visit button
+          html += '<div class="tool-card__actions">';
+          html += '<a href="' + escapeHtml(tool.vendorProductPageUrl || '#') + '" target="_blank" rel="noopener noreferrer" class="tool-card__visit-btn">';
+          html += 'Visit Product Website <span class="sr-only">(opens in new tab)</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+          html += '</a></div></div>';
+          html += '</article>';
+        } else {
+          // COMPACT VIEW (single line)
+          html += '<div class="my-list-item-compact" data-tool-id="' + toolId + '">';
+          html += '<span class="my-list-item-compact__name">' + escapeHtml(tool.name) + '</span>';
+          html += '<span class="my-list-item-compact__company">· ' + escapeHtml(tool.company) + '</span>';
+          html += '<button class="my-list-item-compact__see-more" data-expand-mylist="' + toolId + '">See More <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button>';
+          html += '</div>';
+        }
+      }
+    });
+    myListItems.innerHTML = html;
+    
+    // Show/hide based on myListHidden state
+    if (myListHidden) {
+      myListItems.style.display = 'none';
+      if (myListEnd) myListEnd.style.display = 'none';
+    } else {
+      myListItems.style.display = '';
+      if (myListEnd && markedToolIds.size > 0) myListEnd.style.display = '';
+    }
   }
 
   function renderFilterPanel() {
@@ -416,7 +540,7 @@ var installMap = {
           ' data-category="' + category + '" data-value="' + opt + '">' +
           '<span class="filter-panel__option-label">' + opt + '</span>' +
 '<span class="tooltip" data-tooltip="' + escapeHtml(desc) + '" role="button" tabindex="0">' +
-  '<svg class="filter-panel__help-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>' +
+  '<svg class="filter-panel__help-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>' +
   '</span></label>';
       }).join('');
     });
@@ -433,21 +557,32 @@ var installMap = {
   }
 
   function renderActiveFilters() {
-    var container = document.getElementById('active-filters-container');
-    var badgesContainer = document.getElementById('filter-badges');
-    var countEl = document.getElementById('filter-count');
+    var container = document.getElementById('active-filters-container-top');
+    var badgesContainer = document.getElementById('filter-badges-top');
+    var countEl = document.getElementById('filter-count-top');
+    var summaryEl = document.getElementById('filter-summary-top');
 
     var hasAnyFilter = filters.functions.length > 0 || filters.devices.length > 0 || 
       filters.installTypes.length > 0 || filters.purchaseOptions.length > 0 || 
       (searchQuery && searchQuery.trim() !== '');
 
-    if (!hasAnyFilter) {
-      if (container) container.style.display = 'none';
-      return;
-    }
-
+    // Always show the container
     if (container) container.style.display = '';
     if (countEl) countEl.textContent = filteredTools.length;
+    
+    // Update the summary text based on whether filters are active
+    if (summaryEl) {
+      if (hasAnyFilter) {
+        summaryEl.innerHTML = 'We found <strong class="browse__filter-count--large" id="filter-count-top">' + filteredTools.length + '</strong> tools that match your selections.';
+      } else {
+        summaryEl.innerHTML = 'There are <strong class="browse__filter-count--large" id="filter-count-top">' + filteredTools.length + '</strong> total items currently shown.';
+      }
+    }
+    
+    if (!hasAnyFilter) {
+      if (badgesContainer) badgesContainer.innerHTML = '';
+      return;
+    }
     
     if (badgesContainer) {
       var html = '';
@@ -525,7 +660,7 @@ var installMap = {
         html += '</div></div>';
       }
       
-      badgesContainer.innerHTML = html;
+badgesContainer.innerHTML = html;
     }
   }
 
@@ -806,7 +941,7 @@ var installMap = {
         html += '<button class="function-header__toggle">';
         html += '<div class="function-header__left">';
         html += '<span class="function-header__title">' + (funcInfo ? funcInfo.name : toTitleCase(item.funcFilter).toUpperCase()) + '</span>';
-        html += '<span class="function-header__subtitle">' + (isInfoExpanded ? 'Click to collapse' : 'Expand this for more information on ' + toTitleCase(item.funcFilter) + ' tools') + '</span>';
+        html += '<span class="function-header__subtitle">' + (isInfoExpanded ? 'Click to collapse' : '<strong>OPEN THIS FIRST</strong> for a list of features to look for in this category') + '</span>';
         html += '</div>';
         html += '<svg class="function-header__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
           (isInfoExpanded ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>') + '</svg>';
@@ -907,12 +1042,17 @@ var installMap = {
         var isMarked = markedToolIds.has(baseToolId);
         if (isMarked) cardClass += ' tool-card--marked';
         
-        var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
-        var checkboxHTML = '<button class="' + checkboxClass + '" data-mark-tool="' + toolId + '" aria-label="' + (isMarked ? 'Unmark' : 'Mark') + ' this product">' +
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' +
-          '</button>';
+var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
+  var tooltipAttr = markedToolIds.size > 0 ? '' : ' data-tooltip="Click this button to add a copy of this item to your Short List at top of the page."';
+  var addIcon = '<svg class="tool-card__add-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14,10H3v2h11V10z M14,6H3v2h11V6z M18,14v-4h-2v4h-4v2h4v4h2v-4h4v-2H18z M3,16h7v-2H3V16z"/></svg>';
+  var checkIcon = '<svg class="tool-card__check-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="#15803d"/><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="white"/></svg>';
+  var checkboxHTML = '<label class="' + checkboxClass + '" data-mark-tool="' + toolId + '"' + tooltipAttr + '>' +
+  '<input type="checkbox" class="tool-card__bookmark-input" ' + (isMarked ? 'checked' : '') + ' aria-label="Add to Short List">' +
+  '<span class="tool-card__bookmark-text">' + (isMarked ? 'In Short List' : 'Add to Short List') + '</span>' +
+  addIcon + checkIcon +
+  '</label>';
 
-        var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem">';
+        var html_card = '<article class="' + cardClass + '" data-tool-id="' + toolId + '" tabindex="0" role="listitem" aria-expanded="' + isExpanded + '" aria-label="' + escapeHtml(tool.name) + ' by ' + escapeHtml(tool.company) + '">';
 
         if (isExpanded) {
           // EXPANDED VIEW
@@ -955,7 +1095,7 @@ var installMap = {
           // Visit button
           html_card += '<div class="tool-card__actions">';
           html_card += '<a href="' + escapeHtml(tool.vendorProductPageUrl || '#') + '" target="_blank" rel="noopener noreferrer" class="tool-card__visit-btn">';
-          html_card += 'Visit Product Website <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+          html_card += 'Visit Product Website <span class="sr-only">(opens in new tab)</span> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
           html_card += '</a></div></div>';
         } else if (isRepeat) {
           // REPEAT VIEW (single line that wraps naturally)
@@ -1297,7 +1437,8 @@ var installMap = {
     var filterToggleIcon = document.getElementById('filter-toggle-icon');
     
     if (filterToggle) {
-      filterToggle.addEventListener('click', function() {
+      filterToggle.addEventListener('click', function(e) {
+        e.preventDefault();
         var isOpen = filterContent.classList.toggle('is-open');
         filterToggle.setAttribute('aria-expanded', isOpen);
         filterToggleIcon.innerHTML = isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>';
@@ -1406,27 +1547,56 @@ var installMap = {
     }
 
     // Mark checkbox handler
-    document.addEventListener('click', function(e) {
-      var markBtn = e.target.closest('[data-mark-tool]');
-      if (markBtn) {
-        e.stopPropagation();
-        var toolId = markBtn.getAttribute('data-mark-tool');
-        // Extract base tool ID (remove -repeat- and see-also- prefixes/suffixes)
-        var baseToolId = getBaseToolId(toolId);
-        if (markedToolIds.has(baseToolId)) {
-          markedToolIds.delete(baseToolId);
-        } else {
-          markedToolIds.add(baseToolId);
+    document.addEventListener('change', function(e) {
+      if (e.target.matches('.tool-card__bookmark-input')) {
+        var markLabel = e.target.closest('[data-mark-tool]');
+        if (markLabel) {
+          e.stopPropagation();
+          var toolId = markLabel.getAttribute('data-mark-tool');
+          // Extract base tool ID (remove -repeat- and see-also- prefixes/suffixes)
+          var baseToolId = getBaseToolId(toolId);
+          var wasFirstBookmark = markedToolIds.size === 0;
+          if (markedToolIds.has(baseToolId)) {
+            markedToolIds.delete(baseToolId);
+          } else {
+            markedToolIds.add(baseToolId);
+            // On mobile, show popup on first bookmark
+            if (wasFirstBookmark && window.innerWidth < 640) {
+              showMobileFirstBookmarkPopup = true;
+            }
+          }
+          
+          // Remember scroll position and My List height before render
+          var myListContainer = document.getElementById('my-list-items');
+          var oldMyListHeight = myListContainer ? myListContainer.offsetHeight : 0;
+          var scrollBefore = window.scrollY;
+          
+          render();
+          
+          // Compensate scroll if on page 1 or show all, and adding item (not removing)
+          if ((currentPage === 1 || perPage === 0) && markedToolIds.has(baseToolId)) {
+            var newMyListHeight = myListContainer ? myListContainer.offsetHeight : 0;
+            var heightDiff = newMyListHeight - oldMyListHeight;
+            if (heightDiff > 0) {
+              window.scrollTo(0, scrollBefore + heightDiff);
+            }
+          }
+          
+          // Show mobile first bookmark popup after render
+          if (showMobileFirstBookmarkPopup) {
+            var popup = document.getElementById('mobile-first-bookmark-popup');
+            if (popup) {
+              popup.style.display = 'block';
+            }
+          }
         }
-        render();
-        return;
       }
     });
     
     // Tool card interactions
     document.addEventListener('click', function(e) {
       var toolCard = e.target.closest('.tool-card');
-      if (toolCard && !e.target.closest('a') && !e.target.closest('.tool-card__visit-btn') && !e.target.closest('[data-mark-tool]')) {
+      if (toolCard && !e.target.closest('a') && !e.target.closest('.tool-card__visit-btn') && !e.target.closest('[data-mark-tool]') && !e.target.closest('.tool-card__bookmark-input')) {
         var toolId = toolCard.getAttribute('data-tool-id');
         
         if (e.target.closest('.tool-card__see-more')) {
@@ -1522,26 +1692,6 @@ var installMap = {
       }
     });
 
-    // Show/Hide Mark Feature Section
-    var showMarkFeatureBtn = document.getElementById('show-mark-feature-btn');
-    var hideMarkFeatureBtn = document.getElementById('hide-mark-feature-btn');
-    var markFeatureSection = document.getElementById('mark-feature-section');
-    var markIntro = document.getElementById('browse-mark-intro');
-    
-    if (showMarkFeatureBtn) {
-      showMarkFeatureBtn.addEventListener('click', function() {
-        markIntro.style.display = 'none';
-        markFeatureSection.style.display = 'block';
-      });
-    }
-    
-    if (hideMarkFeatureBtn) {
-      hideMarkFeatureBtn.addEventListener('click', function() {
-        markFeatureSection.style.display = 'none';
-        markIntro.style.display = 'block';
-      });
-    }
-
     // Tooltips - hover shows, click pins open
   var tooltipPinned = false;
   var currentTooltipTrigger = null;
@@ -1602,14 +1752,11 @@ var installMap = {
   }
   
   function setupMarkingButtons() {
-    // Check if Share API is supported
-    var shareBtn = document.getElementById('share-marked-link-btn');
-    var shareUnsupportedMsg = document.getElementById('share-unsupported-msg');
-    if (shareBtn && navigator.canShare) {
-      shareBtn.style.display = '';
-    } else if (shareUnsupportedMsg) {
-      shareUnsupportedMsg.style.display = '';
-    }
+// Check if Share API is supported - only show share button if supported
+  var shareBtn = document.getElementById('share-marked-link-btn');
+  if (shareBtn && navigator.canShare) {
+    shareBtn.style.display = '';
+  }
     
     // Show Only Marked button
     var showMarkedBtn = document.getElementById('show-marked-only-btn');
@@ -1661,9 +1808,36 @@ var installMap = {
   
   function createMarkedProductsLink() {
     var baseUrl = window.location.origin + window.location.pathname;
+    var params = [];
+    
+    // Add marked items
     var markedIds = Array.from(markedToolIds).join(',');
     if (markedIds) {
-      return baseUrl + '?marked=' + encodeURIComponent(markedIds);
+      params.push('marked=' + encodeURIComponent(markedIds));
+    }
+    
+    // Add current filter state - functions
+    if (filters.functions.length > 0) {
+      params.push('function=' + encodeURIComponent(filters.functions.join(', ')));
+    }
+    
+    // Add devices (save directly as they appear in filters)
+    if (filters.devices.length > 0) {
+      params.push('devices=' + encodeURIComponent(filters.devices.join(', ')));
+    }
+    
+    // Add install types
+    if (filters.installTypes.length > 0) {
+      params.push('install=' + encodeURIComponent(filters.installTypes.join(', ')));
+    }
+    
+    // Add purchase options
+    if (filters.purchaseOptions.length > 0) {
+      params.push('purchase=' + encodeURIComponent(filters.purchaseOptions.join(', ')));
+    }
+    
+    if (params.length > 0) {
+      return baseUrl + '?' + params.join('&');
     }
     return baseUrl;
   }
@@ -1680,6 +1854,94 @@ var installMap = {
   if (clearMarkedBtn) {
     clearMarkedBtn.addEventListener('click', clearAllMarks);
   }
+  
+  // Set up How-to Instructions toggle
+  var howToToggleBtn = document.getElementById('how-to-toggle-btn');
+  var howToContent = document.getElementById('how-to-content');
+  if (howToToggleBtn && howToContent) {
+    howToToggleBtn.addEventListener('click', function() {
+      var isHidden = howToContent.classList.toggle('is-hidden');
+      howToToggleBtn.textContent = isHidden ? 'SHOW INSTRUCTIONS FOR THIS PAGE' : 'HIDE INSTRUCTIONS';
+    });
+  }
+  
+  // Set up My List toggle (Hide/Show)
+  document.addEventListener('click', function(e) {
+    var toggleBtn = e.target.closest('#my-list-toggle-btn');
+    if (toggleBtn) {
+      myListHidden = !myListHidden;
+      toggleBtn.textContent = myListHidden ? 'Show Short List' : 'Hide Short List';
+      var myListCollapsible = document.getElementById('my-list-collapsible');
+      if (myListCollapsible) myListCollapsible.style.display = myListHidden ? 'none' : '';
+    }
+  });
+  
+  // Set up My List item expand (clicking anywhere on compact row)
+  document.addEventListener('click', function(e) {
+    var compactItem = e.target.closest('.my-list-item-compact');
+    if (compactItem) {
+      var toolId = compactItem.getAttribute('data-tool-id');
+      myListExpandedIds.add(toolId);
+      renderMyList();
+    }
+    
+    var collapseBtn = e.target.closest('[data-collapse-mylist]');
+    if (collapseBtn) {
+      var toolId = collapseBtn.getAttribute('data-collapse-mylist');
+      myListExpandedIds.delete(toolId);
+      renderMyList();
+    }
+    
+    // Also collapse when clicking the header area
+    var collapseHeader = e.target.closest('[data-collapse-mylist-header]');
+    if (collapseHeader && !e.target.closest('[data-mark-tool]') && !e.target.closest('.tool-card__collapse-btn')) {
+      var toolId = collapseHeader.getAttribute('data-collapse-mylist-header');
+      myListExpandedIds.delete(toolId);
+      renderMyList();
+    }
+  });
+  
+  // Bookmark tooltip - stay open until click elsewhere
+  document.addEventListener('mouseenter', function(e) {
+    var bookmark = e.target.closest('.tool-card__mark-checkbox[data-tooltip]');
+    if (bookmark && !bookmarkTooltipVisible) {
+      bookmark.classList.add('tooltip-active');
+    }
+  }, true);
+  
+  document.addEventListener('mouseleave', function(e) {
+    var bookmark = e.target.closest('.tool-card__mark-checkbox[data-tooltip]');
+    if (bookmark && !bookmarkTooltipVisible) {
+      bookmark.classList.remove('tooltip-active');
+    }
+  }, true);
+  
+  // Close tooltip and mobile popup on any click (but don't block the click)
+  document.addEventListener('click', function(e) {
+    // Close mobile first bookmark popup
+    if (showMobileFirstBookmarkPopup) {
+      var popup = document.getElementById('mobile-first-bookmark-popup');
+      if (popup && !e.target.closest('.tool-card__mark-checkbox')) {
+        popup.style.display = 'none';
+        showMobileFirstBookmarkPopup = false;
+      }
+    }
+    
+    if (bookmarkTooltipVisible) {
+      document.querySelectorAll('.tool-card__mark-checkbox.tooltip-active').forEach(function(el) {
+        el.classList.remove('tooltip-active');
+      });
+      bookmarkTooltipVisible = false;
+    }
+    // If clicking on a bookmark with tooltip, pin it open after the click processes
+    var bookmark = e.target.closest('.tool-card__mark-checkbox[data-tooltip]');
+    if (bookmark) {
+      setTimeout(function() {
+        bookmark.classList.add('tooltip-active');
+        bookmarkTooltipVisible = true;
+      }, 50);
+    }
+  });
   
   function updateMarkedMode() {
     var showMarkedBtn = document.getElementById('show-marked-only-btn');
@@ -1796,6 +2058,7 @@ var installMap = {
   function parseUrlParams() {
     var params = new URLSearchParams(window.location.search);
     
+    // Parse function filters
     var funcParam = params.get('function');
     if (funcParam) {
       funcParam.split(', ').forEach(function(f) {
@@ -1805,6 +2068,35 @@ var installMap = {
       });
     }
 
+    // Parse devices (new format - direct device names)
+    var devicesParam = params.get('devices');
+    if (devicesParam) {
+      // Map questionnaire device names to browse-tools device names
+      var questionnaireToFilterMapping = {
+        'Windows (Microsoft)': 'PC (Windows)',
+        'Mac (Apple)': 'Macintosh',
+        'Chromebook (Google)': 'Chromebook',
+        'Android (Samsung/Google)': 'Android',
+        'Android (Samsung, Google)': 'Android',
+        'iPhone': 'iPhone',
+        'iPad': 'iPad',
+        // Also support direct names
+        'PC (Windows)': 'PC (Windows)',
+        'Macintosh': 'Macintosh',
+        'Chromebook': 'Chromebook',
+        'Android': 'Android'
+      };
+      
+      devicesParam.split(',').forEach(function(d) {
+        var trimmed = d.trim();
+        var mapped = questionnaireToFilterMapping[trimmed] || trimmed;
+        if (DEVICE_OPTIONS.includes(mapped) && !filters.devices.includes(mapped)) {
+          filters.devices.push(mapped);
+        }
+      });
+    }
+    
+    // Legacy support for computer/phone params
     var computerParam = params.get('computer');
     if (computerParam) {
       var deviceMapping = { 'Mac (Apple)': 'Macintosh', 'Windows (Microsoft)': 'PC (Windows)', 'Chromebook (Google)': 'Chromebook' };
@@ -1819,6 +2111,26 @@ var installMap = {
       var phoneDeviceMapping = { 'iPhone': 'iPhone', 'Android (Samsung, Google)': 'Android' };
       var mapped = phoneDeviceMapping[phoneParam];
       if (mapped && !filters.devices.includes(mapped)) filters.devices.push(mapped);
+    }
+    
+    // Parse install types
+    var installParam = params.get('install');
+    if (installParam) {
+      installParam.split(', ').forEach(function(i) {
+        if (INSTALL_OPTIONS.includes(i) && !filters.installTypes.includes(i)) {
+          filters.installTypes.push(i);
+        }
+      });
+    }
+    
+    // Parse purchase options
+    var purchaseParam = params.get('purchase');
+    if (purchaseParam) {
+      purchaseParam.split(', ').forEach(function(p) {
+        if (PURCHASE_OPTIONS.includes(p) && !filters.purchaseOptions.includes(p)) {
+          filters.purchaseOptions.push(p);
+        }
+      });
     }
   }
 
@@ -1850,6 +2162,36 @@ var installMap = {
     loadTools();
     setupVideoModal();
     checkMarkedUrlParams();
+    handleMobileSidebarPosition();
+  }
+  
+  // Move sidebar to just above browse__controls on mobile
+  function handleMobileSidebarPosition() {
+    var sidebar = document.querySelector('.browse__sidebar');
+    var controls = document.querySelector('.browse__controls');
+    var originalParent = sidebar ? sidebar.parentNode : null;
+    var originalNextSibling = sidebar ? sidebar.nextSibling : null;
+    
+    function repositionSidebar() {
+      if (!sidebar || !controls) return;
+      
+      var isMobile = window.innerWidth < 640;
+      
+      if (isMobile) {
+        // Move sidebar to just before controls
+        controls.parentNode.insertBefore(sidebar, controls);
+      } else if (originalParent) {
+        // Move sidebar back to original position
+        if (originalNextSibling) {
+          originalParent.insertBefore(sidebar, originalNextSibling);
+        } else {
+          originalParent.appendChild(sidebar);
+        }
+      }
+    }
+    
+    repositionSidebar();
+    window.addEventListener('resize', repositionSidebar);
   }
   
   function checkMarkedUrlParams() {
@@ -1861,12 +2203,12 @@ var installMap = {
         markedToolIds.add(id.trim());
       });
       if (ids.length > 0) {
-        showMarkedOnly = true;
-        // Wait for tools to load, then update mode
+        // Just populate MY LIST, don't filter to marked only
+        // Wait for tools to load, then render to show MY LIST items
         var checkInterval = setInterval(function() {
           if (allTools.length > 0) {
             clearInterval(checkInterval);
-            updateMarkedMode();
+            renderMyList();
           }
         }, 100);
       }
@@ -1878,8 +2220,14 @@ var installMap = {
     var modal = document.getElementById('video-modal');
     var modalIframe = document.getElementById('video-modal-iframe');
     var closeBtn = document.getElementById('video-modal-close');
+    var lastFocusedElement = null;
     
     if (!modal || !modalIframe) return;
+
+    // Add dialog role for screen readers
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-label', 'Tool video');
     
     // Delegate click events for video containers
     document.addEventListener('click', function(e) {
@@ -1887,6 +2235,7 @@ var installMap = {
       if (videoContainer) {
         var iframe = videoContainer.querySelector('iframe');
         if (iframe) {
+          lastFocusedElement = document.activeElement;
           var src = iframe.getAttribute('src');
           // Add autoplay parameter
           if (src.indexOf('?') === -1) {
@@ -1897,6 +2246,8 @@ var installMap = {
           modalIframe.setAttribute('src', src);
           modal.classList.add('is-open');
           document.body.style.overflow = 'hidden';
+          // Move focus to close button
+          if (closeBtn) closeBtn.focus();
         }
       }
     });
@@ -1905,6 +2256,8 @@ var installMap = {
       modal.classList.remove('is-open');
       modalIframe.setAttribute('src', '');
       document.body.style.overflow = '';
+      // Return focus to element that opened the modal
+      if (lastFocusedElement) lastFocusedElement.focus();
     }
     
     if (closeBtn) {
@@ -1918,10 +2271,33 @@ var installMap = {
       }
     });
     
-    // Close on Escape key
+    // Close on Escape key & trap focus inside modal
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+      if (!modal.classList.contains('is-open')) return;
+      
+      if (e.key === 'Escape') {
         closeModal();
+        return;
+      }
+      
+      // Focus trap
+      if (e.key === 'Tab') {
+        var focusable = modal.querySelectorAll('button, iframe, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     });
   }

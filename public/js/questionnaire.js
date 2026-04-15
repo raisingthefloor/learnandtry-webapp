@@ -11,7 +11,7 @@
   // =============================================
   
   let currentStep = 1;
-  const totalSteps = 4;
+  const totalSteps = 3;
   let answers = {};
   let selectedOption = '';
   let selectedOptions = [];
@@ -53,15 +53,9 @@
         },
         {
           id: 3,
-          question: 'What type of computer ' + doVerb + ' ' + subject + ' use at home or school\n(check all that apply)?',
-          options: ['Windows (Microsoft)', 'Mac (Apple)', 'Chromebook (Google)', 'My Device Is Not Listed'],
+          question: 'What devices ' + doVerb + ' ' + subject + ' use at home or school\n(check all that apply)?',
+          options: ['Windows (Microsoft)', 'Mac (Apple)', 'Chromebook (Google)', 'iPhone', 'iPad', 'Android (Samsung/Google)', 'Show all'],
           multiSelect: true
-        },
-        {
-          id: 4,
-          question: 'What type of phone ' + doVerb + ' ' + subject + ' primarily use?',
-          options: ['iPhone', 'Android (Samsung, Google)', 'None'],
-          multiSelect: false
         }
       ]
     };
@@ -171,20 +165,48 @@
     
     // Clear options
     optionsContainer.innerHTML = '<legend class="sr-only" id="options-legend">' + question.question + '</legend>';
+    optionsContainer.classList.remove('questionnaire__options--rows');
+    
+    // Create rows for question 3 layout
+    var mainRow = null;
+    var secondRow = null;
+    var thirdRow = null;
+    
+    if (currentStep === 3) {
+      optionsContainer.classList.add('questionnaire__options--rows');
+      mainRow = document.createElement('div');
+      mainRow.className = 'questionnaire__options-row';
+      secondRow = document.createElement('div');
+      secondRow.className = 'questionnaire__options-row';
+      thirdRow = document.createElement('div');
+      thirdRow.className = 'questionnaire__options-row questionnaire__options-row--single';
+    }
     
     // Render options
-    question.options.forEach(function(option) {
+    question.options.forEach(function(option, index) {
       const isSelected = question.multiSelect 
         ? selectedOptions.indexOf(option) !== -1
         : selectedOption === option;
       
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'questionnaire__option' + (isSelected ? ' questionnaire__option--selected' : '');
-      btn.setAttribute('aria-pressed', isSelected);
-      btn.textContent = option;
+      const inputType = 'checkbox';
+      const inputId = 'option-' + currentStep + '-' + index;
+      const inputName = 'question-' + currentStep;
       
-      btn.addEventListener('click', function() {
+      // Create label (styled as button)
+      const label = document.createElement('label');
+      label.className = 'questionnaire__option' + (isSelected ? ' questionnaire__option--selected' : '');
+      label.setAttribute('for', inputId);
+      
+      // Create hidden input
+      const input = document.createElement('input');
+      input.type = inputType;
+      input.id = inputId;
+      input.name = inputName;
+      input.value = option;
+      input.checked = isSelected;
+      input.className = 'questionnaire__input';
+      
+      input.addEventListener('change', function() {
         if (question.multiSelect) {
           toggleMultiOption(option);
         } else {
@@ -192,8 +214,33 @@
         }
       });
       
-      optionsContainer.appendChild(btn);
+      // Create text span
+      const textSpan = document.createElement('span');
+      textSpan.textContent = option;
+      
+      label.appendChild(input);
+      label.appendChild(textSpan);
+      
+      // Add to appropriate row for question 3
+      if (currentStep === 3) {
+        if (option === 'Show all') {
+          thirdRow.appendChild(label);
+        } else if (option === 'iPhone' || option === 'iPad' || option === 'Android (Samsung/Google)') {
+          secondRow.appendChild(label);
+        } else {
+          mainRow.appendChild(label);
+        }
+      } else {
+        optionsContainer.appendChild(label);
+      }
     });
+    
+    // Append rows for question 3
+    if (currentStep === 3) {
+      optionsContainer.appendChild(mainRow);
+      optionsContainer.appendChild(secondRow);
+      optionsContainer.appendChild(thirdRow);
+    }
     
     // Update button states
     backBtn.disabled = currentStep === 1;
@@ -208,31 +255,53 @@
       isForSelf = option === 'For Myself';
     }
     
-    // Update UI
-    const buttons = optionsContainer.querySelectorAll('.questionnaire__option');
-    buttons.forEach(function(btn) {
-      const isSelected = btn.textContent === option;
-      btn.classList.toggle('questionnaire__option--selected', isSelected);
-      btn.setAttribute('aria-pressed', isSelected);
+    // Update UI - uncheck all other checkboxes and update visual state
+    const labels = optionsContainer.querySelectorAll('.questionnaire__option');
+    labels.forEach(function(label) {
+      const input = label.querySelector('input');
+      const textSpan = label.querySelector('span');
+      const optionText = textSpan ? textSpan.textContent : label.textContent;
+      const isSelected = optionText === option;
+      label.classList.toggle('questionnaire__option--selected', isSelected);
+      if (input) input.checked = isSelected;
     });
     
     updateNextButton();
   }
 
   function toggleMultiOption(option) {
-    const index = selectedOptions.indexOf(option);
-    if (index !== -1) {
-      selectedOptions.splice(index, 1);
+    // Handle "Show all" - deselect all others
+    if (option === 'Show all') {
+      const wasSelected = selectedOptions.indexOf('Show all') !== -1;
+      if (wasSelected) {
+        selectedOptions = [];
+      } else {
+        selectedOptions = ['Show all'];
+      }
     } else {
-      selectedOptions.push(option);
+      // If selecting a device, remove "Show all" if present
+      const showAllIndex = selectedOptions.indexOf('Show all');
+      if (showAllIndex !== -1) {
+        selectedOptions.splice(showAllIndex, 1);
+      }
+      
+      const index = selectedOptions.indexOf(option);
+      if (index !== -1) {
+        selectedOptions.splice(index, 1);
+      } else {
+        selectedOptions.push(option);
+      }
     }
     
     // Update UI
-    const buttons = optionsContainer.querySelectorAll('.questionnaire__option');
-    buttons.forEach(function(btn) {
-      const isSelected = selectedOptions.indexOf(btn.textContent) !== -1;
-      btn.classList.toggle('questionnaire__option--selected', isSelected);
-      btn.setAttribute('aria-pressed', isSelected);
+    const labels = optionsContainer.querySelectorAll('.questionnaire__option');
+    labels.forEach(function(label) {
+      const input = label.querySelector('input');
+      const textSpan = label.querySelector('span');
+      const optionText = textSpan ? textSpan.textContent : label.textContent;
+      const isSelected = selectedOptions.indexOf(optionText) !== -1;
+      label.classList.toggle('questionnaire__option--selected', isSelected);
+      if (input) input.checked = isSelected;
     });
     
     updateNextButton();
@@ -259,11 +328,8 @@
     // Get selected functions from question 2
     var selectedFunctions = answers[2] ? answers[2].split(', ').filter(function(f) { return f; }) : [];
     
-    // Get selected computers from question 3
-    var selectedComputers = answers[3] ? answers[3].split(', ').filter(function(c) { return c; }) : [];
-    
-    // Get selected phone from question 4
-    var selectedPhone = answers[4] || '';
+    // Get selected devices from question 3 (computers and phones combined)
+    var selectedDevices = answers[3] ? answers[3].split(', ').filter(function(c) { return c; }) : [];
 
     // Device mapping
     var deviceMapping = {
@@ -271,7 +337,8 @@
       'Windows (Microsoft)': ['pc', 'windows', 'win'],
       'Chromebook (Google)': ['chrome', 'chromebook', 'chromeos', 'cros'],
       'iPhone': ['iphone', 'ios'],
-      'Android (Samsung, Google)': ['android']
+      'iPad': ['ipad', 'ios'],
+      'Android (Samsung/Google)': ['android']
     };
 
     // Function mapping
@@ -306,16 +373,11 @@
     }
 
     // Filter by devices
-    var allSelectedDevices = selectedComputers.slice();
-    if (selectedPhone && selectedPhone !== 'None') {
-      allSelectedDevices.push(selectedPhone);
-    }
-
-    if (allSelectedDevices.length > 0 && selectedComputers.indexOf('My Device Is Not Listed') === -1) {
+    if (selectedDevices.length > 0 && selectedDevices.indexOf('Show all') === -1) {
       filteredTools = filteredTools.filter(function(tool) {
         if (!tool.supportedPlatforms || tool.supportedPlatforms.length === 0) return false;
         var toolPlatformsLower = tool.supportedPlatforms.map(function(p) { return p.toLowerCase(); });
-        return allSelectedDevices.some(function(selectedDevice) {
+        return selectedDevices.some(function(selectedDevice) {
           var mappedValues = deviceMapping[selectedDevice] || [selectedDevice.toLowerCase()];
           return mappedValues.some(function(mapped) {
             return toolPlatformsLower.some(function(platform) {
@@ -364,6 +426,8 @@
     } else {
       // Next question
       currentStep++;
+      // Restore saved answers for the next step if any
+      restoreSavedAnswers();
       renderStepper();
       renderQuestion();
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -372,18 +436,47 @@
 
   function handleBack() {
     if (currentStep > 1) {
+      // Save current answer before going back
+      const data = getQuestionnaireData();
+      const question = data.questions[currentStep - 1];
+      var currentAnswer = question.multiSelect ? selectedOptions.join(', ') : selectedOption;
+      answers[question.id] = currentAnswer;
+      
       currentStep--;
-      selectedOption = '';
-      selectedOptions = [];
+      // Restore saved answers for this step
+      restoreSavedAnswers();
       renderStepper();
       renderQuestion();
       window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }
+  
+  function restoreSavedAnswers() {
+    const data = getQuestionnaireData();
+    const question = data.questions[currentStep - 1];
+    const savedAnswer = answers[question.id];
+    
+    if (savedAnswer) {
+      if (question.multiSelect) {
+        selectedOptions = savedAnswer.split(', ').filter(function(s) { return s; });
+        selectedOption = '';
+      } else {
+        selectedOption = savedAnswer;
+        selectedOptions = [];
+      }
+    } else {
+      selectedOption = '';
+      selectedOptions = [];
     }
   }
 
   function handleResultsBack() {
     resultsScreen.style.display = 'none';
     questionnaireScreen.style.display = 'flex';
+    // Restore saved answers for current step
+    restoreSavedAnswers();
+    renderStepper();
+    renderQuestion();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
@@ -392,11 +485,10 @@
     var params = new URLSearchParams();
     
     if (answers[2]) params.set('function', answers[2]);
-    if (answers[3]) params.set('computer', answers[3]);
-    if (answers[4]) params.set('phone', answers[4]);
+    if (answers[3]) params.set('devices', answers[3]);
     
     // Redirect to browse tools
-    window.location.href = 'browse-tools.html?' + params.toString();
+    window.location.href = '/browse/index.html?' + params.toString();
   }
 
   // =============================================

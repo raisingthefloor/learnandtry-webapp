@@ -11,22 +11,23 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <!-- Header -->
-  <header class="header" role="banner">
+  <header class="header">
     <div class="header__inner">
       <!-- Logo -->
-      <a href="index.html" class="header__logo" aria-label="Learn and Try home">
-        <img src="images/logo-lt.png" alt="" class="header__logo-icon" aria-hidden="true">
+      <a href="/index.html" class="header__logo" aria-label="Learn and Try home">
+        <img src="images/logo-lt.png" alt="The Learn &amp; Try tool logo - L&amp;T with a circle around them" class="header__logo-icon">
         <span class="header__logo-text">Learn and Try Tool</span>
       </a>
 
       <!-- Desktop Navigation -->
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="header__nav-list">
-          <li><a href="index.html" class="header__nav-link header__nav-link--active" aria-current="page">Home</a></li>
-          <li><a href="tool-finder.html" class="header__nav-link">AT Tool Finder</a></li>
-          <li><a href="browse-tools.html" class="header__nav-link">Browse Tools Directly</a></li>
-          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+          <li><a href="/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Home</a></li>
+          <li><a href="/finder/index.html" class="header__nav-link">Easy Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__nav-link">Browse Listing Directly</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
 
@@ -34,8 +35,8 @@
       <button 
         class="header__mobile-toggle" 
         aria-label="Open navigation menu"
+        title="Open navigation menu"
         aria-expanded="false"
-        aria-controls="mobile-menu"
         id="mobile-menu-toggle"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -50,16 +51,16 @@
     <div id="mobile-menu" class="header__mobile-menu">
       <nav aria-label="Mobile navigation">
         <ul class="header__mobile-nav-list">
-          <li><a href="index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Home</a></li>
-          <li><a href="tool-finder.html" class="header__mobile-nav-link">AT Tool Finder</a></li>
-          <li><a href="browse-tools.html" class="header__mobile-nav-link">Browse Tools Directly</a></li>
-          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us</a></li>
+          <li><a href="/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Home</a></li>
+          <li><a href="/finder/index.html" class="header__mobile-nav-link">Easy Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse Listing Directly</a></li>
+          <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main-content">
     <!-- Hero Section -->
     <section class="hero" aria-labelledby="hero-heading">
       <div class="container container--medium">
@@ -74,11 +75,11 @@
           Get personalized suggestions with our Tool Finder, or browse the tools directly.
         </p>
         <div class="hero__actions">
-          <a href="tool-finder.html" class="btn btn--primary btn--lg" aria-label="Start using the Tool Finder to get personalized suggestions">
+          <a href="/finder/index.html" class="btn btn--primary btn--lg" aria-label="Start using the Tool Finder to get personalized suggestions">
             Use Tool Finder
           </a>
-          <a href="browse-tools.html" class="btn btn--outline btn--lg" aria-label="Browse the complete directory of assistive technology tools">
-            Browse Tools Directly
+          <a href="/browse/index.html" class="btn btn--outline btn--lg" aria-label="Browse the complete directory of assistive technology tools">
+            Browse Listing Directly
           </a>
         </div>
         <p class="hero__privacy">
@@ -144,13 +145,14 @@
         <h2 id="video-heading" class="video-section__title">Watch Our Website Walkthrough</h2>
         
         <button class="video-section__player" id="play-walkthrough-btn" aria-label="Play website walkthrough video">
-          <div class="video-section__play-btn">
+          <img src="images/video-thumbnail.png" alt="Video thumbnail showing the Tool Finder welcome screen" class="video-section__thumbnail">
+          <div class="video-section__play-overlay">
             <div class="video-section__play-icon" aria-hidden="true"></div>
           </div>
         </button>
 
-        <a href="https://raisingthefloor.org/lnt-transcript" target="_blank" rel="noopener noreferrer" class="btn btn--outline" aria-label="Read transcript of the website walkthrough video">
-          Read Transcript
+        <a href="https://raisingthefloor.org/lnt-transcript" target="_blank" rel="noopener noreferrer" class="btn btn--outline" aria-label="Full transcript and description of the website walkthrough video (opens in new tab)">
+          Full Transcript + Description of Video <span class="sr-only">(opens in new tab)</span>
         </a>
       </div>
     </section>
@@ -158,7 +160,7 @@
     <!-- Video Modal -->
     <div class="home-video-modal" id="home-video-modal">
       <div class="home-video-modal__content">
-        <button class="home-video-modal__close" id="home-video-modal-close" aria-label="Close video">
+        <button class="home-video-modal__close" id="home-video-modal-close" aria-label="Close video" title="Close video">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6 6 18"></path>
             <path d="m6 6 12 12"></path>
@@ -174,22 +176,40 @@
       <div class="container container--medium">
         <h2 id="cta-heading" class="cta__title">Ready to Get Started?</h2>
         <p class="cta__description">
-          Find the right tool(s) for users with different needs.
+          Find the right computer access tool(s) for users with different needs.
         </p>
         <div class="cta__actions">
-          <a href="tool-finder.html" class="btn btn--primary btn--lg" aria-label="Start using the Tool Finder to get personalized suggestions">
+          <a href="/finder/index.html" class="btn btn--primary btn--lg" aria-label="Start using the Tool Finder to get personalized suggestions">
             Use Tool Finder
           </a>
-          <a href="browse-tools.html" class="btn btn--outline btn--lg" aria-label="Browse the complete directory of assistive technology tools">
-            Browse Tools Directly
+          <a href="/browse/index.html" class="btn btn--outline btn--lg" aria-label="Browse the complete directory of assistive technology tools">
+            Browse Listing Directly
           </a>
         </div>
+      </div>
+    </section>
+
+    <!-- Learn First Section -->
+    <section class="learn-first" aria-labelledby="learn-first-heading">
+      <div class="container">
+        <div class="learn-first__intro">
+          <p class="learn-first__title" id="learn-first-heading">Want to learn more first before you search?</p>
+          <p class="learn-first__text">Not familiar with everything these tools can do?</p>
+          <p class="learn-first__text">Want to learn about ALL the features a tool might have before picking a tool?</p>
+          <p class="learn-first__instruction">Click on lines below (with a <svg class="learn-first__chevron-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>) to expand and explore each topic area.</p>
+        </div>
+        
+        <div class="learn-first__functions" id="learn-first-functions">
+          <!-- Functions will be populated by JavaScript -->
+        </div>
+        
+        <p class="learn-first__note">(Not every tool includes every feature — check each tool to see exactly what it does.)</p>
       </div>
     </section>
   </main>
 
   <!-- Footer -->
-  <footer class="footer" role="contentinfo">
+  <footer class="footer">
     <div class="footer__inner">
 <nav class="footer__grid footer__grid--three-cols" aria-label="Footer navigation">
         <!-- Raising the Floor Column -->
@@ -204,8 +224,8 @@
         <div>
           <h3 class="footer__column-title">Organization</h3>
           <ul class="footer__links">
-            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us</a></li>
-            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us</a></li>
+            <li><a href="https://raisingthefloor.org" class="footer__link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
+            <li><a href="https://raisingthefloor.org/contact-us/" class="footer__link" target="_blank" rel="noopener noreferrer">Contact Us <span class="sr-only">(opens in new tab)</span></a></li>
           </ul>
         </div>
         
@@ -213,7 +233,7 @@
         <div class="footer__column--wide">
           <h3 class="footer__column-title">See other Free Tools from RTF</h3>
           <ul class="footer__links">
-            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic</a></li>
+            <li><a href="https://morphic.org" class="footer__link" target="_blank" rel="noopener noreferrer">Morphic <span class="sr-only">(opens in new tab)</span></a></li>
           </ul>
         </div>
       </nav>
@@ -222,5 +242,6 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script src="js/learn-first.js"></script>
 </body>
 </html>
