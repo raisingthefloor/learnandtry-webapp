@@ -136,7 +136,7 @@
                     </button>
                   </legend>
                   <p class="filter-panel__fieldset-desc">Tools that don't need to be installed can be used even if person has no permission to install things.</p>
-                  <p class="filter-panel__fieldset-label">Show only:</p>
+                  <p class="filter-panel__fieldset-label">Show only tools that are:</p>
                   <div class="filter-panel__options" id="install-filters">
                     <!-- Rendered by JavaScript -->
                   </div>
@@ -192,28 +192,30 @@
               <div class="my-list-header">
                 <div class="my-list-header__top">
                   <span class="my-list-header__title">Your SHORT LIST</span>
+                  <button class="my-list-toggle-btn" id="my-list-toggle-btn">Hide Short List</button>
                 </div>
-                <p class="my-list-header__description my-list-header__description--desktop">As you find products below that you like or would like to remember, explore more, or share, you can click on the <span class="my-list-header__button-text">"Add to Short List"</span> button you will find on each product to bring a copy of that product up to your SHORT LIST here where you can later COMPARE, EXPLORE, or SHARE them with others.</p>
-                <p class="my-list-header__description my-list-header__description--mobile">As you find products you like below you can click on the "add to shortlist" icon <svg class="my-list-header__inline-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14,10H3v2h11V10z M14,6H3v2h11V6z M18,14v-4h-2v4h-4v2h4v4h2v-4h4v-2H18z M3,16h7v-2H3V16z"/></svg> to add them here where you can later COMPARE, EXPLORE, or SHARE them with others.</p>
-                <div class="my-list-header__actions" id="my-list-actions" style="display: none;">
-                  <div class="my-list-header__buttons">
-                    <button class="btn btn--marking" id="copy-marked-link-btn">COPY link to SHORT LIST to save/share list.</button>
-                    <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE link to SHORT LIST items</button>
+                <div class="my-list-collapsible" id="my-list-collapsible">
+                  <p class="my-list-header__description my-list-header__description--desktop">As you find products below that you like or would like to remember, explore more, or share, you can click on the <span class="my-list-header__button-text">"Add to Short List"</span> button you will find on each product to bring a copy of that product up to your SHORT LIST here where you can later COMPARE, EXPLORE, or SHARE them with others.</p>
+                  <p class="my-list-header__description my-list-header__description--mobile">As you find products you like below you can click on the "add to shortlist" icon <svg class="my-list-header__inline-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14,10H3v2h11V10z M14,6H3v2h11V6z M18,14v-4h-2v4h-4v2h4v4h2v-4h4v-2H18z M3,16h7v-2H3V16z"/></svg> to add them here where you can later COMPARE, EXPLORE, or SHARE them with others.</p>
+                  <div class="my-list-header__actions" id="my-list-actions" style="display: none;">
+                    <div class="my-list-header__buttons">
+                      <button class="btn btn--marking" id="copy-marked-link-btn">COPY link to SHORT LIST to save/share list.</button>
+                      <button class="btn btn--marking" id="share-marked-link-btn" style="display: none;">SHARE link to SHORT LIST items</button>
+                    </div>
+                    <p class="my-list-header__note"><strong>NOTE:</strong> SHORT LIST items are not remembered between sessions. Use the "COPY link" button above to save a link to the SHORT LIST to view the SHORT LIST again later yourself, or to share them with others.</p>
+                    <p class="my-list-header__click-hint"><strong>Click on any item in SHORT LIST here to expand it to see full product information.</strong></p>
                   </div>
-                  <p class="my-list-header__note"><strong>NOTE:</strong> SHORT LIST items are not remembered between sessions. Use the "COPY link" button above to save a link to the SHORT LIST to view the SHORT LIST again later yourself, or to share them with others.</p>
-                  <p class="my-list-header__click-hint"><strong>Click on any item in SHORT LIST here to expand it to see full product information.</strong> <button class="my-list-toggle-btn" id="my-list-toggle-btn">(Hide SHORT LIST)</button></p>
+                
+                  <!-- SHORT LIST Items Container -->
+                  <div class="my-list-items-container" id="my-list-items">
+                    <!-- Items added to Short List will appear here -->
+                  </div>
+                  
+                  <!-- End of SHORT LIST -->
+                  <div class="my-list-end" id="my-list-end" style="display: none;">
+                    <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">REMOVE all products from SHORT LIST</button>
+                  </div>
                 </div>
-              </div>
-              
-              <!-- SHORT LIST Items Container -->
-              <div class="my-list-items-container" id="my-list-items">
-                <!-- Items added to Short List will appear here -->
-              </div>
-              
-              <!-- End of SHORT LIST -->
-              <div class="my-list-end" id="my-list-end" style="display: none;">
-                <span class="my-list-end__text">End of SHORT LIST items</span>
-                <button class="btn btn--marking btn--clear-marks" id="clear-marked-btn">REMOVE all products from SHORT LIST</button>
               </div>
             </div>
             

@@ -406,6 +406,9 @@ var installMap = {
     var myListActions = document.getElementById('my-list-actions');
     var myListEnd = document.getElementById('my-list-end');
     var shareBtn = document.getElementById('share-marked-link-btn');
+    var toggleBtn = document.getElementById('my-list-toggle-btn');
+    var descriptionDesktop = document.querySelector('.my-list-header__description--desktop');
+    var descriptionMobile = document.querySelector('.my-list-header__description--mobile');
     
     if (!myListItems) return;
     
@@ -413,10 +416,19 @@ var installMap = {
       myListItems.innerHTML = '';
       if (myListActions) myListActions.style.display = 'none';
       if (myListEnd) myListEnd.style.display = 'none';
+      if (toggleBtn) toggleBtn.style.display = 'none';
+      // Show instructions when no items
+      if (descriptionDesktop) descriptionDesktop.style.display = '';
+      if (descriptionMobile) descriptionMobile.style.display = '';
       return;
     }
     
-    // Show actions and end when items exist
+    // Hide instructions when items exist
+    if (descriptionDesktop) descriptionDesktop.style.display = 'none';
+    if (descriptionMobile) descriptionMobile.style.display = 'none';
+    
+    // Show toggle button and actions when items exist
+    if (toggleBtn) toggleBtn.style.display = '';
     if (myListActions) myListActions.style.display = '';
     if (myListEnd && !myListHidden) myListEnd.style.display = '';
     
@@ -1858,11 +1870,9 @@ var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
     var toggleBtn = e.target.closest('#my-list-toggle-btn');
     if (toggleBtn) {
       myListHidden = !myListHidden;
-      toggleBtn.textContent = myListHidden ? '(Show SHORT LIST)' : '(Hide SHORT LIST)';
-      var myListItems = document.getElementById('my-list-items');
-      var myListEnd = document.getElementById('my-list-end');
-      if (myListItems) myListItems.style.display = myListHidden ? 'none' : '';
-      if (myListEnd) myListEnd.style.display = (myListHidden || markedToolIds.size === 0) ? 'none' : '';
+      toggleBtn.textContent = myListHidden ? 'Show Short List' : 'Hide Short List';
+      var myListCollapsible = document.getElementById('my-list-collapsible');
+      if (myListCollapsible) myListCollapsible.style.display = myListHidden ? 'none' : '';
     }
   });
   
