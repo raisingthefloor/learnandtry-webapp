@@ -54,58 +54,63 @@ function initMobileMenu() {
 // Set Active Navigation Link
 // =============================================
 
+// Normalize a path to its directory section so that:
+//   /index.html          -> /
+//   /finder/index.html   -> /finder
+//   /browse/index.html   -> /browse
+// Trailing "index.html" and trailing slashes are stripped.
+function normalizeNavPath(path) {
+  try {
+    // Resolve relative/absolute hrefs against the current origin
+    var resolved = new URL(path, window.location.origin).pathname;
+    resolved = resolved.replace(/index\.html$/, '');
+    resolved = resolved.replace(/\/+$/, '');
+    return resolved === '' ? '/' : resolved;
+  } catch (e) {
+    return path;
+  }
+}
+
 function setActiveNavLink() {
-  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const currentPath = normalizeNavPath(window.location.pathname);
   
-  // Desktop nav
-  const navLinks = document.querySelectorAll('.header__nav-link');
-  navLinks.forEach(function(link) {
-    const href = link.getAttribute('href');
-    link.classList.remove('header__nav-link--active');
-    link.removeAttribute('aria-current');
-    
-    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
-      link.classList.add('header__nav-link--active');
-      link.setAttribute('aria-current', 'page');
-    }
-  });
+  function applyActiveState(links, activeClass) {
+    links.forEach(function(link) {
+      const href = link.getAttribute('href');
+      link.classList.remove(activeClass);
+      link.removeAttribute('aria-current');
+      
+      // Skip external links (e.g. About Us opens in a new tab on another domain)
+      if (link.target === '_blank' || /^https?:\/\//.test(href)) {
+        return;
+      }
+      
+      if (normalizeNavPath(href) === currentPath) {
+        link.classList.add(activeClass);
+        link.setAttribute('aria-current', 'page');
+      }
+    });
+  }
   
-  // Mobile nav
-  const mobileNavLinks = document.querySelectorAll('.header__mobile-nav-link');
-  mobileNavLinks.forEach(function(link) {
-    const href = link.getAttribute('href');
-    link.classList.remove('header__mobile-nav-link--active');
-    link.removeAttribute('aria-current');
-    
-    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
-      link.classList.add('header__mobile-nav-link--active');
-      link.setAttribute('aria-current', 'page');
-    }
-  });
+  applyActiveState(document.querySelectorAll('.header__nav-link'), 'header__nav-link--active');
+  applyActiveState(document.querySelectorAll('.header__mobile-nav-link'), 'header__mobile-nav-link--active');
 }
 
 // =============================================
-// Home Page Video Modal
+// Home Page Inline Video Embed
 // =============================================
 
-function initHomeVideoModal() {
+function initHomeVideoEmbed() {
   var playBtn = document.getElementById('play-walkthrough-btn');
-  var modal = document.getElementById('home-video-modal');
-  var closeBtn = document.getElementById('home-video-modal-close');
-  var iframe = document.getElementById('home-video-iframe');
+  var embedContainer = document.getElementById('video-embed-container');
   
   // Fetch video ID from JSON file on GitHub
   var videoIdJsonUrl = 'https://raw.githubusercontent.com/raisingthefloor/learnandtry-webapp/data/public/data/lnt_video_youtube_id.json';
   var fallbackUrl = 'https://raisingthefloor.org/lnt-walkthrough';
   
-  if (!playBtn || !modal || !iframe) return;
-
-  // Add dialog role for screen readers
-  modal.setAttribute('role', 'dialog');
-  modal.setAttribute('aria-modal', 'true');
-  modal.setAttribute('aria-label', 'Website walkthrough video');
+  if (!playBtn || !embedContainer) return;
   
-  function openModal() {
+  function embedVideo() {
     fetch(videoIdJsonUrl)
       .then(function(response) {
         return response.json();
@@ -114,11 +119,15 @@ function initHomeVideoModal() {
         var videoId = data.videoId || data.video_id || data.id;
         
         if (videoId) {
+          // Remove the play button and replace with iframe
+          var iframe = document.createElement('iframe');
           iframe.setAttribute('src', 'https://www.youtube.com/embed/' + videoId + '?autoplay=1');
-          modal.classList.add('is-open');
-          document.body.style.overflow = 'hidden';
-          // Move focus to close button
-          if (closeBtn) closeBtn.focus();
+          iframe.setAttribute('title', 'Website Walkthrough Video');
+          iframe.setAttribute('allowfullscreen', '');
+          iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+          
+          embedContainer.innerHTML = '';
+          embedContainer.appendChild(iframe);
         } else {
           // Fallback: open in new tab
           window.open(fallbackUrl, '_blank');
@@ -130,56 +139,7 @@ function initHomeVideoModal() {
       });
   }
   
-  function closeModal() {
-    modal.classList.remove('is-open');
-    iframe.setAttribute('src', '');
-    document.body.style.overflow = '';
-    // Return focus to trigger button
-    playBtn.focus();
-  }
-  
-  playBtn.addEventListener('click', openModal);
-  
-  if (closeBtn) {
-    closeBtn.addEventListener('click', closeModal);
-  }
-  
-  // Close on backdrop click
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      closeModal();
-    }
-  });
-  
-  // Close on Escape key & trap focus inside modal
-  document.addEventListener('keydown', function(e) {
-    if (!modal.classList.contains('is-open')) return;
-    
-    if (e.key === 'Escape') {
-      closeModal();
-      return;
-    }
-    
-    // Focus trap
-    if (e.key === 'Tab') {
-      var focusable = modal.querySelectorAll('button, iframe, [tabindex]:not([tabindex="-1"])');
-      if (focusable.length === 0) return;
-      var first = focusable[0];
-      var last = focusable[focusable.length - 1];
-      
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-  });
+  playBtn.addEventListener('click', embedVideo);
 }
 
 // =============================================
@@ -189,5 +149,5 @@ function initHomeVideoModal() {
 document.addEventListener('DOMContentLoaded', function() {
   initMobileMenu();
   setActiveNavLink();
-  initHomeVideoModal();
+  initHomeVideoEmbed();
 });
