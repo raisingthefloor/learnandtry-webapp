@@ -176,18 +176,28 @@
       
       // Features these tools might provide
       html += '<div class="learn-first__subsection">';
-      html += '<h4 class="learn-first__subsection-title">Features these tools might provide</h4>';
+      html += '<button class="learn-first__subsection-toggle" aria-expanded="false">';
+      html += createChevronSVG(false);
+      html += '<span>Features these tools might provide</span>';
+      html += '</button>';
+      html += '<div class="learn-first__subsection-content" style="display: none;">';
       html += '<ul class="learn-first__feature-list">';
       func.features.forEach(function(feature) {
         html += '<li>' + feature + '</li>';
       });
       html += '</ul>';
       html += '</div>';
+      html += '</div>';
       
       // Other tool types that might also help
       html += '<div class="learn-first__subsection">';
-      html += '<h4 class="learn-first__subsection-title">Other tool types that might also help</h4>';
+      html += '<button class="learn-first__subsection-toggle" aria-expanded="false">';
+      html += createChevronSVG(false);
+      html += '<span>Other tool types that might also help</span>';
+      html += '</button>';
+      html += '<div class="learn-first__subsection-content" style="display: none;">';
       html += func.seeAlso;
+      html += '</div>';
       html += '</div>';
       
       html += '</div>'; // function-content
@@ -203,6 +213,7 @@
 
     container.addEventListener('click', function(e) {
       var functionToggle = e.target.closest('.learn-first__function-toggle');
+      var subsectionToggle = e.target.closest('.learn-first__subsection-toggle');
 
       if (functionToggle) {
         var functionDiv = functionToggle.closest('.learn-first__function');
@@ -211,6 +222,17 @@
         var isExpanded = functionToggle.getAttribute('aria-expanded') === 'true';
         
         functionToggle.setAttribute('aria-expanded', !isExpanded);
+        content.style.display = isExpanded ? 'none' : 'block';
+        chevron.classList.toggle('is-expanded', !isExpanded);
+      }
+
+      if (subsectionToggle) {
+        var subsection = subsectionToggle.closest('.learn-first__subsection');
+        var content = subsection.querySelector('.learn-first__subsection-content');
+        var chevron = subsectionToggle.querySelector('.learn-first__chevron');
+        var isExpanded = subsectionToggle.getAttribute('aria-expanded') === 'true';
+        
+        subsectionToggle.setAttribute('aria-expanded', !isExpanded);
         content.style.display = isExpanded ? 'none' : 'block';
         chevron.classList.toggle('is-expanded', !isExpanded);
       }
