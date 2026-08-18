@@ -486,10 +486,10 @@ var installMap = {
           
           // Badges
           html += '<div class="tool-card__badges-expanded">';
-          html += createBadgeColumnHTML('HELPS WITH:', tool.functions, 'function');
-          html += createBadgeColumnHTML('DEVICES:', tool.supportedPlatforms, 'device');
-          html += createBadgeColumnHTML('INSTALL?:', tool.installTypes, 'install');
-          html += createBadgeColumnHTML('PRICING:', tool.purchaseOptions, 'purchase');
+          html += createBadgeColumnHTML('Helps with:', tool.functions, 'function');
+          html += createBadgeColumnHTML('Devices:', tool.supportedPlatforms, 'device');
+          html += createBadgeColumnHTML('Install?:', tool.installTypes, 'install');
+          html += createBadgeColumnHTML('Pricing:', tool.purchaseOptions, 'purchase');
           html += '</div><hr class="tool-card__divider">';
           
           // Visit button
@@ -678,7 +678,7 @@ badgesContainer.innerHTML = html;
   var totalEl = document.getElementById('total-results');
   if (startEl) startEl.textContent = Math.min(start, total);
   if (endEl) endEl.textContent = end;
-  if (totalEl) totalEl.textContent = total + ' tools';
+  if (totalEl) totalEl.textContent = total;
 
     var loadingEl = document.getElementById('loading-state');
     var emptyEl = document.getElementById('empty-state');
@@ -1086,10 +1086,10 @@ var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
 
           // Badges
           html_card += '<div class="tool-card__badges-expanded">';
-          html_card += createBadgeColumnHTML('HELPS WITH:', tool.functions, 'function');
-          html_card += createBadgeColumnHTML('DEVICES:', tool.supportedPlatforms, 'device');
-          html_card += createBadgeColumnHTML('INSTALL?:', tool.installTypes, 'install');
-          html_card += createBadgeColumnHTML('PRICING:', tool.purchaseOptions, 'purchase');
+          html_card += createBadgeColumnHTML('Helps with:', tool.functions, 'function');
+          html_card += createBadgeColumnHTML('Devices:', tool.supportedPlatforms, 'device');
+          html_card += createBadgeColumnHTML('Install?:', tool.installTypes, 'install');
+          html_card += createBadgeColumnHTML('Pricing:', tool.purchaseOptions, 'purchase');
           html_card += '</div><hr class="tool-card__divider">';
 
           // Visit button

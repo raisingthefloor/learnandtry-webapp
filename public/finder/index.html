@@ -7,7 +7,7 @@
   <title>Tool Finder - Learn and Try</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body class="page--inner">
@@ -23,8 +23,8 @@
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="header__nav-list">
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
-          <li><a href="/finder/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__nav-link">Browse Listing Directly</a></li>
+          <li><a href="/finder/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__nav-link">Browse All Tools</a></li>
           <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -48,8 +48,8 @@
       <nav aria-label="Mobile navigation">
         <ul class="header__mobile-nav-list">
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
-          <li><a href="/finder/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse Listing Directly</a></li>
+          <li><a href="/finder/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse All Tools</a></li>
           <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -61,13 +61,11 @@
     <section id="welcome-screen" class="tool-finder">
       <div class="tool-finder__content">
         <h1 class="tool-finder__title">
-          Welcome to the <span class="tool-finder__title-highlight">Tool Finder</span>
+          Welcome to the Tool Finder
         </h1>
         <p class="tool-finder__text">
-          Answer a few questions and a list<br>
-          of possible solutions to fit will be provided.
+          Answer a few questions and the tool will provide a list of possible solutions to fit an individual.
         </p>
-        <p class="tool-finder__text tool-finder__text--no-margin"><span class="tool-finder__text--emphasis">We don't store any information —</span> your answers are only used to help you find tools and then forgotten.</p>
         <button 
           id="start-questionnaire" 
           class="btn btn--primary btn--lg"
@@ -75,6 +73,13 @@
         >
           Start
         </button>
+        <p class="privacy-notice">
+          <svg class="privacy-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          We don't store any information — your answers are only used to help you find tools and then forgotten.
+        </p>
       </div>
     </section>
 
@@ -90,7 +95,8 @@
       <!-- Question Content -->
       <div class="questionnaire__content">
         <div class="questionnaire__inner">
-          <h2 id="question-text" class="questionnaire__question"></h2>
+          <h2 id="question-text" class="questionnaire__question" tabindex="-1"></h2>
+          <p id="question-subline" class="questionnaire__subline" style="display: none;"></p>
           <p id="question-hint" class="questionnaire__hint" style="display: none;">Select one or more, then click Next</p>
           
           <fieldset class="questionnaire__options" id="options-container">
@@ -101,21 +107,27 @@
           <div class="questionnaire__actions">
             <button 
               id="back-btn" 
-              class="btn btn--outline btn--lg"
-              aria-label="Go back to previous question"
-              disabled
+              class="btn btn--secondary btn--lg"
             >
-              ← Back
+              <span aria-hidden="true">← </span>Back
             </button>
             <button 
               id="next-btn" 
               class="btn btn--primary btn--lg"
-              aria-label="Go to next question"
-              disabled
+              aria-disabled="true"
+              aria-describedby="next-help"
             >
-              Next →
+              Next<span aria-hidden="true"> →</span>
             </button>
           </div>
+          <p id="next-help" class="questionnaire__next-help" role="alert" style="display: none;">
+            <svg class="questionnaire__next-help-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+              <line x1="12" x2="12" y1="9" y2="13"></line>
+              <line x1="12" x2="12.01" y1="17" y2="17"></line>
+            </svg>
+            <span>Please select an option to continue.</span>
+          </p>
         </div>
       </div>
     </section>
@@ -132,28 +144,25 @@
       <!-- Results Content -->
       <div class="results">
         <div class="results__content">
-          <p class="results__text results__text--found">
-            We found <strong class="results__count" id="tool-count">0</strong> tools that meet those choices.
-          </p>
-          <p class="results__text">
-            We will now show you them in a list.<br>
-            - Click any item in the list to see more information about that tool.
-          </p>
+          <div class="results-stat">
+            <span class="results-number" id="tool-count">0</span>
+            <span class="results-label">tools match your choices.</span>
+          </div>
+          <p class="results__text results__text--body">Your personalized list is ready.</p>
+          <p class="results__text results__text--body">Select any tool in the list to learn more about it.</p>
           
           <div class="results__actions">
             <button 
               id="results-back-btn" 
-              class="btn btn--outline btn--lg"
-              aria-label="Go back to previous question"
+              class="btn btn--secondary btn--lg"
             >
-              ← Back
+              <span aria-hidden="true">← </span>Back
             </button>
             <button 
               id="show-tools-btn" 
               class="btn btn--primary btn--lg"
-              aria-label="View recommended tools"
             >
-              Show me the Tools →
+              See My Tools<span aria-hidden="true"> →</span>
             </button>
           </div>
         </div>
@@ -169,7 +178,7 @@
         <div>
           <h3 class="footer__column-title">Raising the Floor</h3>
           <p class="footer__description">
-            Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
+            Making technology accessible for everyone.
           </p>
         </div>
         

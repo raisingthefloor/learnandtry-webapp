@@ -7,7 +7,7 @@
   <title>Browse Tools - Learn and Try</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body class="page--inner">
@@ -23,8 +23,8 @@
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="header__nav-list">
           <li><a href="/index.html" class="header__nav-link">Home</a></li>
-          <li><a href="/finder/index.html" class="header__nav-link">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse Listing Directly</a></li>
+          <li><a href="/finder/index.html" class="header__nav-link">Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Browse All Tools</a></li>
           <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -48,8 +48,8 @@
       <nav aria-label="Mobile navigation">
         <ul class="header__mobile-nav-list">
           <li><a href="/index.html" class="header__mobile-nav-link">Home</a></li>
-          <li><a href="/finder/index.html" class="header__mobile-nav-link">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse Listing Directly</a></li>
+          <li><a href="/finder/index.html" class="header__mobile-nav-link">Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Browse All Tools</a></li>
           <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -57,10 +57,8 @@
   </header>
 
   <main class="browse" id="main-content">
-    <div class="container">
-      
-
-      <div class="browse__layout">
+    <div class="layout-sidebar">
+      <div class="layout-sidebar__grid">
         <!-- Sidebar with Filters -->
         <aside class="browse__sidebar">
           <div class="filter-panel" aria-label="Filter tools">
@@ -169,7 +167,7 @@
           <!-- Page Title and Description -->
           <div class="browse__intro" id="browse-intro">
             <div class="browse__title-row">
-              <h1 class="browse__title" id="page-title">Browse Listing</h1>
+              <h1 class="browse__title" id="page-title">Browse All Tools</h1>
               <button class="browse__how-to-toggle" id="how-to-toggle-btn">SHOW INSTRUCTIONS FOR THIS PAGE</button>
             </div>
             
@@ -266,7 +264,7 @@
           <!-- Results Count & Pagination Controls -->
           <div class="browse__controls">
             <span class="browse__results-count" aria-live="polite" role="status">
-              Showing <strong id="showing-start">0</strong> to <strong id="showing-end">0</strong> of <strong id="total-results">0</strong> tools found.
+                Showing <strong id="showing-start">0</strong>&ndash;<strong id="showing-end">0</strong> of <strong id="total-results">0</strong> tools.
             </span>
             <div class="browse__controls-right">
               <div class="browse__per-page">
@@ -317,7 +315,7 @@
         <div>
           <h3 class="footer__column-title">Raising the Floor</h3>
           <p class="footer__description">
-            Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
+            Making technology accessible for everyone.
           </p>
         </div>
         

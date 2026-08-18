@@ -1,157 +1,401 @@
 (function() {
   'use strict';
 
-  // Function info content - same data as browse-tools.js
+  // Function info content - updated structure per design spec
   var functionInfoContent = {
     'reading': {
       name: 'Reading',
-      intro: '<strong>READING</strong> includes tools for users who have trouble reading, including dyslexia, not understanding the meanings of new/unknown words, idioms, eye tracking while reading, or any other reason a person struggles to read text.',
-      features: [
-        'features for reading text aloud',
-        'highlighting words as you read - or as they are read aloud',
-        'dictionaries, translators, dyslexia fonts',
-        'highlighters and moving rulers or lines that put focus on line you are reading',
-        'removing distracting text',
-        'help finding the start of the next line of text when reading',
-        'changing fonts, text size, boldness, colors and contrast of text',
-        'full-page color overlays to reduce visual stress',
-        'changing spacing of characters and lines',
-        'breaking words into hyphenated syllables',
-        'providing pronunciations',
-        'transform pictures or scans of paper documents into other accessible documents including ebooks, text, WORD, etc',
-        'transforming one digital document format into another more accessible format for the user',
-        'assistance with reading math'
+      intro: 'Tools for users who have trouble reading, including dyslexia, not understanding the meanings of new or unknown words, idioms, eye tracking while reading, or any other reason a person struggles to read text.',
+      featureGroups: [
+        {
+          label: 'Read text aloud',
+          features: [
+            'Text-to-speech for any content',
+            'Highlighting words as they are read aloud'
+          ]
+        },
+        {
+          label: 'Visual reading aids',
+          features: [
+            'Highlighters and moving rulers',
+            'Focus on line you are reading',
+            'Removing distracting text',
+            'Help finding the start of the next line'
+          ]
+        },
+        {
+          label: 'Text customization',
+          features: [
+            'Changing fonts, text size, boldness',
+            'Colors and contrast of text',
+            'Full-page color overlays',
+            'Spacing of characters and lines',
+            'Breaking words into syllables',
+            'Dyslexia-friendly fonts'
+          ]
+        },
+        {
+          label: 'Language support',
+          features: [
+            'Dictionaries and translators',
+            'Providing pronunciations',
+            'Assistance with reading math'
+          ]
+        },
+        {
+          label: 'Document conversion',
+          features: [
+            'Transform pictures or scans into accessible formats',
+            'Converting between digital document formats'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Vision</strong> (some features for making text larger or clearer might make text easier to read)</li></ul>'
+      relatedCategories: [
+        { name: 'Vision', reason: 'Includes features that make text larger or clearer, which can also make reading easier.' }
+      ]
     },
     'writing': {
       name: 'Writing',
-      intro: '<strong>WRITING</strong> includes tools for users who have any problems with writing, organizing thoughts, getting started, knowing the right words, spelling, grammar, fear of bad output or any other barrier to writing.',
-      features: [
-        'features for organizing and structuring thoughts and ideas',
-        'spelling, grammar, and punctuation checking (including context-aware and phonetic spell checking for dyslexia) (done as you type or when you ask)',
-        'helping with style, and clarity',
-        'suggesting words and better phrasing',
-        'word predictors (to speed typing)',
-        'translation dictionaries',
-        'reading text aloud to better catch errors',
-        'assistance writing/typing math equations',
-        'note-takers that turn recorded lectures, meetings, or videos into searchable text notes and summaries'
+      intro: 'Tools for users who have any problems with writing, organizing thoughts, getting started, knowing the right words, spelling, grammar, or any other barrier to writing.',
+      featureGroups: [
+        {
+          label: 'Organization',
+          features: [
+            'Structuring thoughts and ideas',
+            'Outlining and mind mapping'
+          ]
+        },
+        {
+          label: 'Spelling and grammar',
+          features: [
+            'Context-aware spell checking',
+            'Phonetic spell checking for dyslexia',
+            'Grammar and punctuation checking',
+            'Style and clarity suggestions'
+          ]
+        },
+        {
+          label: 'Writing assistance',
+          features: [
+            'Word predictors to speed typing',
+            'Suggesting words and better phrasing',
+            'Translation dictionaries',
+            'Reading text aloud to catch errors'
+          ]
+        },
+        {
+          label: 'Specialized writing',
+          features: [
+            'Writing math equations',
+            'Note-takers that turn recordings into text and summaries'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Physical</strong> (for solutions like speech-to-text, alternatives to standard keyboard input, etc. if user has trouble with using keyboard)</li></ul>'
+      relatedCategories: [
+        { name: 'Physical', reason: 'Physical tools include speech-to-text and keyboard alternatives for people who use alternatives to a standard keyboard.' }
+      ]
     },
     'focus': {
-      name: 'Focus/Planning/Exec',
-      intro: '<strong>FOCUS/PLANNING/EXEC</strong> includes tools for users who have any problems with executive functions including planning, focusing, staying on task, or finishing.',
-      features: [
-        'Features for playing gentle background sounds (such as rain or waves) to block distracting noise',
-        'supporting calm focus',
-        'locking the device to a single app',
-        'blocking certain buttons or touch areas so a user doesn\'t accidentally leave the task they are working on',
-        'hiding ads, menus, and other clutter',
-        'dimming or masking everything on the screen except the line or area they are working on so their eyes stay on one place',
-        'help organizing and structuring your day, your ideas, your tasks',
-        'support for executive skills with visual schedules, reminders, and simple goal-setting tools',
-        'providing focus timers with planned breaks',
-        'controlling distractions',
-        '"Do Not Disturb" function to cut down interruptions',
-        'ways to quickly turn on these or other helpful modes or features'
+      name: 'Attention and planning',
+      intro: 'Tools for users who have any problems with executive functions including planning, focusing, staying on task, or finishing.',
+      featureGroups: [
+        {
+          label: 'Focus aids',
+          features: [
+            'Gentle background sounds to block distracting noise',
+            'Supporting calm focus',
+            'Dimming or masking everything except the working area'
+          ]
+        },
+        {
+          label: 'Distraction control',
+          features: [
+            'Locking the device to a single app',
+            'Blocking certain buttons or touch areas',
+            'Hiding ads, menus, and other clutter',
+            'Do Not Disturb function'
+          ]
+        },
+        {
+          label: 'Planning and organization',
+          features: [
+            'Help organizing your day, ideas, and tasks',
+            'Visual schedules and reminders',
+            'Simple goal-setting tools'
+          ]
+        },
+        {
+          label: 'Time management',
+          features: [
+            'Focus timers with planned breaks',
+            'Quick ways to turn on helpful modes'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Cognitive</strong> (for other related cognitive processing tools that may be helpful)</li></ul>'
+      relatedCategories: [
+        { name: 'Cognitive', reason: 'Includes features like simplifying language, breaking down complex information, and memory aids that can support focus and planning.' }
+      ]
     },
     'cognitive': {
       name: 'Cognitive',
-      intro: '<strong>COGNITIVE</strong> includes tools for users who have any problems with thinking, remembering, or complex language or concepts.',
-      features: [
-        'language simplification',
-        'extra time to read pop-ups',
-        'breaking complex sentences into simpler chunks/phrases for easier understanding',
-        'automatic extraction of key ideas, vocabulary lists, or study questions from text',
-        'memory aids, and shortcuts that do not involve memorization',
-        'toolbars to make things easier to find and use',
-        'simplified screen layouts',
-        'distraction masking and removal',
-        'animation control',
-        'presentation of information both visually and auditorily'
+      intro: 'Tools for users who have any problems with thinking, remembering, or complex language or concepts.',
+      featureGroups: [
+        {
+          label: 'Simplification',
+          features: [
+            'Language simplification',
+            'Breaking complex sentences into simpler chunks',
+            'Simplified screen layouts'
+          ]
+        },
+        {
+          label: 'Learning aids',
+          features: [
+            'Extra time to read pop-ups',
+            'Automatic extraction of key ideas',
+            'Vocabulary lists and study questions'
+          ]
+        },
+        {
+          label: 'Memory support',
+          features: [
+            'Memory aids and shortcuts',
+            'Toolbars to make things easier to find',
+            'Presenting information visually and auditorily'
+          ]
+        },
+        {
+          label: 'Distraction management',
+          features: [
+            'Distraction masking and removal',
+            'Animation control'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Vision</strong> (for additional features that make things larger)</li><li><strong>Focus/Planning/Exec</strong> (for features to help with distraction, focus, planning or other executive functions)</li><li><strong>Reading</strong> (for features that read text aloud and other reading aids)</li><li><strong>Writing</strong> (for things to help with writing)</li><li><strong>Speech/Comm</strong> (if person has trouble with communication)</li></ul>'
+      relatedCategories: [
+        { name: 'Vision', reason: 'For features that make things larger.' },
+        { name: 'Attention and planning', reason: 'For features to help with distraction, focus, or executive functions.' },
+        { name: 'Reading', reason: 'For features that read text aloud and other reading aids.' },
+        { name: 'Writing', reason: 'Includes features for writing support.' },
+        { name: 'Speech and communication', reason: 'If person has trouble with communication.' }
+      ]
     },
     'vision': {
       name: 'Vision',
-      intro: '<strong>VISION</strong> includes tools for users who have any type of visual problem (color blindness, blurry vision, tunnel vision, central loss, contrast, light sensitivity, etc.)',
-      features: [
-        'features for enlarging text, images, and cursors',
-        'inverting screen colors',
-        'applying color filters to shift colors to accommodate people with color blindness (who cannot see some colors)',
-        'enhancing text contrast so text stands out more clearly',
-        'increasing overall contrast and/or choose high-contrast themes so low-contrast text and controls are easier to see',
-        'changing text size',
-        'simplified screen layouts',
-        'changing text-to-speech',
-        'changing image or text to e-book and audio conversions'
+      intro: 'Tools for users who have any type of visual problem including color blindness, blurry vision, tunnel vision, central loss, contrast issues, or light sensitivity.',
+      featureGroups: [
+        {
+          label: 'Magnification',
+          features: [
+            'Enlarging text, images, and cursors',
+            'Changing text size'
+          ]
+        },
+        {
+          label: 'Color and contrast',
+          features: [
+            'Inverting screen colors',
+            'Color filters for color blindness',
+            'Enhancing text contrast',
+            'High-contrast themes'
+          ]
+        },
+        {
+          label: 'Screen reading',
+          features: [
+            'Text-to-speech',
+            'Simplified screen layouts'
+          ]
+        },
+        {
+          label: 'Format conversion',
+          features: [
+            'Image or text to e-book conversion',
+            'Audio conversions'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Reading</strong> (for ebooks, read-aloud features, and other reading aids)</li></ul>'
+      relatedCategories: [
+        { name: 'Reading', reason: 'For ebooks, read-aloud features, and other reading aids.' }
+      ]
     },
     'braille': {
       name: 'Braille',
-      intro: '<strong>BRAILLE</strong> tools are for people who use braille to access computers.',
-      features: [
-        'support of braille displays and braille keyboards to read screen content and interact with software',
-        'converting printed or digital text, web pages, and scanned documents into electronic braille or braille-ready files (including support for multiple languages, mathematics, and music notation)',
-        'using an on-screen touchscreen as a six-dot braille keyboard',
-        '(for those with hearing) using braille in parallel with speech output',
-        '(for those with some vision) using braille in parallel with enlarged text and/or screen'
+      intro: 'Tools for people who use braille to access computers.',
+      featureGroups: [
+        {
+          label: 'Braille input and output',
+          features: [
+            'Support of braille displays and braille keyboards',
+            'Using touchscreen as a six-dot braille keyboard'
+          ]
+        },
+        {
+          label: 'Conversion',
+          features: [
+            'Converting text and documents into electronic braille',
+            'Support for multiple languages, math, and music notation'
+          ]
+        },
+        {
+          label: 'Multi-modal use',
+          features: [
+            'Using braille with speech output',
+            'Using braille with enlarged text or screen'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Vision</strong> (most braille users also will use the tools in the Vision category)</li></ul>'
+      relatedCategories: [
+        { name: 'Speech and communication', reason: 'Includes tools that many Braille users use.' }
+      ]
     },
     'hearing': {
       name: 'Hearing',
-      intro: '<strong>HEARING</strong> tools have computer-based features people who have trouble using computers if they cannot hear them or hear them well enough including when computers talk to them.',
-      features: [
-        'features for making it easier to hear and understand speech through amplification, filtering, and/or frequency shifting',
-        'reducing background sounds',
-        'providing visual indication of or identifying any sounds',
-        'transform any spoken words and sounds (live or recorded) into text',
-        'translate words into sign language',
-        'show any captions automatically',
-        'record, transform into text, and summarize meetings',
-        'provide real-time text alongside spoken conversations',
-        'connection of audio directly to hearing aids',
-        'and provision of tactile indications for alerts'
+      intro: 'Tools for people who have trouble hearing computers or hearing them well enough, including when computers talk to them.',
+      featureGroups: [
+        {
+          label: 'Audio enhancement',
+          features: [
+            'Amplification and filtering',
+            'Frequency shifting',
+            'Reducing background sounds'
+          ]
+        },
+        {
+          label: 'Visual alternatives',
+          features: [
+            'Visual indication of sounds',
+            'Captions shown automatically',
+            'Real-time text alongside spoken conversations'
+          ]
+        },
+        {
+          label: 'Speech-to-text',
+          features: [
+            'Transform spoken words into text',
+            'Recording and summarizing meetings'
+          ]
+        },
+        {
+          label: 'Connections',
+          features: [
+            'Direct audio connection to hearing aids',
+            'Tactile indications for alerts',
+            'Translation to sign language'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Writing</strong> (for people whose native language is sign-language and would benefit from writing aids since writing is done in a language different from sign)</li></ul>'
+      relatedCategories: [
+        { name: 'Writing', reason: 'For people whose native language is sign-language and would benefit from writing aids.' }
+      ]
     },
     'physical': {
       name: 'Physical',
-      intro: '<strong>PHYSICAL</strong> includes tools for people who have trouble physically using, or using efficiently, computers keyboards, mice, or onscreen controls.',
-      features: [
-        'features for making it easier to use keyboards or mice with one hand, one finger, a mouth-stick or head-stick',
-        'making it easier to use keyboard or mice with tremor or athetotic movements (like Cerebral Palsy)',
-        'typing and controlling the computer via a wide variety of alternate input techniques - including but not limited to speech, eye-gaze, head movement or pointing, scanning (one or two switch), morse or other codes',
-        'providing input using a wide variety of input devices including larger and smaller keyboards, switches, joysticks, sip and puff, eye-blink or EMG (small electrical signals from muscles trying to move)',
-        'speeding up input with word prediction, word completion, macros, and other techniques',
-        'alternate ways to control a mouse pointer including using keys on a keyboard (or alternate keyboard)'
+      intro: 'Tools for people who have trouble physically using, or using efficiently, computer keyboards, mice, or onscreen controls.',
+      featureGroups: [
+        {
+          label: 'Keyboard alternatives',
+          features: [
+            'Using keyboard with one hand, one finger, or mouth-stick',
+            'Easier use with tremor or athetotic movements',
+            'Larger and smaller keyboards'
+          ]
+        },
+        {
+          label: 'Input methods',
+          features: [
+            'Speech control',
+            'Eye-gaze and head movement',
+            'Scanning with switches',
+            'Morse or other codes'
+          ]
+        },
+        {
+          label: 'Input devices',
+          features: [
+            'Switches and joysticks',
+            'Sip and puff',
+            'Eye-blink or EMG signals'
+          ]
+        },
+        {
+          label: 'Efficiency',
+          features: [
+            'Word prediction and completion',
+            'Macros and shortcuts',
+            'Alternate mouse pointer control'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Writing</strong> (for techniques to speed up and help correct input after using any of the above techniques)</li><li><strong>Speech/Communication</strong> (for those who cannot speak or speak clearly)</li></ul>'
+      relatedCategories: [
+        { name: 'Writing', reason: 'For techniques to speed up and help correct input.' },
+        { name: 'Speech and communication', reason: 'For those who cannot speak or speak clearly.' }
+      ]
     },
     'speech': {
-      name: 'Speech/Communication',
-      intro: '<strong>SPEECH/COMMUNICATION</strong> includes tools for people who have trouble speaking or speaking clearly or communicating spoken or written language.',
-      features: [
-        'features for clarifying people\'s speech',
-        'recognizing some types of difficult to understand speech and re-speaking it clearly',
-        'letting people communicate in text, sign language, pictures, symbols, or voice of their choosing (including original voice for those who have lost it)',
-        'accelerating communication when using non-speech input methods',
-        'allowing people to operate devices including computers and artificial agents via their or artificial speech input'
+      name: 'Speech and communication',
+      intro: 'Tools for people who have trouble speaking or speaking clearly, or communicating spoken or written language.',
+      featureGroups: [
+        {
+          label: 'Speech enhancement',
+          features: [
+            'Clarifying people\'s speech',
+            'Recognizing difficult speech and re-speaking it clearly'
+          ]
+        },
+        {
+          label: 'Alternative communication',
+          features: [
+            'Communicate in text, sign language, pictures, or symbols',
+            'Voice of your choosing including original voice',
+            'Accelerating communication with non-speech input'
+          ]
+        },
+        {
+          label: 'Device control',
+          features: [
+            'Operating computers via speech input',
+            'Controlling artificial agents'
+          ]
+        }
       ],
-      seeAlso: '<p class="info-note">Some features in the following other categories might be useful:</p><ul class="info-list"><li><strong>Physical</strong> (for special interfaces for those who cannot use a keyboard or use it well)</li><li><strong>Writing</strong> (for tools for faster and better written expression)</li></ul>'
+      relatedCategories: [
+        { name: 'Physical', reason: 'For special interfaces for those who cannot use a keyboard well.' },
+        { name: 'Writing', reason: 'For tools for faster and better written expression.' }
+      ]
     }
   };
 
   var functionOrder = ['reading', 'writing', 'focus', 'cognitive', 'vision', 'braille', 'hearing', 'physical', 'speech'];
 
+  // Mapping from category display names to accordion IDs
+  var categoryNameToId = {
+    'Reading': 'accordion-reading',
+    'Writing': 'accordion-writing',
+    'Attention and planning': 'accordion-attention',
+    'Cognitive': 'accordion-cognitive',
+    'Vision': 'accordion-vision',
+    'Braille': 'accordion-braille',
+    'Hearing': 'accordion-hearing',
+    'Physical': 'accordion-physical',
+    'Speech and communication': 'accordion-speech'
+  };
+
+  // Mapping from function keys to accordion IDs
+  var functionKeyToAccordionId = {
+    'reading': 'accordion-reading',
+    'writing': 'accordion-writing',
+    'focus': 'accordion-attention',
+    'cognitive': 'accordion-cognitive',
+    'vision': 'accordion-vision',
+    'braille': 'accordion-braille',
+    'hearing': 'accordion-hearing',
+    'physical': 'accordion-physical',
+    'speech': 'accordion-speech'
+  };
+
   function createChevronSVG(isExpanded) {
-    return '<svg class="learn-first__chevron' + (isExpanded ? ' is-expanded' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>';
+    return '<svg class="learn-first__chevron' + (isExpanded ? ' is-expanded' : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   }
 
   function renderFunctions() {
@@ -164,41 +408,67 @@
       var func = functionInfoContent[key];
       if (!func) return;
 
-      html += '<div class="learn-first__function" data-function="' + key + '">';
-      html += '<button class="learn-first__function-toggle" aria-expanded="false">';
+      var accordionId = functionKeyToAccordionId[key];
+      html += '<div class="learn-first__function" data-function="' + key + '" id="' + accordionId + '">';
+      html += '<button class="learn-first__function-toggle" aria-expanded="false" aria-controls="panel-' + key + '">';
       html += createChevronSVG(false);
       html += '<span class="learn-first__function-name">' + func.name + '</span>';
       html += '</button>';
-      html += '<div class="learn-first__function-content" style="display: none;">';
+      html += '<div class="learn-first__function-content" id="panel-' + key + '" style="display: none;">';
       
-      // Intro content (promoted from "Who these tools can help")
+      // Intro content
       html += '<p class="learn-first__intro-text">' + func.intro + '</p>';
       
-      // Features these tools might provide
-      html += '<div class="learn-first__subsection">';
-      html += '<button class="learn-first__subsection-toggle" aria-expanded="false">';
-      html += createChevronSVG(false);
-      html += '<span>Features these tools might provide</span>';
-      html += '</button>';
-      html += '<div class="learn-first__subsection-content" style="display: none;">';
-      html += '<ul class="learn-first__feature-list">';
-      func.features.forEach(function(feature) {
-        html += '<li>' + feature + '</li>';
+      // Feature groups - two-column layout at group level
+      html += '<div class="learn-first__groups-grid">';
+      html += '<div class="learn-first__groups-column learn-first__groups-column--left">';
+      func.featureGroups.forEach(function(group, index) {
+        // Odd-indexed groups (0, 2, 4...) go to left column
+        if (index % 2 === 0) {
+          html += '<div class="learn-first__subsection">';
+          html += '<h4 class="learn-first__subsection-title">' + group.label + '</h4>';
+          html += '<ul class="learn-first__feature-list">';
+          group.features.forEach(function(feature) {
+            html += '<li>' + feature + '</li>';
+          });
+          html += '</ul>';
+          html += '</div>';
+        }
       });
-      html += '</ul>';
+      html += '</div>';
+      html += '<div class="learn-first__groups-column learn-first__groups-column--right">';
+      func.featureGroups.forEach(function(group, index) {
+        // Even-indexed groups (1, 3, 5...) go to right column
+        if (index % 2 === 1) {
+          html += '<div class="learn-first__subsection">';
+          html += '<h4 class="learn-first__subsection-title">' + group.label + '</h4>';
+          html += '<ul class="learn-first__feature-list">';
+          group.features.forEach(function(feature) {
+            html += '<li>' + feature + '</li>';
+          });
+          html += '</ul>';
+          html += '</div>';
+        }
+      });
       html += '</div>';
       html += '</div>';
       
-      // Other tool types that might also help
-      html += '<div class="learn-first__subsection">';
-      html += '<button class="learn-first__subsection-toggle" aria-expanded="false">';
-      html += createChevronSVG(false);
-      html += '<span>Other tool types that might also help</span>';
-      html += '</button>';
-      html += '<div class="learn-first__subsection-content" style="display: none;">';
-      html += func.seeAlso;
-      html += '</div>';
-      html += '</div>';
+      // Related categories - inline text format with p elements
+      if (func.relatedCategories && func.relatedCategories.length > 0) {
+        html += '<hr class="learn-first__related-divider">';
+        html += '<div class="learn-first__subsection learn-first__subsection--related">';
+        html += '<h4 class="learn-first__subsection-title">Other categories that may also help</h4>';
+        html += '<div class="learn-first__related-list">';
+        func.relatedCategories.forEach(function(cat) {
+          html += '<p class="learn-first__related-item">';
+          html += '<span class="learn-first__related-name">' + cat.name + '</span>';
+          html += '<span class="learn-first__related-sep"> — </span>';
+          html += '<span class="learn-first__related-desc">' + cat.reason + '</span>';
+          html += '</p>';
+        });
+        html += '</div>';
+        html += '</div>';
+      }
       
       html += '</div>'; // function-content
       html += '</div>'; // function
@@ -212,8 +482,8 @@
     if (!container) return;
 
     container.addEventListener('click', function(e) {
+      // Handle accordion toggle clicks
       var functionToggle = e.target.closest('.learn-first__function-toggle');
-      var subsectionToggle = e.target.closest('.learn-first__subsection-toggle');
 
       if (functionToggle) {
         var functionDiv = functionToggle.closest('.learn-first__function');
@@ -222,17 +492,6 @@
         var isExpanded = functionToggle.getAttribute('aria-expanded') === 'true';
         
         functionToggle.setAttribute('aria-expanded', !isExpanded);
-        content.style.display = isExpanded ? 'none' : 'block';
-        chevron.classList.toggle('is-expanded', !isExpanded);
-      }
-
-      if (subsectionToggle) {
-        var subsection = subsectionToggle.closest('.learn-first__subsection');
-        var content = subsection.querySelector('.learn-first__subsection-content');
-        var chevron = subsectionToggle.querySelector('.learn-first__chevron');
-        var isExpanded = subsectionToggle.getAttribute('aria-expanded') === 'true';
-        
-        subsectionToggle.setAttribute('aria-expanded', !isExpanded);
         content.style.display = isExpanded ? 'none' : 'block';
         chevron.classList.toggle('is-expanded', !isExpanded);
       }

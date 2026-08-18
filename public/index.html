@@ -7,7 +7,7 @@
   <title>Learn and Try - Assistive Technology Tools</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -25,8 +25,8 @@
       <nav class="header__nav" aria-label="Main navigation">
         <ul class="header__nav-list">
           <li><a href="/index.html" class="header__nav-link header__nav-link--active" aria-current="page">Home</a></li>
-          <li><a href="/finder/index.html" class="header__nav-link">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__nav-link">Browse Listing Directly</a></li>
+          <li><a href="/finder/index.html" class="header__nav-link">Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__nav-link">Browse All Tools</a></li>
           <li><a href="https://raisingthefloor.org" class="header__nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -52,8 +52,8 @@
       <nav aria-label="Mobile navigation">
         <ul class="header__mobile-nav-list">
           <li><a href="/index.html" class="header__mobile-nav-link header__mobile-nav-link--active" aria-current="page">Home</a></li>
-          <li><a href="/finder/index.html" class="header__mobile-nav-link">Easy Tool Finder</a></li>
-          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse Listing Directly</a></li>
+          <li><a href="/finder/index.html" class="header__mobile-nav-link">Tool Finder</a></li>
+          <li><a href="/browse/index.html" class="header__mobile-nav-link">Browse All Tools</a></li>
           <li><a href="https://raisingthefloor.org" class="header__mobile-nav-link" target="_blank" rel="noopener noreferrer">About Us <span class="sr-only">(opens in new tab)</span></a></li>
         </ul>
       </nav>
@@ -62,42 +62,42 @@
 
   <main id="main-content">
     <!-- Hero Section -->
-    <section class="hero" aria-labelledby="hero-heading">
-      <div class="container container--medium">
+    <section class="homepage-section hero" aria-labelledby="hero-heading">
+      <div class="layout-centered">
         <h1 id="hero-heading" class="hero__title">
-          <span class="hero__title-highlight">Learn and Try Tool</span>
+          Find tools that make your computer easier to use.
         </h1>
         <p class="hero__subtitle">
-          Explore tools that could make computers accessible<br>
-          and easier to use.
-        </p>
-        <p class="hero__description">
-          Get personalized suggestions with our Tool Finder, or browse the tools directly.
+          Get personalized suggestions with our Tool Finder, or browse all tools on your own.
         </p>
         <div class="hero__actions">
           <a href="/finder/index.html" class="btn btn--primary btn--lg" aria-label="Start using the Tool Finder to get personalized suggestions">
             Use Tool Finder
           </a>
           <a href="/browse/index.html" class="btn btn--outline btn--lg" aria-label="Browse the complete directory of assistive technology tools">
-            Browse Listing Directly
+            Browse All Tools
           </a>
         </div>
-        <p class="hero__privacy">
-          No information about you or others is gathered, stored, or used by this site.
+        <p class="privacy-notice">
+          <svg class="privacy-notice__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          No information about you is gathered, stored, or used by this site.
         </p>
       </div>
     </section>
 
-    <!-- How to Use Section -->
-    <section class="features" aria-labelledby="how-to-use-heading">
-      <div class="container container--medium">
-        <h2 id="how-to-use-heading" class="features__title">You can use this website to:</h2>
+    <!-- What you can do here Section -->
+    <section class="homepage-section features" aria-labelledby="features-heading">
+      <div class="layout-centered">
+        <h2 id="features-heading" class="features__title">What you can do here</h2>
         
         <div class="features__grid">
           <!-- Discover -->
           <div class="feature">
             <div class="feature__icon" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.3-4.3"></path>
               </svg>
@@ -111,7 +111,7 @@
           <!-- Learn -->
           <div class="feature">
             <div class="feature__icon" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
               </svg>
             </div>
@@ -124,86 +124,81 @@
           <!-- Try -->
           <div class="feature">
             <div class="feature__icon" aria-hidden="true">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"></path>
                 <path d="m13 13 6 6"></path>
               </svg>
             </div>
             <h3 class="feature__title">Try</h3>
             <p class="feature__description">
-              Try out solutions that you find.<br>
-              1 out of 3 are already built-in.&nbsp;&nbsp;<br>
-              9 out of 10 are free or free to try.</p>
+              Try out solutions that you find.
+            </p>
+            <div class="feature__stats">
+              1 in 3 tools are already built into your computer<br>
+              9 out of 10 are free or free to try
+            </div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- Video Section -->
-    <section class="video-section" aria-labelledby="video-heading">
-      <div class="container container--medium">
-        <h2 id="video-heading" class="video-section__title">Watch Our Website Walkthrough</h2>
+    <section class="homepage-section video-section" aria-labelledby="video-heading">
+      <div class="layout-centered">
+        <h2 id="video-heading" class="video-section__title">See how it works</h2>
+        <p class="video-section__subtitle">A short walkthrough of the Tool Finder and browsing experience.</p>
         
-        <button class="video-section__player" id="play-walkthrough-btn" aria-label="Play website walkthrough video">
-          <img src="images/video-thumbnail.png" alt="Video thumbnail showing the Tool Finder welcome screen" class="video-section__thumbnail">
-          <div class="video-section__play-overlay">
-            <div class="video-section__play-icon" aria-hidden="true"></div>
-          </div>
-        </button>
-
-        <a href="https://raisingthefloor.org/lnt-transcript" target="_blank" rel="noopener noreferrer" class="btn btn--outline" aria-label="Full transcript and description of the website walkthrough video (opens in new tab)">
-          Full Transcript + Description of Video <span class="sr-only">(opens in new tab)</span>
+        <div class="video-section__embed" id="video-embed-container">
+          <button class="video-section__player" id="play-walkthrough-btn" aria-label="Play website walkthrough video">
+            <img src="images/video-thumbnail.png" alt="Video thumbnail showing the Tool Finder welcome screen" class="video-section__thumbnail">
+            <div class="video-section__play-overlay">
+              <div class="video-section__play-icon" aria-hidden="true"></div>
+            </div>
+          </button>
+        </div>
+        
+        <a href="https://raisingthefloor.org/lnt-transcript" target="_blank" rel="noopener noreferrer" class="video-section__transcript-link" aria-label="Read the full transcript and description of the website walkthrough video (opens in new tab)">
+          Read the full transcript and description
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 17L17 7"></path>
+            <path d="M7 7h10v10"></path>
+          </svg>
+          <span class="sr-only">(opens in new tab)</span>
         </a>
       </div>
     </section>
     
-    <!-- Video Modal -->
-    <div class="home-video-modal" id="home-video-modal">
-      <div class="home-video-modal__content">
-        <button class="home-video-modal__close" id="home-video-modal-close" aria-label="Close video" title="Close video">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 6 6 18"></path>
-            <path d="m6 6 12 12"></path>
-          </svg>
-          Close
-        </button>
-        <iframe id="home-video-iframe" src="" title="Website Walkthrough Video" allowfullscreen></iframe>
+    <!-- Learn First Section -->
+    <section class="homepage-section learn-first" aria-labelledby="learn-first-heading">
+      <div class="layout-centered">
+        <div class="learn-first__intro">
+          <h2 class="learn-first__title" id="learn-first-heading">Not sure what to look for?</h2>
+          <p class="learn-first__text">Browse topics below to learn what kinds of tools exist before you search. Each topic expands to show what tools in that area can do.</p>
+        </div>
+        
+        <div class="learn-first__functions" id="learn-first-functions" role="region" aria-label="Tool categories">
+          <!-- Functions will be populated by JavaScript -->
+        </div>
+        
+        <p class="learn-first__note">Not every tool includes every feature — check each tool's page to see exactly what it does.</p>
       </div>
-    </div>
+    </section>
 
     <!-- Bottom CTA Section -->
-    <section class="cta" aria-labelledby="cta-heading">
-      <div class="container container--medium">
-        <h2 id="cta-heading" class="cta__title">Ready to Get Started?</h2>
+    <section class="homepage-section cta" aria-labelledby="cta-heading">
+      <div class="layout-centered">
+        <h2 id="cta-heading" class="cta__title">Ready to find your tools?</h2>
         <p class="cta__description">
-          Find the right computer access tool(s) for users with different needs.
+          The Tool Finder takes about 2 minutes and gives you a personalized list based on your specific needs.
         </p>
         <div class="cta__actions">
           <a href="/finder/index.html" class="btn btn--primary btn--lg" aria-label="Start using the Tool Finder to get personalized suggestions">
             Use Tool Finder
           </a>
           <a href="/browse/index.html" class="btn btn--outline btn--lg" aria-label="Browse the complete directory of assistive technology tools">
-            Browse Listing Directly
+            Browse All Tools
           </a>
         </div>
-      </div>
-    </section>
-
-    <!-- Learn First Section -->
-    <section class="learn-first" aria-labelledby="learn-first-heading">
-      <div class="container">
-        <div class="learn-first__intro">
-          <p class="learn-first__title" id="learn-first-heading">Want to learn more first before you search?</p>
-          <p class="learn-first__text">Not familiar with everything these tools can do?</p>
-          <p class="learn-first__text">Want to learn about ALL the features a tool might have before picking a tool?</p>
-          <p class="learn-first__instruction">Click on lines below (with a <svg class="learn-first__chevron-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>) to expand and explore each topic area.</p>
-        </div>
-        
-        <div class="learn-first__functions" id="learn-first-functions">
-          <!-- Functions will be populated by JavaScript -->
-        </div>
-        
-        <p class="learn-first__note">(Not every tool includes every feature — check each tool to see exactly what it does.)</p>
       </div>
     </section>
   </main>
@@ -216,7 +211,7 @@
         <div>
           <h3 class="footer__column-title">Raising the Floor</h3>
           <p class="footer__description">
-            Raising the Floor works with communities to develop solutions to make technologies more inclusive and accessible for all.
+            Making technology accessible for everyone.
           </p>
         </div>
         
