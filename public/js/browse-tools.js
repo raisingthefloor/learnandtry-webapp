@@ -1574,7 +1574,7 @@ var checkboxClass = 'tool-card__mark-checkbox' + (isMarked ? ' is-marked' : '');
           render();
           
           // Compensate scroll if on page 1 or show all, and adding item (not removing)
-          if ((currentPage === 1 || perPage === 0) && markedToolIds.has(baseToolId)) {
+          if ((currentPage === 1 || itemsPerPage === 0) && markedToolIds.has(baseToolId)) {
             var newMyListHeight = myListContainer ? myListContainer.offsetHeight : 0;
             var heightDiff = newMyListHeight - oldMyListHeight;
             if (heightDiff > 0) {
